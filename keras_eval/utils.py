@@ -1,5 +1,6 @@
 import os
 import keras
+import json
 
 
 def load_multi_model(models_path, custom_objects=None):
@@ -16,14 +17,16 @@ def load_multi_model(models_path, custom_objects=None):
     '''
 
     models = []
+    model_specs = []
     num_models = 0
     model_extensions = ['.h5', '.hdf5']
     for dirpath, dirnames, models in os.walk(models_path):
         for model in models:
             if model.endswith(tuple(model_extensions)):
                 print('Loading model ', model)
-                read_model = keras.models.load_model(os.path.join(dirpath, model), custom_objects)
-                models.append(read_model)
+                model, model_spec = load_model(os.path.join(dirpath, model), custom_objects)
+                models.append(model)
+                model_specs.append(model_spec)
                 num_models += 1
             else:
                 raise ValueError('Model files must be either h5 or hdf5 files. Found : ' + str(
@@ -33,9 +36,15 @@ def load_multi_model(models_path, custom_objects=None):
     return models
 
 
-def load_model(self, model_name, custom_objects=None):
-    self.model_name = model_name
-    self.model = keras.models.load_model(self.model_name, custom_objects)
+def load_model(model_path, specs_path=None, custom_objects=None):
+    model = keras.models.load_model(model_path, custom_objects)
+    if specs_path is None:
+        split_path = model_path.split('/')
+        specs_path = split_path[:-1]
+        specs_name = split_path[-1].replace('.h5', '_model_spec.json')
+    with open(os.path.join(specs_path, specs_name), 'r') as f:
+        model_spec = json.load(f)
+    return model, model_spec
 
 
 def create_image_generator(data_dir, batch_size, target_size, preprocessing_function=None):
@@ -104,3 +113,48 @@ def load_preprocess_images(img_paths, preprocess_func, target_size):
 
     pre_imgs = np.asarray(pre_imgs)
     return pre_imgs
+
+
+def combine_ensemble_probs(probs, combination_mode=None):
+    '''
+    Args:
+        probs: Probailities given by the ensemble of models
+        combination_mode: combination_mode: 'arithmetic' / 'geometric' / 'harmonic' mean of the predictions or 'maximum'
+           probability value
+
+    Returns: Probabilities combined
+    '''
+    # Probabilities of the ensemble input=[n_models, n_images, n_class] --> output=[n_images, n_class]
+
+    # Join probabilities given by an ensemble of models following combination mode
+
+    combiners = {
+        'arithmetic': np.mean,
+        'geometric': scipy.stats.gmean,
+        'harmonic': scipy.stats.hmean,
+        'maximum': np.amax
+    }
+    if combination_mode is None:
+        raise ValueError('combination_mode is required')
+    elif combination_mode not in combiners.keys():
+        raise ValueError('Error: invalid option for `combination_mode` ' + str(combination_mode))
+    combiner = combiners[combination_mode]
+    return combiner(probs, axis=0)
+
+
+# Custom preprocessing: dataset mean subtraction
+def preprocessing_mean_dataset_subtraction(x):
+    # Should be centered in 0 --> Between [-1,1]
+    x -= mean_dataset
+    x /= 255.
+    x *= 2.
+    return x
+
+
+# Custom preprocessing: dataset mean subtraction
+def preprocess_between_plus_minus_1(x):
+    # Should be centered in 0 --> Between [-1,1]
+    x /= 255.
+    x -= 0.5
+    x *= 2.
+    return x
