@@ -1,19 +1,20 @@
 import os
 import json
 import keras
+import copy
 
 import keras_eval.utils as utils
 import keras_eval.metrics as metrics
 import keras_eval.visualizer as visualizer
 from keras.preprocessing import image
+from keras_model_specs import ModelSpec
 
 
 class Evaluator(object):
 
     OPTIONS = {
-        'target_size': {'type': None},
-        'data_dir': {'type': str},
-        'class_dictionary': {'type': dict, 'default': None},
+        'data_dir': {'type': str, 'default': None},
+        'class_dictionaries': {'type': list, 'default': None},
         'preprocess_input': {'type': None, 'default': None},
         'ensemble_models_dir': {'type': None, 'default': None},
         'model_dir': {'type': None, 'default': None},
@@ -38,6 +39,7 @@ class Evaluator(object):
             raise ValueError('unsupported options given: %s' % (', '.join(extra_options), ))
 
         self.models = []
+        self.model_specs = []
 
         if self.model_dir is not None:
             self.models.append(utils.load_model(self.model_dir))
@@ -54,37 +56,41 @@ class Evaluator(object):
         self.models.pop(model_index)
         self.model_specs.pop(model_index)
 
-    def evaluate(self, data_dir=None, target_size=None, K=[1], filter_indices=None, confusion_matrix=False,
+    def evaluate(self, data_dir=None, K=[1], filter_indices=None, confusion_matrix=False,
                  save_confusion_matrix_path=None):
         data_dir = data_dir or self.data_dir
         if data_dir is None:
             raise ValueError('Please specify a valid data directory under variable data_dir')
         else:
-            self.probs, self.labels = self.compute_probabilities_generator(data_dir=None)
-            self.print_results(self.probs, self.labels, K, filter_indices)
+            self.probs, self.labels = self.compute_probabilities_generator(data_dir=data_dir)
+
+            if self.class_dictionaries is None:
+                self.class_dictionaries = utils.class_dictionary_default(self.num_classes)
+
+            self.class_abbrevs = utils.get_class_dictionaries_items(class_dictionaries, key='abbrev')
+
+            self.get_metrics(self.probs, self.labels, self.class_abbrevs, K, filter_indices)
             if confusion_matrix:
-                self.plot_confusion_matrix(self.probs.argmax(axis=1), self.labels.argmax(axis=1),
-                                           class_names, save_confusion_matrix_path)
+                self.plot_confusion_matrix(self.probs, self.labels, self.class_abbrevs, save_confusion_matrix_path)
         return self.probs, self.labels
 
     def plot_confusion_matrix(self, probs, labels, class_names, save_path):
         if probs is None or labels is None:
             probs, labels = self.probs, self.labels
 
-        visualizer.confusion_matrix(probs.argmax(axis=1), labels.argmax(axis=1),
-                                    labels=class_names, save_path=save_path)
+        visualizer.confusion_matrix(probs, labels, class_names, save_path=save_path)
 
-    def print_results(self, probs, labels, K=(1, 2), list_indices=None):
+    def get_metrics(self, probs, labels, class_names, K=(1, 2), list_indices=None, verbose=1):
         '''
-        Print to screen metrics from experiment given probs and y_true
+        Print to screen metrics from experiment given probs and labels
 
         Args:
             probs: Probabilities from softmax layer
-            labels: Ground truth
+            labels: Ground truth labels
             K: a tuple of the top-k predictions to consider. E.g. K = (1,2,3,4,5) is top-5 preds
             list_indices: If given take only the predictions corresponding to that indices to compute metrics
 
-        Returns: Nothing. Prints results to screen.
+        Returns: Dictionary with metrics
 
         '''
         y_true = labels.argmax(axis=1)
@@ -98,53 +104,46 @@ class Evaluator(object):
             print('Accuracy at k=%i is %.4f' % (k, acc_k))
 
         # Print sensitivity and precision for different values of K.
-        metrics.metrics_top_k(y_true, probs, labels=self.skindata.label_abbrevs(), k_vals=K, print_screen=True)
+        met = metrics.metrics_top_k(probs, y_true, class_names=class_names, k_vals=K, verbose=verbose)
+        return met
 
     def compute_probabilities_generator(self, data_dir=None):
         probs = []
         for i, model in enumerate(self.models):
-            if len(target_size) == len(models):
-                target_size_images = target_size[i]
-            else:
-                target_size_images = target_size
-
-            generator, labels = utils.create_image_generator(data_dir,
-                                                             self.batch_size,
-                                                             self.model_specs[i]['target_size'],
-                                                             self.model_specs[i]['preprocess_func'])
+            generator, labels = utils.create_image_generator(data_dir, self.batch_size, self.model_specs[i])
             print('Making predictions from model ', str(i))
-            probs.append(model.predict_generator(generator=generator,
-                                                 steps=(generator.samples // batch_size) + 1,
+            probs.append(model.predict_generator(generator=generator, steps=(generator.samples // batch_size) + 1,
                                                  workers=1,
                                                  verbose=1))
+        self.num_classes = generator.num_classes
         probs = np.array(probs)
         return probs, labels
 
-    def predict(self, folder_path, target_size=None):
-        target_size = target_size or self.target_size
+    def predict(self, folder_path):
         probs = []
         for i, model in enumerate(self.models):
-            if len(target_size) == len(self.models):
-                target_size_images = target_size[i]
-            else:
-                target_size_images = target_size
-
-            images = []
-            images_path = []
-
             # Read images from folder
-            for file in sorted(os.listdir(folder_path)):
-                if file.endswith(".png") or file.endswith(".jpeg") or file.endswith(".jpg"):
-                    images.append(load_preprocess_image(
-                        os.path.join(folder_path, file), preprocess_func=self.preprocess_input,
-                        target_size=target_size_images)[0])
-                    images_path.append(os.path.join(folder_path, file))
+            file_paths = sorted(os.listdir(folder_path))
+            images, images_path = utils.load_preprocess_images(file_paths, model_specs[i])
             images = np.array(images)
 
             # Predict
             print('Making predictions from model ', str(i))
-            probs.append(model.predict(images, batch_size=batch_size, verbose=1))
+            probs.append(model.predict(images, batch_size=self.batch_size, verbose=1))
 
         probs = np.array(probs)
 
         return probs, images_path
+
+    def predict_image(self, image_path):
+        probs = []
+        for i, model in enumerate(self.models):
+            # Read image
+            image = utils.load_preprocess_image(image_path, model_specs[i])
+            # Predict
+            print('Making predictions from model ', str(i))
+            probs.append(model.predict(image, batch_size=1, verbose=1))
+
+        probs = np.array(probs)
+
+        return probs

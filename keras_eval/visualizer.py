@@ -6,27 +6,29 @@ from sklearn.metrics import confusion_matrix
 from tensorflow.contrib.tensorboard.plugins import projector
 
 
-def confusion_matrix(y_pred, y_true, labels, fontsize=18, figsize=(16, 12), cmap=plt.cm.coolwarm_r, save_path=None):
+def confusion_matrix(probs, labels, class_names, fontsize=18, figsize=(16, 12), cmap=plt.cm.coolwarm_r, save_path=None):
     '''
 
     Args:
-        y_true:
-        y_pred:
-        labels:
-        fontsize:
-        figsize:
-        cmap:
-        save_path:
+       probs: Output of the CNN
+       labels: Ground truth classes (categorical)
+       class_names: List of strings containing classes names
+       fontsize: Size of text
+       figsize: Size of figure
+       cmap: Color choice
+       save_path: If `save_path` specified save confusion matrix in that location
 
-    Returns:
+    Returns: Nothing, shows confusion matrix
 
     '''
+    y_pred = argmax(probs, axis=1)
+    y_true = argmax(labels, axis=1)
 
-    n_labels = len(labels)
+    n_labels = len(class_names)
     np.set_printoptions(precision=2)
     plt.rcParams.update({'font.size': fontsize})
 
-    cm = confusion_matrix(y_true, y_pred, range(len(labels)))
+    cm = confusion_matrix(y_true, y_pred, range(len(class_names)))
     cm_normalized = cm.astype('float') / cm.sum(axis=1)[:, np.newaxis]
 
     fig = plt.figure(figsize=figsize)
@@ -35,15 +37,15 @@ def confusion_matrix(y_pred, y_true, labels, fontsize=18, figsize=(16, 12), cmap
 
     fig.colorbar(cax)
     ax.xaxis.tick_bottom()
-    ax.set_xticklabels(labels)
-    ax.set_yticklabels(labels)
+    ax.set_xticklabels(class_names)
+    ax.set_yticklabels(class_names)
     plt.xticks(np.arange(0, n_labels, 1.0), rotation='vertical')
     plt.yticks(np.arange(0, n_labels, 1.0))
     plt.ylabel('True label', fontweight='bold')
     plt.xlabel('Predicted label', fontweight='bold')
 
     # http://stackoverflow.com/questions/21712047/matplotlib-imshow-matshow-display-values-on-plot
-    min_val, max_val = 0, len(labels)
+    min_val, max_val = 0, len(class_names)
     ind_array = np.arange(min_val, max_val, 1.0)
     x, y = np.meshgrid(ind_array, ind_array)
     for i, (x_val, y_val) in enumerate(zip(x.flatten(), y.flatten())):
@@ -55,6 +57,16 @@ def confusion_matrix(y_pred, y_true, labels, fontsize=18, figsize=(16, 12), cmap
 
 
 def threshold_impact(correct_array, errors_array, threshold):
+    '''
+
+    Args:
+        correct_array: Array of correct predictions per each threshold
+        errors_array: Array of error predictions per each threshold
+        threshold: Threshold values used
+
+    Returns:
+
+    '''
 
     n_errors = errors_array[0]
     n_correct = correct_array[0]

@@ -1,16 +1,15 @@
 from __future__ import print_function, division, absolute_import
 import numpy as np
 import scipy
-from deepderm import vis
 from math import log
 
 
-def accuracy(y_true, y_pred):
+def accuracy(y_pred, y_true):
     acc = np.sum(y_true == y_pred) / float(len(y_true))
     return acc
 
 
-def accuracy_top_k(y_true, probs, k):
+def accuracy_top_k(probs, y_true,  k):
     assert k >= 1, "k must be at least 1."
     assert len(probs.shape) == 2, "`probs` should be a matrix of n_samples x n_dimensions"
     assert y_true.shape[0] == probs.shape[0], "The first dimensions should match"
@@ -32,7 +31,7 @@ def accuracy_top_k(y_true, probs, k):
     return acc
 
 
-def metrics_top_k(y_true, y_probs, labels, k_vals=(1, 2, 3), print_screen=True):
+def metrics_top_k(probs, y_true, class_names, k_vals=(1, 2, 3), verbose=1):
     """
     Compute the sensitivity and precision between the predicted `y_probs` and the true labels `y_true`.
 
@@ -56,12 +55,12 @@ def metrics_top_k(y_true, y_probs, labels, k_vals=(1, 2, 3), print_screen=True):
 
     """
     met = []  # {}
-    for idx, label in zip(range(len(labels)), labels):
+    for idx, label in zip(range(len(class_names)), class_names):
         for k in k_vals:
             if k == 0:
                 raise ValueError('`k_vals` cannot contain a `0`')
 
-            top_k_preds = y_probs.argsort(axis=1)[:, -k:]
+            top_k_preds = probs.argsort(axis=1)[:, -k:]
             preds_match = (top_k_preds == y_true[:, np.newaxis])
             in_top_k = np.sum(preds_match, axis=1) > 0
             tp_top_k = np.sum(in_top_k[(y_true == idx)])
@@ -84,31 +83,31 @@ def metrics_top_k(y_true, y_probs, labels, k_vals=(1, 2, 3), print_screen=True):
                 met.append({'label': label, 'sensitivity_k' + str(k): sensitivity, 'precision_k' + str(k): precision})
 
                 # met[label] = [{'k': k, 'sensitivity': sensitivity, 'precision': precision}]
-                if print_screen:
+                if verbose:
                     print('| %s | @k=1, sens:%.3f , prec:%.3f |' % (label.ljust(5), sensitivity, precision),
                           end='')
             else:
                 met[idx].update({'sensitivity_k' + str(k): sensitivity})
                 # met[label].append({'k': k, 'sens': sensitivity})
-                if print_screen:
+                if verbose:
                     print(' @k=%i, sens:%.3f |' % (k, sensitivity), end='')
 
-        if print_screen:
+        if verbose:
             print('')
 
     return met
 
 
-def geometric_mean_3D(y_probs):
-    return scipy.stats.gmean(y_probs, axis=0)
+def geometric_mean_3D(probs):
+    return scipy.stats.gmean(probs, axis=0)
 
 
-def arithmetic_mean_3D(y_probs):
-    return np.mean(y_probs, axis=0)
+def arithmetic_mean_3D(probs):
+    return np.mean(probs, axis=0)
 
 
-def harmonic_mean_3D(y_probs):
-    return scipy.stats.hmean(y_probs, axis=0)
+def harmonic_mean_3D(probs):
+    return scipy.stats.hmean(probs, axis=0)
 
 
 def combine_ensemble_probs(probs, combination_mode=None):
@@ -233,7 +232,7 @@ def get_correct_errors_indices(probs, y_true, k, split_k=False, combination_mode
     return correct, errors, probs
 
 
-def get_top1_probability_stats(probs, y_true, threshold, plot=False, combination_mode='arithmetic', verbose=1):
+def get_top1_probability_stats(probs, y_true, threshold, combination_mode='arithmetic', verbose=1):
     '''
     Args:
         probs: Probabilities of the model / ensemble [n_images, n_class] / [n_models, n_images, n_class]
@@ -301,14 +300,10 @@ def get_top1_probability_stats(probs, y_true, threshold, plot=False, combination
     n_correct = np.array(n_correct)
     n_errors = np.array(n_errors)
 
-    # Plot how predictions vary in relation with threshold
-    if plot:
-        vis.plot_threshold_impact(n_correct, n_errors, threshold_list)
-
     return errors_list, correct_list, n_correct, n_errors
 
 
-def get_top1_entropy_stats(probs, y_true, entropy, plot=False, combination_mode='arithmetic', verbose=1):
+def get_top1_entropy_stats(probs, y_true, entropy, combination_mode='arithmetic', verbose=1):
     '''
     Args:
         probs: Probabilities of the model / ensemble [n_images, n_class] / [n_models, n_images, n_class]
@@ -375,9 +370,5 @@ def get_top1_entropy_stats(probs, y_true, entropy, plot=False, combination_mode=
 
     n_correct = np.array(n_correct)
     n_errors = np.array(n_errors)
-
-    # Plot how predictions vary in relation with threshold
-    if plot:
-        vis.plot_threshold_impact(n_correct, n_errors, entropy_list)
 
     return errors_list, correct_list, n_correct, n_errors

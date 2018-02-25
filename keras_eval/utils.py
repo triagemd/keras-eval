@@ -1,6 +1,7 @@
 import os
 import keras
 import json
+from keras_model_specs import ModelSpec
 
 
 def load_multi_model(models_path, custom_objects=None):
@@ -39,15 +40,27 @@ def load_multi_model(models_path, custom_objects=None):
 def load_model(model_path, specs_path=None, custom_objects=None):
     model = keras.models.load_model(model_path, custom_objects)
     if specs_path is None:
-        split_path = model_path.split('/')
-        specs_path = split_path[:-1]
-        specs_name = split_path[-1].replace('.h5', '_model_spec.json')
-    with open(os.path.join(specs_path, specs_name), 'r') as f:
-        model_spec = json.load(f)
+        model_name = model_path.split('/')[-1]
+        specs_path = model_path.replace(model_name, model_name.replace('.h5', '_model_spec.json'))
+        print(specs_path)
+    with open(specs_path) as f:
+        model_spec_json = json.load(f)
+        model_spec = ModelSpec(model_spec_json)
     return model, model_spec
 
 
-def create_image_generator(data_dir, batch_size, target_size, preprocessing_function=None):
+def create_class_dictionary_default(num_classes):
+    class_dictionary_default = []
+    for i in range (0, num_classes):
+        class_dictionary_default.append({'class_name': 'Class ' + str(i), 'abbrev': 'C' + str(i)})
+    return class_dictionary_default
+
+
+def get_class_dictionaries_items(class_dictionaries, key):
+    return [class_dict[key] for class_dict in class_dictionaries]
+
+
+def create_image_generator(data_dir, batch_size, model_spec):
     '''
     Creates a Keras image generator
     Args:
@@ -58,17 +71,17 @@ def create_image_generator(data_dir, batch_size, target_size, preprocessing_func
     Returns: Keras generator without shuffling samples and ground truth labels associated with generator
 
     '''
-    test_gen = image.ImageDataGenerator(preprocessing_function=preprocessing_function)
+    test_gen = image.ImageDataGenerator(preprocessing_function=model_spec.preprocess_input)
 
-    generator = test_gen.flow_from_directory(data_dir, batch_size=batch_size, target_size=target_size,
+    generator = test_gen.flow_from_directory(data_dir, batch_size=batch_size, target_size=model_spec.target_size,
                                              class_mode='categorical', shuffle=False)
 
-    gt_labels = keras.utils.np_utils.to_categorical(generator.classes, generator.num_classes)
+    labels = keras.utils.np_utils.to_categorical(generator.classes, generator.num_classes)
 
-    return generator, gt_labels
+    return generator, labels
 
 
-def load_preprocess_image(img_name, preprocess_func, target_size):
+def load_preprocess_image(img_path, model_spec):
     """
     Return a preprocessed images (probably to use within a deep neural net).
 
@@ -80,19 +93,10 @@ def load_preprocess_image(img_name, preprocess_func, target_size):
     Returns: the preprocessed image.
 
     """
-
-    # Load the image.
-    img = image.load_img(img_name, target_size=target_size)
-    x = image.img_to_array(img)
-    x = np.expand_dims(x, axis=0)
-
-    # Pre-process the image.
-    if preprocess_func is not None:
-        x = preprocess_func(x)
-    return x
+    return model_spec.load_img(img_path)
 
 
-def load_preprocess_images(img_paths, preprocess_func, target_size):
+def load_preprocess_images(img_paths, model_spec):
     """
     Return an array of preprocessed images.
 
@@ -105,14 +109,13 @@ def load_preprocess_images(img_paths, preprocess_func, target_size):
         pre_imgs: an array of preprocessed images.
 
     """
-    pre_imgs = []
+    images = []
 
     for img_path in img_paths:
-        pre_img = load_preprocess_image(img_path, preprocess_func=preprocess_func, target_size=target_size)
-        pre_imgs.append(np.squeeze(pre_img))
+        if file.endswith(".png") or file.endswith(".jpeg") or file.endswith(".jpg"):
+            images.append(load_preprocess_image(img_path, model_spec)[0])
 
-    pre_imgs = np.asarray(pre_imgs)
-    return pre_imgs
+    return images
 
 
 def combine_ensemble_probs(probs, combination_mode=None):
@@ -140,21 +143,3 @@ def combine_ensemble_probs(probs, combination_mode=None):
         raise ValueError('Error: invalid option for `combination_mode` ' + str(combination_mode))
     combiner = combiners[combination_mode]
     return combiner(probs, axis=0)
-
-
-# Custom preprocessing: dataset mean subtraction
-def preprocessing_mean_dataset_subtraction(x):
-    # Should be centered in 0 --> Between [-1,1]
-    x -= mean_dataset
-    x /= 255.
-    x *= 2.
-    return x
-
-
-# Custom preprocessing: dataset mean subtraction
-def preprocess_between_plus_minus_1(x):
-    # Should be centered in 0 --> Between [-1,1]
-    x /= 255.
-    x -= 0.5
-    x *= 2.
-    return x
