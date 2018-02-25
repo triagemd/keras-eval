@@ -2,6 +2,7 @@ import os
 import json
 import keras
 import copy
+import numpy as np
 
 import keras_eval.utils as utils
 import keras_eval.metrics as metrics
@@ -67,7 +68,7 @@ class Evaluator(object):
             if self.class_dictionaries is None:
                 self.class_dictionaries = utils.class_dictionary_default(self.num_classes)
 
-            self.class_abbrevs = utils.get_class_dictionaries_items(class_dictionaries, key='abbrev')
+            self.class_abbrevs = utils.get_class_dictionaries_items(self.class_dictionaries, key='abbrev')
 
             self.get_metrics(self.probs, self.labels, self.class_abbrevs, K, filter_indices)
             if confusion_matrix:
@@ -123,8 +124,7 @@ class Evaluator(object):
         probs = []
         for i, model in enumerate(self.models):
             # Read images from folder
-            file_paths = sorted(os.listdir(folder_path))
-            images, images_path = utils.load_preprocess_images(file_paths, model_specs[i])
+            images, images_path = utils.load_preprocess_images(folder_path, self.model_specs[i])
             images = np.array(images)
 
             # Predict
@@ -139,7 +139,7 @@ class Evaluator(object):
         probs = []
         for i, model in enumerate(self.models):
             # Read image
-            image = utils.load_preprocess_image(image_path, model_specs[i])
+            image = utils.load_preprocess_image(image_path, self.model_specs[i])
             # Predict
             print('Making predictions from model ', str(i))
             probs.append(model.predict(image, batch_size=1, verbose=1))

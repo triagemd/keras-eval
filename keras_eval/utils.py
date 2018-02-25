@@ -93,10 +93,10 @@ def load_preprocess_image(img_path, model_spec):
     Returns: the preprocessed image.
 
     """
-    return model_spec.load_img(img_path)
+    return model_spec.load_image(img_path)
 
 
-def load_preprocess_images(img_paths, model_spec):
+def load_preprocess_images(folder_path, model_spec):
     """
     Return an array of preprocessed images.
 
@@ -110,12 +110,15 @@ def load_preprocess_images(img_paths, model_spec):
 
     """
     images = []
+    image_paths = []
 
-    for img_path in img_paths:
-        if file.endswith(".png") or file.endswith(".jpeg") or file.endswith(".jpg"):
+    for file_path in sorted(os.listdir(folder_path)):
+        if file_path.endswith(".png") or file_path.endswith(".jpeg") or file_path.endswith(".jpg"):
+            img_path = os.path.join(folder_path, file_path)
             images.append(load_preprocess_image(img_path, model_spec)[0])
+            image_paths.append(img_path)
 
-    return images
+    return images, image_paths
 
 
 def combine_ensemble_probs(probs, combination_mode=None):
