@@ -52,6 +52,9 @@ class Evaluator(object):
         self.models.pop(model_index)
         self.model_specs.pop(model_index)
 
+    def set_class_dictionaries(self, class_dictionaries):
+        self.class_dictionaries = class_dictionaries
+
     def evaluate(self, data_dir=None, K=[1], filter_indices=None, confusion_matrix=False,
                  save_confusion_matrix_path=None, combination_mode=None):
         '''
@@ -80,7 +83,7 @@ class Evaluator(object):
         if data_dir is None:
             raise ValueError('No data directory found, please specify a valid data directory under variable data_dir')
         else:
-            # Create Keras image generator
+            # Create Keras image generator and obtain predictions
             self.probs, self.labels = self.compute_probabilities_generator(data_dir=data_dir)
 
             # Create dictionary containing class names
@@ -108,7 +111,7 @@ class Evaluator(object):
 
         return self.probs, self.labels
 
-    def plot_confusion_matrix(self, probs, labels, class_names, save_path):
+    def plot_confusion_matrix(self, probs, labels, class_names, save_path=None):
         '''
 
         Args:
@@ -120,10 +123,8 @@ class Evaluator(object):
         Returns: Shows the confusion matrix in the screen
 
         '''
-        if probs is None or labels is None:
-            probs, labels = self.probs, self.labels
 
-        visualizer.confusion_matrix(probs, labels, class_names, save_path=save_path)
+        visualizer.plot_confusion_matrix(probs=probs, labels=labels, class_names=class_names, save_path=save_path)
 
     def get_metrics(self, probs, labels, class_names, K=(1, 2), list_indices=None, verbose=1):
         '''
@@ -135,7 +136,7 @@ class Evaluator(object):
             K: a tuple of the top-k predictions to consider. E.g. K = (1,2,3,4,5) is top-5 preds
             list_indices: If given take only the predictions corresponding to that indices to compute metrics
 
-        Returns: Dictionary with metrics
+        Returns: Dictionary with metrics for each class
 
         '''
         y_true = labels.argmax(axis=1)
@@ -145,7 +146,7 @@ class Evaluator(object):
             y_true = y_true[list_indices]
 
         for k in K:
-            acc_k = metrics.accuracy_top_k(y_true, probs, k=k)
+            acc_k = metrics.accuracy_top_k(probs, y_true, k=k)
             print('Accuracy at k=%i is %.4f' % (k, acc_k))
 
         # Print sensitivity and precision for different values of K.
@@ -158,7 +159,7 @@ class Evaluator(object):
         Args:
             data_dir: Data directory to load the images from
 
-        Returns: Probabilities, Ground truth labels of predictions
+        Returns: Probabilities, ground truth labels of predictions
 
         '''
         probs = []
@@ -184,7 +185,7 @@ class Evaluator(object):
         Args:
             folder_path: Path of the folder containing the images
 
-        Returns: Probabilities predicted, Image path for every image (aligned with probability)
+        Returns: Probabilities predicted, image path for every image (aligned with probability)
 
         '''
         probs = []
@@ -203,7 +204,7 @@ class Evaluator(object):
     def predict_image(self, image_path):
         '''
 
-        Predict class probabilities for a single Image.
+        Predict class probabilities for a single image.
 
         Args:
             image_path: Path where the image is located

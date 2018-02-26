@@ -3,7 +3,7 @@ import matplotlib.pyplot as plt
 from sklearn.metrics import confusion_matrix
 
 
-def confusion_matrix(probs, labels, class_names, fontsize=18, figsize=(16, 12), cmap=plt.cm.coolwarm_r, save_path=None):
+def plot_confusion_matrix(probs, labels, class_names, fontsize=18, figsize=(16, 12), cmap=plt.cm.coolwarm_r, save_path=None):
     '''
 
     Args:
@@ -18,8 +18,9 @@ def confusion_matrix(probs, labels, class_names, fontsize=18, figsize=(16, 12), 
     Returns: Nothing, shows confusion matrix
 
     '''
-    y_pred = argmax(probs, axis=1)
-    y_true = argmax(labels, axis=1)
+
+    y_pred = np.argmax(probs, axis=1)
+    y_true = np.argmax(labels, axis=1)
 
     n_labels = len(class_names)
     np.set_printoptions(precision=2)
@@ -53,7 +54,7 @@ def confusion_matrix(probs, labels, class_names, fontsize=18, figsize=(16, 12), 
         plt.savefig(save_path)
 
 
-def threshold_impact(correct_array, errors_array, threshold):
+def plot_threshold_impact(correct_array, errors_array, threshold):
     '''
 
     Args:

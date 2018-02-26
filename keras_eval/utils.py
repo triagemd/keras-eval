@@ -53,7 +53,7 @@ def load_model(model_path, specs_path=None, custom_objects=None):
 def create_class_dictionary_default(num_classes):
     class_dictionary_default = []
     for i in range(0, num_classes):
-        class_dictionary_default.append({'class_name': 'Class ' + str(i), 'abbrev': 'C' + str(i)})
+        class_dictionary_default.append({'class_name': 'Class_ ' + str(i), 'abbrev': 'C_' + str(i)})
     return class_dictionary_default
 
 
