@@ -15,6 +15,8 @@ setup(
         'Keras',
         'h5py',
         'Pillow',
+        'scipy',
+        'numpy',
         'keras-model-specs>=0.0.16',
     ]
 )
