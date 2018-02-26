@@ -1,6 +1,8 @@
 import os
 import keras
 import json
+import numpy as np
+import scipy
 from keras_model_specs import ModelSpec
 from keras.preprocessing import image
 
