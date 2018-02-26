@@ -1,9 +1,6 @@
 import numpy as np
 import matplotlib.pyplot as plt
-import os
-import tensorflow as tf
 from sklearn.metrics import confusion_matrix
-from tensorflow.contrib.tensorboard.plugins import projector
 
 
 def confusion_matrix(probs, labels, class_names, fontsize=18, figsize=(16, 12), cmap=plt.cm.coolwarm_r, save_path=None):

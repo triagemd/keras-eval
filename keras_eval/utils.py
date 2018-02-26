@@ -2,6 +2,7 @@ import os
 import keras
 import json
 from keras_model_specs import ModelSpec
+from keras.preprocessing import image
 
 
 def load_multi_model(models_path, custom_objects=None):
@@ -51,7 +52,7 @@ def load_model(model_path, specs_path=None, custom_objects=None):
 
 def create_class_dictionary_default(num_classes):
     class_dictionary_default = []
-    for i in range (0, num_classes):
+    for i in range(0, num_classes):
         class_dictionary_default.append({'class_name': 'Class ' + str(i), 'abbrev': 'C' + str(i)})
     return class_dictionary_default
 
@@ -72,8 +73,8 @@ def create_image_generator(data_dir, batch_size, model_spec):
 
     '''
     test_gen = image.ImageDataGenerator(preprocessing_function=model_spec.preprocess_input)
-
-    generator = test_gen.flow_from_directory(data_dir, batch_size=batch_size, target_size=model_spec.target_size,
+    print(model_spec.target_size)
+    generator = test_gen.flow_from_directory(data_dir, batch_size=batch_size, target_size=model_spec.target_size[:2],
                                              class_mode='categorical', shuffle=False)
 
     labels = keras.utils.np_utils.to_categorical(generator.classes, generator.num_classes)
@@ -121,7 +122,7 @@ def load_preprocess_images(folder_path, model_spec):
     return images, image_paths
 
 
-def combine_ensemble_probs(probs, combination_mode=None):
+def combine_probs(probs, combination_mode=None):
     '''
     Args:
         probs: Probailities given by the ensemble of models

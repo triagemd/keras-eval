@@ -9,7 +9,7 @@ def accuracy(y_pred, y_true):
     return acc
 
 
-def accuracy_top_k(probs, y_true,  k):
+def accuracy_top_k(probs, y_true, k):
     assert k >= 1, "k must be at least 1."
     assert len(probs.shape) == 2, "`probs` should be a matrix of n_samples x n_dimensions"
     assert y_true.shape[0] == probs.shape[0], "The first dimensions should match"
