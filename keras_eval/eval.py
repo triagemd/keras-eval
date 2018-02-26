@@ -19,8 +19,7 @@ class Evaluator(object):
         'loss_function': {'type': str, 'default': 'categorical_crossentropy'},
         'metrics': {'type': list, 'default': ['accuracy']},
         'batch_size': {'type': int, 'default': 1},
-        'num_gpus': {'type': int, 'default': 0},
-        'verbose': {'type': str, 'default': False},
+        'verbose': {'type': int, 'default': 0},
     }
 
     def __init__(self, **options):
