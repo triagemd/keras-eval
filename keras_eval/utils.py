@@ -16,7 +16,7 @@ def load_multi_model(models_path, custom_objects=None):
        custom_objects: dict mapping class names (or function names) of custom (non-Keras) objects to class/functions.
                     e.g. for mobilenet models: {'relu6': mobilenet.relu6, 'DepthwiseConv2D': mobilenet.DepthwiseConv2D}
 
-    Returns: Models list
+    Returns: List of models, list of model_specs
 
     '''
 

@@ -1,6 +1,5 @@
 import os
 import json
-import platform
 import keras
 
 from keras_eval.eval import Evaluator
@@ -56,7 +55,7 @@ def test_evaluator_mobilenet_v1_on_catdog_dataset():
              'preprocess_args': None,
              'preprocess_func': 'between_plus_minus_1',
              'target_size': [224, 224, 3]
-    }
+             }
 
     with open('mobilenet_model_specs.txt', 'w') as outfile:
         json.dump(specs, outfile)

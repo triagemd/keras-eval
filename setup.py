@@ -18,6 +18,7 @@ setup(
         'scipy',
         'numpy',
         'matplotlib',
+        'sklearn',
         'keras-model-specs>=0.0.16',
     ]
 )
