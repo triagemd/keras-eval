@@ -9,7 +9,3 @@ autopep8
 
 stored
 backports.tempfile
-tensorflow
-scipy
-numpy
-keras

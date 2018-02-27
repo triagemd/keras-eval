@@ -204,8 +204,8 @@ def get_correct_errors_indices(probs, y_true, k, split_k=False, combination_mode
         raise ValueError('k is required')
     k_list = [k] if not isinstance(k, (list, tuple, np.ndarray)) else k
 
-    errors = list()
-    correct = list()
+    errors = []
+    correct = []
 
     # Get ground truth classes
     y_true = y_true.argmax(axis=1)
@@ -263,13 +263,13 @@ def get_top1_probability_stats(probs, y_true, threshold, combination_mode='arith
     threshold_list = [threshold] if not isinstance(threshold, (list, tuple, np.ndarray)) else threshold
 
     # Compute indices of the errors over certain th
-    errors_list = list()
+    errors_list = []
     # Compute indices of the correct over certain th
-    correct_list = list()
+    correct_list = []
 
     # number of correct / error predictions
-    n_correct = list()
-    n_errors = list()
+    n_correct = []
+    n_errors = []
 
     for i, thres in enumerate(threshold_list):
 
@@ -337,13 +337,13 @@ def get_top1_entropy_stats(probs, y_true, entropy, combination_mode='arithmetic'
     correct_list = list()
 
     # number of correct / error predictions
-    n_correct = list()
-    n_errors = list()
+    n_correct = []
+    n_errors = []
 
     for i, ent in enumerate(entropy_list):
-        errors_below_e = [errors[i] for i, entropy in enumerate(error_entropy) if entropy < ent]
+        errors_below_e = [errors[i] for i, entropy_value in enumerate(error_entropy) if entropy_value < ent]
 
-        correct_below_e = [correct[i] for i, entropy in enumerate(correct_entropy) if entropy < ent]
+        correct_below_e = [correct[i] for i, entropy_value in enumerate(correct_entropy) if entropy_value < ent]
 
         errors_below_e = np.array(errors_below_e)
         correct_below_e = np.array(correct_below_e)

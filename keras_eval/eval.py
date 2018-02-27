@@ -93,14 +93,12 @@ class Evaluator(object):
             self.class_abbrevs = utils.get_class_dictionaries_items(self.class_dictionaries, key='abbrev')
 
             # Check if we have an ensemble or just one model predictions
-            print(self.probs.shape[0])
             if self.probs.shape[0] <= 1:
                 self.probs_combined = self.probs[0]
             else:
                 # Combine ensemble proobabilities
                 self.probs_combined = utils.combine_probs(self.probs, combination_mode)
 
-            print(self.probs_combined.shape)
             # Compute metrics
             self.get_metrics(self.probs_combined, self.labels, self.class_abbrevs, K, filter_indices)
 
