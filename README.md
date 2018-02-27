@@ -34,7 +34,6 @@ Each sub-folder under `'data_dir/'` will be considered as a different class. E.g
 ```
 data_dir = ''tests/files/catdog/test/'
 probs, labels = evaluator.evaluate(data_dir=None, K=[1], filter_indices=None, confusion_matrix=False, save_confusion_matrix_path=None, combination_mode=None)
-
 ```
 
 Predict class probabilities of a set of images from a folder.
@@ -43,7 +42,6 @@ Predict class probabilities of a set of images from a folder.
 ```
 folder_path = ''tests/files/catdog/test/cat/'
 probs, image_paths = evaluator.(folder_path)
-
 ```
 
 Predict class probabilities of a single image
@@ -52,7 +50,6 @@ Predict class probabilities of a single image
 ```
 image_path = ''tests/files/catdog/test/cat/cat-1.jpg'
 probs = evaluator.predict_image(image_path)
-
 ```
 
 ## Additional options
@@ -65,7 +62,6 @@ or setting class names and abbreviations to show in the confusion matrix
 ```
 model_path = '/your_model_path/model.h5
 evaluator.add_model(model_path)
-
 ```
 
 **add_model_ensemble**
@@ -73,7 +69,6 @@ evaluator.add_model(model_path)
 ```
 model_path = '/your_model_ensemble_path/'
 evaluator.add_model_ensemble(model_path)
-
 ```
 
 **set_class_dictionaries**
@@ -85,7 +80,6 @@ dict_pso = [{'abbrev':'PSO', 'class_name': 'psoriasis'},
            {'abbrev':'NS', 'class_name': 'not_skin'}]
            
 evaluator.set_class_dictionaries(model_path)
-
 ```
 
 

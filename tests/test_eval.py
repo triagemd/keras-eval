@@ -71,7 +71,7 @@ def test_evaluator_mobilenet_v1_on_catdog_dataset():
              'target_size': [224, 224, 3]
     }
 
-    with open('mobilenet_model_specs.txt', 'w') as outfile:
+    with open('mobilenet_model_specs.json', 'w') as outfile:
         json.dump(specs, outfile)
 
     check_eval_on_catdog_datasets({model_dir: '/tests/mobilenet.h5'})
