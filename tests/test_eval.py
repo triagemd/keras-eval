@@ -27,7 +27,7 @@ def check_evaluate_on_catdog_datasets(eval_args={}):
     # n_samples x n_classes
     assert len(evaluator.probs_combined.shape) == 2
 
-    # n_classes = 2
+    # class abbreviations
     assert evaluator.class_abbrevs == ['C_1', 'C_2']
 
 

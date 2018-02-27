@@ -45,6 +45,12 @@ class Evaluator(object):
         self.models.append(model)
         self.model_specs.append(model_spec)
 
+    def add_model_ensemble(self, ensemble_path):
+        models, model_specs = utils.load_multi_model(ensemble_path)
+        for i, model in enumerate(models):
+            self.models.append(model)
+            self.model_specs.append(model_spec[i])
+
     def remove_model(self, model_index):
         self.models.pop(model_index)
         self.model_specs.pop(model_index)

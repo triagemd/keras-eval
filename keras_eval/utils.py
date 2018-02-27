@@ -37,7 +37,7 @@ def load_multi_model(models_path, custom_objects=None):
                     os.path.splitext(model)[1] + 'file.'))
 
     print('Models loaded: ', num_models)
-    return models
+    return models, model_specs
 
 
 def load_model(model_path, specs_path=None, custom_objects=None):
