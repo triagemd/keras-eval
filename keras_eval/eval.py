@@ -11,11 +11,9 @@ class Evaluator(object):
     OPTIONS = {
         'data_dir': {'type': str, 'default': None},
         'class_dictionaries': {'type': list, 'default': None},
-        'preprocess_input': {'type': None, 'default': None},
         'ensemble_models_dir': {'type': None, 'default': None},
         'model_dir': {'type': None, 'default': None},
         'report_dir': {'type': str, 'default': None},
-        'data_generator': {'type': None, 'default': None},
         'loss_function': {'type': str, 'default': 'categorical_crossentropy'},
         'metrics': {'type': list, 'default': ['accuracy']},
         'batch_size': {'type': int, 'default': 1},
