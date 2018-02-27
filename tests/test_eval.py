@@ -3,7 +3,7 @@ import json
 import platform
 import keras
 
-from keras_eval import Evaluator
+from keras_eval.eval import Evaluator
 
 
 def check_evaluate_on_catdog_datasets(eval_args={}):
