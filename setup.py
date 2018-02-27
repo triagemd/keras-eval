@@ -17,6 +17,7 @@ setup(
         'Pillow',
         'scipy',
         'numpy',
+        'matplotlib',
         'keras-model-specs>=0.0.16',
     ]
 )
