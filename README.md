@@ -6,6 +6,8 @@ Evaluation abstraction for Keras models.
 Easy predictions and evaluations for a single model or an ensemble of many models. 
 You can specify all the following options. 
 
+**Evaluator**
+
 ```
 from keras_eval.eval import Evaluator
 
@@ -24,11 +26,13 @@ evaluator = Evaluator({
 
 ## Evaluation Functions
 
-Evaluate a set of images. Each sub-folder under 'data_dir/' will be considered as a different class.
-E.g. 'data_dir/class_1/dog.jpg' , 'data_dir/class_2/cat.jpg
+Evaluate a set of images. 
+
+Each sub-folder under `'data_dir/'` will be considered as a different class. E.g. `'data_dir/class_1/dog.jpg'` , `'data_dir/class_2/cat.jpg'`
 
 **evaluate**
 ```
+data_dir = ''tests/files/catdog/test/'
 probs, labels = evaluator.evaluate(data_dir=None, K=[1], filter_indices=None, confusion_matrix=False, save_confusion_matrix_path=None, combination_mode=None)
 
 ```
@@ -37,6 +41,7 @@ Predict class probabilities of a set of images from a folder.
 
 **predict**
 ```
+folder_path = ''tests/files/catdog/test/cat/'
 probs, image_paths = evaluator.(folder_path)
 
 ```
@@ -45,6 +50,7 @@ Predict class probabilities of a single image
 
 **predict_image**
 ```
+image_path = ''tests/files/catdog/test/cat/cat-1.jpg'
 probs = evaluator.predict_image(image_path)
 
 ```

@@ -189,6 +189,7 @@ class Evaluator(object):
         Returns: Probabilities predicted, image path for every image (aligned with probability)
 
         '''
+        folder_path = folder_path or self.data_dir
         probs = []
         for i, model in enumerate(self.models):
             # Read images from folder
@@ -213,6 +214,7 @@ class Evaluator(object):
         Returns:
 
         '''
+        image_path = image_path or self.data_dir
         probs = []
         for i, model in enumerate(self.models):
             # Read image
