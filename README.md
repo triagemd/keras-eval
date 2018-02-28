@@ -21,7 +21,6 @@ evaluator = Evaluator({
         'batch_size': 1,
         'verbose': 0,
     }
-
 ```
 
 ## Evaluation Functions
