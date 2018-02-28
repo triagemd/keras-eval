@@ -5,6 +5,17 @@ import numpy as np
 import scipy
 from keras_model_specs import ModelSpec
 from keras.preprocessing import image
+from keras.applications import mobilenet
+import tensorflow as tf
+
+
+def create_default_custom_objects():
+    '''
+
+    Returns: Default custom objects for Keras models supported in keras.applications
+
+    '''
+    return {'relu6': mobilenet.relu6, 'DepthwiseConv2D': mobilenet.DepthwiseConv2D, "tf": tf}
 
 
 def load_multi_model(models_dir, custom_objects=None):
@@ -24,28 +35,38 @@ def load_multi_model(models_dir, custom_objects=None):
     model_specs = []
     num_models = 0
     model_extensions = ['.h5', '.hdf5']
-    for dirpath, dirnames, models in os.walk(models_dir):
-        for model in models:
-            if model.endswith(tuple(model_extensions)):
-                print('Loading model ', model)
-                model, model_spec = load_model(os.path.join(dirpath, model), custom_objects)
-                models.append(model)
-                model_specs.append(model_spec)
-                num_models += 1
-            else:
-                raise ValueError('Model files must be either h5 or hdf5 files. Found : ' + str(
-                    os.path.splitext(model)[1] + 'file.'))
+
+    for dirpath, dirnames, files in os.walk(models_dir):
+        for dir in dirnames:
+            files = os.listdir(os.path.join(dirpath, dir))
+            for filename in files:
+                if filename.endswith(tuple(model_extensions)):
+                    print('Loading model ', filename)
+                    model, model_spec = load_model(os.path.join(dirpath, dir, filename), custom_objects)
+                    models.append(model)
+                    model_specs.append(model_spec)
+                    num_models += 1
 
     print('Models loaded: ', num_models)
     return models, model_specs
 
 
 def load_model(model_dir, specs_path=None, custom_objects=None):
+    '''
+
+    Args:
+        model_dir: Folder containing the model
+        specs_path: If specified custom model_specs name, default `model_spec.json`
+        custom_objects: dict mapping class names (or function names) of custom (non-Keras) objects to class/functions.
+                    e.g. for mobilenet models: {'relu6': mobilenet.relu6, 'DepthwiseConv2D': mobilenet.DepthwiseConv2D}
+
+    Returns: keras model, model_spec object for that model
+
+    '''
     model = keras.models.load_model(model_dir, custom_objects)
     if specs_path is None:
         model_name = model_dir.split('/')[-1]
-        specs_path = model_dir.replace(model_name, model_name.replace('.h5', '_model_spec.json'))
-        print(specs_path)
+        specs_path = model_dir.replace(model_name, 'model_spec.json')
     with open(specs_path) as f:
         model_spec_json = json.load(f)
         model_spec = ModelSpec(model_spec_json)
@@ -75,7 +96,7 @@ def create_image_generator(data_dir, batch_size, model_spec):
 
     '''
     test_gen = image.ImageDataGenerator(preprocessing_function=model_spec.preprocess_input)
-    print(model_spec.target_size)
+    print('Input image size: ', model_spec.target_size)
     generator = test_gen.flow_from_directory(data_dir, batch_size=batch_size, target_size=model_spec.target_size[:2],
                                              class_mode='categorical', shuffle=False)
 

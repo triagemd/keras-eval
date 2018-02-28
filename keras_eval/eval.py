@@ -1,3 +1,4 @@
+import os
 import copy
 import numpy as np
 
@@ -26,7 +27,12 @@ class Evaluator(object):
             if key not in options and 'default' not in option:
                 raise ValueError('missing required option: %s' % (key, ))
             value = options.get(key, copy.copy(option.get('default')))
-            setattr(self, key, value)
+            if key == 'custom_objects':
+                self.custom_objects = utils.create_default_custom_objects()
+                if value is not None:
+                    self.custom_objects.update(value)
+            else:
+                setattr(self, key, value)
 
         extra_options = set(options.keys()) - set(self.OPTIONS.keys())
         if len(extra_options) > 0:
@@ -41,8 +47,8 @@ class Evaluator(object):
         if self.ensemble_models_dir is not None:
             self.add_model_ensemble(models_dir=self.ensemble_models_dir, custom_objects=self.custom_objects)
 
-    def add_model(self, model_dir, custom_objects=None):
-        model, model_spec = utils.load_model(model_dir=model_dir, custom_objects=custom_objects)
+    def add_model(self, model_dir, specs_path=None, custom_objects=None):
+        model, model_spec = utils.load_model(model_dir=model_dir, specs_path=specs_path, custom_objects=custom_objects)
         self.models.append(model)
         self.model_specs.append(model_spec)
 
@@ -60,7 +66,7 @@ class Evaluator(object):
         self.class_dictionaries = class_dictionaries
 
     def evaluate(self, data_dir=None, K=[1], filter_indices=None, confusion_matrix=False,
-                 save_confusion_matrix_path=None, combination_mode=None):
+                 save_confusion_matrix_path=None, combination_mode='arithmetic'):
         '''
 
         Evaluate a set of images. Each sub-folder under 'data_dir/' will be considered as a different class.
@@ -85,7 +91,7 @@ class Evaluator(object):
         data_dir = data_dir or self.data_dir
 
         if data_dir is None:
-            raise ValueError('No data directory found, please specify a valid data directory under variable data_dir')
+            raise ValueError('No data directory found, please specify a valid data directory under variable `data_dir`')
         else:
             # Create Keras image generator and obtain predictions
             self.probs, self.labels = self.compute_probabilities_generator(data_dir=data_dir)
@@ -101,8 +107,11 @@ class Evaluator(object):
             if self.probs.shape[0] <= 1:
                 self.probs_combined = self.probs[0]
             else:
-                # Combine ensemble proobabilities
-                self.probs_combined = utils.combine_probs(self.probs, combination_mode)
+                # Combine ensemble probabilities
+                if combination_mode is not None:
+                    self.probs_combined = utils.combine_probs(self.probs, combination_mode)
+                else:
+                    raise ValueError('You have multiple models, please enter a valid probability `combination_mode`')
 
             # Compute metrics
             self.get_metrics(self.probs_combined, self.labels, self.class_abbrevs, K, filter_indices)
@@ -180,7 +189,16 @@ class Evaluator(object):
             probs = np.array(probs)
             return probs, labels
 
-    def predict(self, folder_path=None):
+    def predict(self, data_dir):
+        data_dir = data_dir or self.data_dir
+        if os.path.isdir(data_dir):
+            return self._predict_folder(data_dir)
+        elif data_dir.endswith(".png") or data_dir.endswith(".jpeg") or data_dir.endswith(".jpg"):
+            return self._predict_image(data_dir)
+        else:
+            raise ValueError('Wrong data format inputted, please input a valid directory or image path')
+
+    def _predict_folder(self, folder_path):
         '''
 
         Predict the class probabilities of a set of images from a folder.
@@ -191,7 +209,6 @@ class Evaluator(object):
         Returns: Probabilities predicted, image path for every image (aligned with probability)
 
         '''
-        folder_path = folder_path or self.data_dir
         probs = []
         for i, model in enumerate(self.models):
             # Read images from folder
@@ -205,7 +222,7 @@ class Evaluator(object):
 
         return probs, images_path
 
-    def predict_image(self, image_path=None):
+    def _predict_image(self, image_path):
         '''
 
         Predict class probabilities for a single image.
@@ -216,7 +233,6 @@ class Evaluator(object):
         Returns:
 
         '''
-        image_path = image_path or self.data_dir
         probs = []
         for i, model in enumerate(self.models):
             # Read image

@@ -54,7 +54,7 @@ def check_predict_single_image(eval_args={}):
         **eval_args
     )
 
-    probs = evaluator.predict_image()
+    probs = evaluator.predict()
 
     # n_models x n_samples x n_classes
     assert len(probs.shape) == 3
