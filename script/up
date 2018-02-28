@@ -3,3 +3,6 @@
 pip install --upgrade pip
 pip install -r requirements.txt
 python setup.py sdist
+
+# Fetch sample fixtures.
+script/fetch-fixtures

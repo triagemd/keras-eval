@@ -7,7 +7,7 @@ from keras_model_specs import ModelSpec
 from keras.preprocessing import image
 
 
-def load_multi_model(models_path, custom_objects=None):
+def load_multi_model(models_dir, custom_objects=None):
     '''
     Loads multiple models stored in `models_path`.
 
@@ -24,7 +24,7 @@ def load_multi_model(models_path, custom_objects=None):
     model_specs = []
     num_models = 0
     model_extensions = ['.h5', '.hdf5']
-    for dirpath, dirnames, models in os.walk(models_path):
+    for dirpath, dirnames, models in os.walk(models_dir):
         for model in models:
             if model.endswith(tuple(model_extensions)):
                 print('Loading model ', model)
@@ -40,11 +40,11 @@ def load_multi_model(models_path, custom_objects=None):
     return models, model_specs
 
 
-def load_model(model_path, specs_path=None, custom_objects=None):
-    model = keras.models.load_model(model_path, custom_objects)
+def load_model(model_dir, specs_path=None, custom_objects=None):
+    model = keras.models.load_model(model_dir, custom_objects)
     if specs_path is None:
-        model_name = model_path.split('/')[-1]
-        specs_path = model_path.replace(model_name, model_name.replace('.h5', '_model_spec.json'))
+        model_name = model_dir.split('/')[-1]
+        specs_path = model_dir.replace(model_name, model_name.replace('.h5', '_model_spec.json'))
         print(specs_path)
     with open(specs_path) as f:
         model_spec_json = json.load(f)

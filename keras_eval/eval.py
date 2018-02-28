@@ -13,6 +13,7 @@ class Evaluator(object):
         'class_dictionaries': {'type': list, 'default': None},
         'ensemble_models_dir': {'type': None, 'default': None},
         'model_dir': {'type': None, 'default': None},
+        'custom_objects': {'type': None, 'default': None},
         'report_dir': {'type': str, 'default': None},
         'loss_function': {'type': str, 'default': 'categorical_crossentropy'},
         'metrics': {'type': list, 'default': ['accuracy']},
@@ -35,18 +36,18 @@ class Evaluator(object):
         self.model_specs = []
 
         if self.model_dir is not None:
-            self.models.append(utils.load_model(self.model_dir))
+            self.add_model(model_dir=self.model_dir, custom_objects=self.custom_objects)
 
         if self.ensemble_models_dir is not None:
-            self.models.append(utils.load_multi_model(self.model_dir))
+            self.add_model_ensemble(models_dir=self.ensemble_models_dir, custom_objects=self.custom_objects)
 
-    def add_model(self, model_path):
-        model, model_spec = utils.load_model(model_path)
+    def add_model(self, model_dir, custom_objects=None):
+        model, model_spec = utils.load_model(model_dir=model_dir, custom_objects=custom_objects)
         self.models.append(model)
         self.model_specs.append(model_spec)
 
-    def add_model_ensemble(self, ensemble_path):
-        models, model_specs = utils.load_multi_model(ensemble_path)
+    def add_model_ensemble(self, models_dir, custom_objects=None):
+        models, model_specs = utils.load_multi_model(models_dir=models_dir, custom_objects=custom_objects)
         for i, model in enumerate(models):
             self.models.append(model)
             self.model_specs.append(model_spec[i])
@@ -170,10 +171,11 @@ class Evaluator(object):
             for i, model in enumerate(self.models):
                 print('Making predictions from model ', str(i))
                 generator, labels = utils.create_image_generator(data_dir, self.batch_size, self.model_specs[i])
+                # N_batches + 1 to gather all the images + collect without repetition [0:n_samples]
                 probs.append(model.predict_generator(generator=generator,
                                                      steps=(generator.samples // self.batch_size) + 1,
                                                      workers=1,
-                                                     verbose=1))
+                                                     verbose=1)[0:generator.samples])
             self.num_classes = generator.num_classes
             probs = np.array(probs)
             return probs, labels

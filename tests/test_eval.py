@@ -1,9 +1,9 @@
 import os
 import json
-import platform
-import keras
 
 from keras_eval.eval import Evaluator
+from keras.applications import mobilenet
+import tensorflow as tf
 
 
 def check_evaluate_on_catdog_datasets(eval_args={}):
@@ -28,7 +28,7 @@ def check_evaluate_on_catdog_datasets(eval_args={}):
     assert len(evaluator.probs_combined.shape) == 2
 
     # class abbreviations
-    assert evaluator.class_abbrevs == ['C_1', 'C_2']
+    assert evaluator.class_abbrevs == ['C_0', 'C_1']
 
 
 def check_predict_on_cat_folder(eval_args={}):
@@ -61,21 +61,22 @@ def check_predict_single_image(eval_args={}):
 
 
 def test_evaluator_mobilenet_v1_on_catdog_dataset():
-    model = keras.applications.mobilenet.MobileNet()
-    model.save('/tests/mobilenet.h5')
-
     specs = {'klass': 'keras.applications.mobilenet.MobileNet',
              'name': 'mobilenet_v1',
              'preprocess_args': None,
              'preprocess_func': 'between_plus_minus_1',
              'target_size': [224, 224, 3]
-    }
+             }
 
-    with open('mobilenet_model_specs.json', 'w') as outfile:
+    with open(os.path.abspath('tmp/fixtures/files/mobilenet_v1_model_spec.json'), 'w') as outfile:
         json.dump(specs, outfile)
 
-    check_eval_on_catdog_datasets({model_dir: '/tests/mobilenet.h5'})
+    custom_objects = {'relu6': mobilenet.relu6, 'DepthwiseConv2D': mobilenet.DepthwiseConv2D, "tf": tf}
 
-    check_predict_on_cat_folder({model_dir: '/tests/mobilenet.h5'})
+    eval_options = {'custom_objects': custom_objects, 'model_dir': 'tmp/fixtures/files/mobilenet_v1.h5'}
 
-    check_predict_single_image({model_dir: '/tests/mobilenet.h5'})
+    check_evaluate_on_catdog_datasets(eval_options)
+
+    check_predict_on_cat_folder(eval_options)
+
+    check_predict_single_image(eval_options)
