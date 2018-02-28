@@ -189,7 +189,7 @@ class Evaluator(object):
             probs = np.array(probs)
             return probs, labels
 
-    def predict(self, data_dir):
+    def predict(self, data_dir=None):
         data_dir = data_dir or self.data_dir
         if os.path.isdir(data_dir):
             return self._predict_folder(data_dir)

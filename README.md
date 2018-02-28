@@ -33,6 +33,8 @@ Each sub-folder under `'data_dir/'` will be considered as a different class. E.g
 ```
 data_dir = ''tests/files/catdog/test/'
 probs, labels = evaluator.evaluate(data_dir=None, K=[1], filter_indices=None, confusion_matrix=False, save_confusion_matrix_path=None, combination_mode=None)
+# probs.shape = [n_models, n_samples, n_classes]
+# labels.shape = [n_samples, n_classes]
 ```
 
 Predict class probabilities of a set of images from a folder.
