@@ -50,7 +50,7 @@ class Evaluator(object):
         models, model_specs = utils.load_multi_model(models_dir=models_dir, custom_objects=custom_objects)
         for i, model in enumerate(models):
             self.models.append(model)
-            self.model_specs.append(model_spec[i])
+            self.model_specs.append(model_specs[i])
 
     def remove_model(self, model_index):
         self.models.pop(model_index)
