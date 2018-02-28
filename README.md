@@ -55,13 +55,15 @@ probs = evaluator.predict_image(image_path)
 ## Additional options
 
 You can also add more options once the Evaluator object has been created, like loading more models
-or setting class names and abbreviations to show in the confusion matrix
+or setting class names and abbreviations to show in the confusion matrix.
 
 **add_model**
 
 ```
 model_path = '/your_model_path/model.h5
-evaluator.add_model(model_path)
+# Also supports model custom objects
+custom_objects = None
+evaluator.add_model(model_path, custom_objects)
 ```
 
 **add_model_ensemble**
@@ -74,12 +76,12 @@ evaluator.add_model_ensemble(model_path)
 **set_class_dictionaries**
 
 ```
-dict_pso = [{'abbrev':'PSO', 'class_name': 'psoriasis'},
+dict_classes = [{'abbrev':'PSO', 'class_name': 'psoriasis'},
            {'abbrev':'SL', 'class_name': 'skin-lesion'},
            {'abbrev':'HS', 'class_name': 'healthy-skin'},
            {'abbrev':'NS', 'class_name': 'not_skin'}]
            
-evaluator.set_class_dictionaries(model_path)
+evaluator.set_class_dictionaries(dict_classes)
 ```
 
 
