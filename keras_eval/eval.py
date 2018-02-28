@@ -180,7 +180,7 @@ class Evaluator(object):
             probs = np.array(probs)
             return probs, labels
 
-    def predict(self, folder_path):
+    def predict(self, folder_path=None):
         '''
 
         Predict the class probabilities of a set of images from a folder.
@@ -205,7 +205,7 @@ class Evaluator(object):
 
         return probs, images_path
 
-    def predict_image(self, image_path):
+    def predict_image(self, image_path=None):
         '''
 
         Predict class probabilities for a single image.
