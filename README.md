@@ -40,7 +40,7 @@ Predict class probabilities of a set of images from a folder.
 **predict**
 ```
 folder_path = ''tests/files/catdog/test/cat/'
-probs, image_paths = evaluator.(folder_path)
+probs, image_paths = evaluator.predict(folder_path)
 ```
 
 Predict class probabilities of a single image
