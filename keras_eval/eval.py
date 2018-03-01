@@ -203,6 +203,14 @@ class Evaluator(object):
             return probs, labels
 
     def predict(self, data_dir=None):
+        '''
+
+        Args:
+            data_dir: If folder run _predict_folder, if single image run _predict_image()
+
+        Returns: Probabilities of the folder of images/single image
+
+        '''
         data_dir = data_dir or self.data_dir
         if os.path.isdir(data_dir):
             return self._predict_folder(data_dir)
