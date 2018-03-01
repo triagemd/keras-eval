@@ -49,8 +49,9 @@ class Evaluator(object):
             self.add_model_ensemble(models_dir=self.ensemble_models_dir)
 
     def update_custom_objects(self, custom_objects):
-        if custom_objects is not None:
-            self.custom_objects = self.custom_objects.update(custom_objects)
+        if custom_objects is not None and isinstance(custom_objects, dict):
+            for key, value in custom_objects.items():
+                self.custom_objects.update({key: value})
 
     def add_model(self, model_path, specs_path=None, custom_objects=None):
         self.update_custom_objects(custom_objects)

@@ -68,12 +68,12 @@ def test_evaluator_mobilenet_v1_on_catdog_dataset():
              'target_size': [224, 224, 3]
              }
 
-    with open(os.path.abspath('tmp/fixtures/files/model_spec.json'), 'w') as outfile:
+    with open(os.path.abspath('tmp/fixtures/files/mobilenet/model_spec.json'), 'w') as outfile:
         json.dump(specs, outfile)
 
     custom_objects = {'relu6': mobilenet.relu6, 'DepthwiseConv2D': mobilenet.DepthwiseConv2D, "tf": tf}
 
-    eval_options = {'custom_objects': custom_objects, 'model_path': 'tmp/fixtures/files/mobilenet_v1.h5'}
+    eval_options = {'custom_objects': custom_objects, 'model_path': 'tmp/fixtures/files/mobilenet_1/mobilenet_v1.h5'}
 
     check_evaluate_on_catdog_datasets(eval_options)
 
