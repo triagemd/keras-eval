@@ -51,7 +51,7 @@ def load_multi_model(models_dir, custom_objects=None):
     return models, model_specs
 
 
-def load_model(model_dir, specs_path=None, custom_objects=None):
+def load_model(model_path, specs_path=None, custom_objects=None):
     '''
 
     Args:
@@ -63,10 +63,10 @@ def load_model(model_dir, specs_path=None, custom_objects=None):
     Returns: keras model, model_spec object for that model
 
     '''
-    model = keras.models.load_model(model_dir, custom_objects)
+    model = keras.models.load_model(model_path, custom_objects)
     if specs_path is None:
-        model_name = model_dir.split('/')[-1]
-        specs_path = model_dir.replace(model_name, 'model_spec.json')
+        model_name = model_path.split('/')[-1]
+        specs_path = model_path.replace(model_name, 'model_spec.json')
     with open(specs_path) as f:
         model_spec_json = json.load(f)
         model_spec = ModelSpec(model_spec_json)

@@ -13,7 +13,7 @@ class Evaluator(object):
         'data_dir': {'type': str, 'default': None},
         'class_dictionaries': {'type': list, 'default': None},
         'ensemble_models_dir': {'type': None, 'default': None},
-        'model_dir': {'type': None, 'default': None},
+        'model_path': {'type': None, 'default': None},
         'custom_objects': {'type': None, 'default': None},
         'report_dir': {'type': str, 'default': None},
         'loss_function': {'type': str, 'default': 'categorical_crossentropy'},
@@ -23,14 +23,15 @@ class Evaluator(object):
     }
 
     def __init__(self, **options):
+        # Be able to load keras.applications models by default
+        self.custom_objects = utils.create_default_custom_objects()
+
         for key, option in self.OPTIONS.items():
             if key not in options and 'default' not in option:
                 raise ValueError('missing required option: %s' % (key, ))
             value = options.get(key, copy.copy(option.get('default')))
             if key == 'custom_objects':
-                self.custom_objects = utils.create_default_custom_objects()
-                if value is not None:
-                    self.custom_objects.update(value)
+                self.update_custom_objects(value)
             else:
                 setattr(self, key, value)
 
@@ -41,19 +42,25 @@ class Evaluator(object):
         self.models = []
         self.model_specs = []
 
-        if self.model_dir is not None:
-            self.add_model(model_dir=self.model_dir, custom_objects=self.custom_objects)
+        if self.model_path is not None:
+            self.add_model(model_path=self.model_path)
 
         if self.ensemble_models_dir is not None:
-            self.add_model_ensemble(models_dir=self.ensemble_models_dir, custom_objects=self.custom_objects)
+            self.add_model_ensemble(models_dir=self.ensemble_models_dir)
 
-    def add_model(self, model_dir, specs_path=None, custom_objects=None):
-        model, model_spec = utils.load_model(model_dir=model_dir, specs_path=specs_path, custom_objects=custom_objects)
+    def update_custom_objects(self, custom_objects):
+        if custom_objects is not None:
+            self.custom_objects = self.custom_objects.update(custom_objects)
+
+    def add_model(self, model_path, specs_path=None, custom_objects=None):
+        self.update_custom_objects(custom_objects)
+        model, model_spec = utils.load_model(model_path=model_path, specs_path=specs_path, custom_objects=self.custom_objects)
         self.models.append(model)
         self.model_specs.append(model_spec)
 
     def add_model_ensemble(self, models_dir, custom_objects=None):
-        models, model_specs = utils.load_multi_model(models_dir=models_dir, custom_objects=custom_objects)
+        self.update_custom_objects(custom_objects)
+        models, model_specs = utils.load_multi_model(models_dir=models_dir, custom_objects=self.custom_objects)
         for i, model in enumerate(models):
             self.models.append(model)
             self.model_specs.append(model_specs[i])
@@ -114,15 +121,17 @@ class Evaluator(object):
                     raise ValueError('You have multiple models, please enter a valid probability `combination_mode`')
 
             # Compute metrics
-            self.get_metrics(self.probs_combined, self.labels, self.class_abbrevs, K, filter_indices)
+            self.get_metrics(probs=self.probs_combined, labels=self.labels,
+                             class_names=self.class_abbrevs, K=K, list_indices=filter_indices)
 
             # Show metrics visualization as a confusion matrix
             if confusion_matrix:
-                self.plot_confusion_matrix(self.probs_combined, self.labels, self.class_abbrevs, save_confusion_matrix_path)
+                self.plot_confusion_matrix(probs=self.probs_combined, labels=self.labels,
+                                           class_names=self.class_abbrevs, save_path=save_confusion_matrix_path)
 
         return self.probs, self.labels
 
-    def plot_confusion_matrix(self, probs, labels, class_names, save_path=None):
+    def plot_confusion_matrix(self, probs, labels, class_names=None, save_path=None):
         '''
 
         Args:
@@ -134,10 +143,10 @@ class Evaluator(object):
         Returns: Shows the confusion matrix in the screen
 
         '''
-
+        class_names = class_names or utils.get_class_dictionaries_items(self.class_dictionaries, key='abbrev')
         visualizer.plot_confusion_matrix(probs=probs, labels=labels, class_names=class_names, save_path=save_path)
 
-    def get_metrics(self, probs, labels, class_names, K=(1, 2), list_indices=None, verbose=1):
+    def get_metrics(self, probs, labels, K=(1, 2), class_names=None, list_indices=None, verbose=1):
         '''
         Print to screen metrics from experiment given probs and labels
 
@@ -150,6 +159,7 @@ class Evaluator(object):
         Returns: Dictionary with metrics for each class
 
         '''
+        class_names = class_names or utils.get_class_dictionaries_items(self.class_dictionaries, key='abbrev')
         y_true = labels.argmax(axis=1)
 
         if list_indices is not None:
@@ -186,6 +196,8 @@ class Evaluator(object):
                                                      workers=1,
                                                      verbose=1)[0:generator.samples])
             self.num_classes = generator.num_classes
+            self.filenames = generator.filenames
+
             probs = np.array(probs)
             return probs, labels
 
@@ -219,8 +231,9 @@ class Evaluator(object):
             probs.append(model.predict(images, batch_size=self.batch_size, verbose=1))
 
         probs = np.array(probs)
+        self.filenames = images_path
 
-        return probs, images_path
+        return probs
 
     def _predict_image(self, image_path):
         '''
