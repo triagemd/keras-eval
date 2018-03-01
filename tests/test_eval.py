@@ -73,7 +73,7 @@ def test_evaluator_mobilenet_v1_on_catdog_dataset():
 
     custom_objects = {'relu6': mobilenet.relu6, 'DepthwiseConv2D': mobilenet.DepthwiseConv2D, "tf": tf}
 
-    eval_options = {'custom_objects': custom_objects, 'model_dir': 'tmp/fixtures/files/mobilenet_v1.h5'}
+    eval_options = {'custom_objects': custom_objects, 'model_path': 'tmp/fixtures/files/mobilenet_v1.h5'}
 
     check_evaluate_on_catdog_datasets(eval_options)
 
