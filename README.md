@@ -32,16 +32,15 @@ You can specify all the following options.
 ```
 from keras_eval.eval import Evaluator
 
-evaluator = Evaluator({
-        'data_dir': None,
-        'class_dictionaries': None,
-        'ensemble_models_dir': None,
-        'model_path': None,
-        'loss_function': 'categorical_crossentropy',
-        'metrics': ['accuracy'],
-        'batch_size': 1,
-        'verbose': 0,
-    })
+evaluator = Evaluator(
+                data_dir=None,
+                class_dictionaries=None,
+                ensemble_models_dir=None,
+                model_path=model_path,
+                loss_function='categorical_crossentropy',
+                metrics=['accuracy'],
+                batch_size=32,
+                verbose=0)
 ```
 
 ## Evaluation Functions
