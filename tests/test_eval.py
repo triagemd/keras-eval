@@ -38,13 +38,13 @@ def check_predict_on_cat_folder(eval_args={}):
         **eval_args
     )
 
-    probs, images_path = evaluator.predict()
+    probs = evaluator.predict()
 
     # n_models x n_samples x n_classes
     assert len(probs.shape) == 3
 
     # 2 images in the folder
-    assert len(images_path) == 2
+    assert len(evaluator.filenames) == 2
 
 
 def check_predict_single_image(eval_args={}):
