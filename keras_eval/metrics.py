@@ -33,7 +33,7 @@ def accuracy_top_k(probs, y_true, k):
 
 def metrics_top_k(probs, y_true, class_names, k_vals=(1, 2, 3), verbose=1):
     """
-    Compute the sensitivity and precision between the predicted `y_probs` and the true labels `y_true`.
+    Compute the sensitivity and precision between the predicted `probs` and the true labels `y_true`.
 
     Notes:
         The precision is only computed when k=1, since it is not clear how to compute when k>1.
@@ -238,7 +238,6 @@ def get_top1_probability_stats(probs, y_true, threshold, combination_mode='arith
         probs: Probabilities of the model / ensemble [n_images, n_class] / [n_models, n_images, n_class]
         y_true: Ground truth [n_images, n_class]
         threshold: Value or set of values, can be list, numpy array or tuple
-        plot: Show a plot with predicted images / errors in function of th. Can be passed a range of th.
         combination_mode:  For ensembling probabilities
         verbose: Show text
 
@@ -308,7 +307,6 @@ def get_top1_entropy_stats(probs, y_true, entropy, combination_mode='arithmetic'
     Args:
         probs: Probabilities of the model / ensemble [n_images, n_class] / [n_models, n_images, n_class]
         y_true: Ground truth [n_images, n_class]
-        plot:  Show a plot with predicted images / errors in function of entropy values
         entropy: Value or set of values, can be list or numpy array with max entropy values
         combination_mode: For ensembling probabilities
         verbose: Show text

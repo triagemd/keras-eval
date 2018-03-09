@@ -1,9 +1,14 @@
 #!/usr/bin/env bash
 set -e
 (
-  mkdir -p tmp/fixtures/files/mobilenet_1/
-cd tmp/fixtures/files/mobilenet_1/
+mkdir -p tmp/fixtures/models/mobilenet_1/ tmp/fixtures/models/mobilenet_2/
+
+cd tmp/fixtures/models/mobilenet_1/
   MODEL_URL="https://storage.googleapis.com/keras-eval-fixtures-c04aef45-46f3-42ae-910d-8dba8c4be026/mobilenet_v1.h5"
+if [ ! -f mobilenet_v1.h5 ]; then
+    wget $MODEL_URL
+fi
+cd ../mobilenet_2/
 if [ ! -f mobilenet_v1.h5 ]; then
     wget $MODEL_URL
 fi

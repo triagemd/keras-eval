@@ -18,6 +18,7 @@ setup(
         'Pillow',
         'scipy',
         'numpy',
+        'plotly',
         'matplotlib',
         'sklearn',
         'keras-model-specs>=0.0.16',
