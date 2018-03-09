@@ -102,7 +102,7 @@ class Evaluator(object):
         '''
         self.data_dir = data_dir or self.data_dir
 
-        if data_dir is None:
+        if self.data_dir is None:
             raise ValueError('No data directory found, please specify a valid data directory under variable `data_dir`')
         else:
             # Create Keras image generator and obtain predictions
@@ -283,11 +283,27 @@ class Evaluator(object):
 
         return probs
 
-    def show_threshold_impact(self, probs, labels, type='probability', threshold=None, combination_mode=None):
+    def show_threshold_impact(self, probs, labels, type='probability', threshold=None):
+        '''
+        Interactive Plot showing the effect of the threshold
+        Args:
+            probs: probabilities given by the model [n_samples,n_classes]
+            labels: ground truth labels (categorical)
+            type: 'probability' or 'entropy' for a threshold on network top-1 prob or uncertainty in all predictions
+            threshold: Custom threshold
+
+        Returns: The index of the images with error or correct per every threshold, and arrays with the percentage.
+
+        '''
         # Get Error Indices, Number of Correct Predictions, Number of Error Predictions per Threshold
         if type == 'probability':
             threshold = threshold or np.arange(0, 1.01, 0.01)
             errors_ind, correct_ind, correct, errors = metrics.get_top1_probability_stats(probs, labels, threshold,
+                                                                                          combination_mode=combination_mode,
+                                                                                          verbose=0)
+        elif type == 'entropy':
+            threshold = threshold or np.arange(0, 1.01, 0.01)
+            errors_ind, correct_ind, correct, errors = metrics.get_top1_entropy_stats(probs, labels, threshold,
                                                                                           combination_mode=combination_mode,
                                                                                           verbose=0)
 
@@ -310,7 +326,7 @@ class Evaluator(object):
             class_names: list with class names (by default last evaluation)
             image_paths: list with image_paths (by default last evaluation)
 
-        Returns:
+        Returns: A dictionary containing a list of images per confusion matrix square (relation ClassA_ClassB)
 
         '''
         labels = labels or self.labels
@@ -337,6 +353,16 @@ class Evaluator(object):
         return dict_image_paths_class
 
     def plot_images(self, image_paths, n_imgs=None, title=''):
+        '''
+
+        Args:
+            image_paths: list with image_paths
+            n_imgs: number of images to show
+            title: title for the plot
+
+        Returns:
+
+        '''
         image_paths = np.array(image_paths)
         if n_imgs is None:
             n_imgs = image_paths.shape[0]
