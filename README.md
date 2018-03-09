@@ -3,7 +3,7 @@
 [![Build Status](https://travis-ci.org/triagemd/keras-eval.svg?branch=master)](https://travis-ci.org/triagemd/keras-eval)
 [![PyPI version](https://badge.fury.io/py/keras-eval.svg)](https://badge.fury.io/py/keras-eval)
 
-Evaluation abstraction for Keras models. 
+Evaluation abstraction for Keras models. [Example Notebook](https://github.com/triagemd/keras-eval/blob/master/example.ipynb)
 
 ## Evaluator Class
 
