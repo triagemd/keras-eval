@@ -1,7 +1,7 @@
 import os
 import copy
 import numpy as np
-
+from math import log
 import keras_eval.utils as utils
 import keras_eval.metrics as metrics
 import keras_eval.visualizer as visualizer
@@ -302,7 +302,7 @@ class Evaluator(object):
                                                                                           combination_mode=combination_mode,
                                                                                           verbose=0)
         elif type == 'entropy':
-            threshold = threshold or np.arange(0, 1.01, 0.01)
+            threshold = threshold or np.arange(0, log(probs.shape[1], 2), 0.01)
             errors_ind, correct_ind, correct, errors = metrics.get_top1_entropy_stats(probs, labels, threshold,
                                                                                           combination_mode=combination_mode,
                                                                                           verbose=0)
