@@ -42,7 +42,7 @@ def load_multi_model(models_dir, custom_objects=None):
             for filename in files:
                 if filename.endswith(tuple(model_extensions)):
                     print('Loading model ', filename)
-                    model, model_spec = load_model(os.path.join(dirpath, dir, filename), custom_objects)
+                    model, model_spec = load_model(os.path.join(dirpath, dir, filename), custom_objects=custom_objects)
                     models.append(model)
                     model_specs.append(model_spec)
                     num_models += 1
@@ -148,7 +148,7 @@ def load_preprocess_images(folder_path, model_spec):
 def combine_probs(probs, combination_mode=None):
     '''
     Args:
-        probs: Probailities given by the ensemble of models
+        probs: Probabilities given by the ensemble of models
         combination_mode: combination_mode: 'arithmetic' / 'geometric' / 'harmonic' mean of the predictions or 'maximum'
            probability value
 

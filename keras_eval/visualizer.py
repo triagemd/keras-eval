@@ -1,6 +1,8 @@
 import numpy as np
 import matplotlib.pyplot as plt
 from sklearn.metrics import confusion_matrix
+import plotly.graph_objs as go
+from plotly.offline import iplot
 
 
 def plot_confusion_matrix(probs, labels, class_names, fontsize=18, figsize=(16, 12), cmap=plt.cm.coolwarm_r, save_path=None):
@@ -54,28 +56,50 @@ def plot_confusion_matrix(probs, labels, class_names, fontsize=18, figsize=(16, 
         plt.savefig(save_path)
 
 
-def plot_threshold_impact(correct_array, errors_array, threshold):
-    '''
+def plotly_threshold(threshold, correct, errors, title='Threshold Tuning'):
+    trace1 = go.Scatter(
+        x=threshold,
+        y=correct,
+        name='Correct Predictions'
+    )
 
-    Args:
-        correct_array: Array of correct predictions per each threshold
-        errors_array: Array of error predictions per each threshold
-        threshold: Threshold values used
+    trace2 = go.Scatter(
+        x=threshold,
+        y=errors,
+        name='Removed Errors'
+    )
 
-    Returns:
+    layout = dict(title=title,
+                  xaxis=dict(title='Threshold Value'),
+                  yaxis=dict(title='Network Predictions (%)'),
+                  )
 
-    '''
+    data = [trace1, trace2]
+    fig = dict(data=data, layout=layout)
+    iplot(fig, filename='Threshold Tuning')
 
-    n_errors = errors_array[0]
-    n_correct = correct_array[0]
 
-    threshold = np.array(threshold)
+def plot_images(image_paths, n_imgs, title=''):
+    n_row = 0
+    n_col = 0
 
-    errors_percentage = ((n_errors - errors_array) / n_errors) * 100
-    corrects_percentage = (correct_array / n_correct) * 100
+    if n_imgs <= 5:
+        n_rows_total = 2
+    else:
+        n_rows_total = int(np.ceil(n_imgs / 5))
 
-    plt.plot(threshold, errors_percentage, color='b', label='Removed Errors')
-    plt.plot(threshold, corrects_percentage, color='r', label='Correct Predictions')
-    plt.xlabel('Threshold values')
-    plt.ylabel('%')
-    plt.legend()
+    f, axes = plt.subplots(nrows=n_rows_total, ncols=5, figsize=(n_imgs, n_imgs))
+    plt.title(title)
+    for i, image_path in enumerate(image_paths):
+
+        if i == n_imgs:
+            break
+
+        img = plt.imread(image_path)
+        axes[n_row, n_col].imshow(img, aspect='equal')
+        axes[n_row, n_col].grid('off')
+        axes[n_row, n_col].axis('off')
+        n_row += 1
+        if n_row == int(np.ceil(n_imgs / 5)):
+            n_row = 0
+            n_col += 1
