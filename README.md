@@ -80,7 +80,7 @@ probs = evaluator.predict(image_path)
 
 ## Evaluator attributes
 
-After making predictions you can access to `evaluator.filenames` to get a list of the files forwarded. 
+After making predictions you can access to `evaluator.image_paths` to get a list of the files forwarded. 
 
 ## Additional options
 
