@@ -106,10 +106,8 @@ evaluator.add_model_ensemble(model_path)
 **set_class_dictionaries**
 
 ```
-dict_classes = [{'abbrev':'PSO', 'class_name': 'psoriasis'},
-           {'abbrev':'SL', 'class_name': 'skin-lesion'},
-           {'abbrev':'HS', 'class_name': 'healthy-skin'},
-           {'abbrev':'NS', 'class_name': 'not_skin'}]
+dict_classes = [{'abbrev':'Dog', 'class_name': 'dogs'},
+           {'abbrev':'Cat', 'class_name': 'cats'}]
            
 evaluator.set_class_dictionaries(dict_classes)
 ```
