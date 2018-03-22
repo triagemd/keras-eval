@@ -345,7 +345,6 @@ def get_top1_entropy_stats(probs, y_true, entropy, combination_mode='arithmetic'
 
         errors_below_e = np.array(errors_below_e)
         correct_below_e = np.array(correct_below_e)
-
         n_correct.append(correct_below_e.shape[0])
         n_errors.append(errors_below_e.shape[0])
 

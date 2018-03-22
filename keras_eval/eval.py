@@ -300,14 +300,15 @@ class Evaluator(object):
             threshold = threshold or np.arange(0, 1.01, 0.01)
             errors_ind, correct_ind, correct, errors = metrics.get_top1_probability_stats(probs, labels,
                                                                                           threshold, verbose=0)
+            n_total_errors = errors[0]
+            n_total_correct = correct[0]
         elif type == 'entropy':
             threshold = threshold or np.arange(0, log(probs.shape[1], 2), 0.01)
             errors_ind, correct_ind, correct, errors = metrics.get_top1_entropy_stats(probs, labels,
                                                                                       threshold, verbose=0)
+            n_total_errors = errors[-1]
+            n_total_correct = correct[-1]
 
-        # Uncomment for showing percentage (min threshold have to be 0)
-        n_total_errors = errors[0]
-        n_total_correct = correct[0]
         errors = ((n_total_errors - errors) / n_total_errors) * 100
         correct = ((correct) / n_total_correct) * 100
 
