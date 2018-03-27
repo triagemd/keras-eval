@@ -2,5 +2,13 @@
 . script/env
 ARGS="${@:-tests/}"
 set -e
-PYTHONPATH="." pytest -v $ARGS
+
+# Run tests and lint checks.
+PYTHONPATH="." pytest --cov=./ $ARGS
 flake8 --max-line-length 50000 keras_eval tests
+
+# Upload coverage for CI.
+if [ -n "$CI" ]; then
+  pip install codecov
+  codecov
+fi
