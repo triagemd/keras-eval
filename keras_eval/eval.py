@@ -140,13 +140,22 @@ class Evaluator(object):
     def get_metrics(self, probs, labels, combination_mode=None, K=(1, 2), class_names=None, filter_indices=None,
                     confusion_matrix=False, save_confusion_matrix_path=None, verbose=1):
         '''
-        Print to screen metrics from experiment given probs and labels
+         Print to screen metrics from experiment given probs and labels
 
         Args:
             probs: Probabilities from softmax layer
             labels: Ground truth labels
+            combination_mode: Ways of combining the model's probabilities to obtain the final prediction.
+                'maximum': predictions are obtained by choosing the maximum probabity from each class
+                'geometric': predictions are obtained by a geometric mean of all the probabilities
+                'arithmetic': predictions are obtained by a arithmetic mean of all the probabilities
+                'harmonic': predictions are obtained by a harmonic mean of all the probabilities
             K: a tuple of the top-k predictions to consider. E.g. K = (1,2,3,4,5) is top-5 preds
+            class_names: List containing the class names
             filter_indices: If given take only the predictions corresponding to that indices to compute metrics
+            confusion_matrix: If True show the confusion matrix
+            save_confusion_matrix_path: If path specified save confusion matrix there
+            verbose:
 
         Returns: Dictionary with metrics for each class
 
@@ -283,7 +292,8 @@ class Evaluator(object):
 
         return probs
 
-    def show_threshold_impact(self, probs, labels, type='probability', threshold=None):
+    @staticmethod
+    def show_threshold_impact(probs, labels, type='probability', threshold=None):
         '''
         Interactive Plot showing the effect of the threshold
         Args:
@@ -302,6 +312,7 @@ class Evaluator(object):
                                                                                           threshold, verbose=0)
             n_total_errors = errors[0]
             n_total_correct = correct[0]
+
         elif type == 'entropy':
             threshold = threshold or np.arange(0, log(probs.shape[1], 2), 0.01)
             errors_ind, correct_ind, correct, errors = metrics.get_top1_entropy_stats(probs, labels,
@@ -309,8 +320,8 @@ class Evaluator(object):
             n_total_errors = errors[-1]
             n_total_correct = correct[-1]
 
-        errors = ((n_total_errors - errors) / n_total_errors) * 100
-        correct = ((correct) / n_total_correct) * 100
+        errors = (n_total_errors - errors) / n_total_errors * 100
+        correct = correct / n_total_correct * 100
 
         visualizer.plotly_threshold(threshold, correct, errors, title='Top-1 Probability Threshold Tuning')
 
@@ -367,3 +378,22 @@ class Evaluator(object):
             n_imgs = image_paths.shape[0]
 
         visualizer.plot_images(image_paths, n_imgs, title)
+
+    def compute_mean_probability_distribution(self, probs=None, combination_mode='arithmetic', verbose=1):
+        probs = probs or self.probs
+        if probs.ndim > 2:
+            prob_mean = np.mean(np.sort(probs)[:, :, ::-1], axis=1)
+            prob_mean = utils.combine_ensemble_probs(prob_mean, combination_mode)
+        else:
+            prob_mean = np.mean(np.sort(probs)[:, ::-1], axis=0)
+        if verbose == 1:
+            for ind, prob in enumerate(prob_mean):
+                print('Confidence mean at giving top %i prediction is %f' % (ind + 1, prob))
+        return prob_mean
+
+    def compute_uncertainty_distribution(self, probs=None, combination_mode='arithmetic', verbose=1):
+        probs = probs or self.probs
+        # Check if is ensemble
+        if probs.ndim > 2:
+            probs = combine_ensemble_probs(probs, combination_mode)
+        return metrics.uncertainty_distribution(probs)

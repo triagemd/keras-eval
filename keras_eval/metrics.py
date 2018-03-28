@@ -98,70 +98,7 @@ def metrics_top_k(probs, y_true, class_names, k_vals=(1, 2, 3), verbose=1):
     return met
 
 
-def geometric_mean_3D(probs):
-    return scipy.stats.gmean(probs, axis=0)
-
-
-def arithmetic_mean_3D(probs):
-    return np.mean(probs, axis=0)
-
-
-def harmonic_mean_3D(probs):
-    return scipy.stats.hmean(probs, axis=0)
-
-
-def combine_ensemble_probs(probs, combination_mode=None):
-    '''
-    Args:
-        probs: Probailities given by the ensemble of models
-        combination_mode: combination_mode: 'arithmetic' / 'geometric' / 'harmonic' mean of the predictions or 'maximum'
-           probability value
-
-    Returns: Probabilities combined
-    '''
-    # Probabilities of the ensemble input=[n_models, n_images, n_class] --> output=[n_images, n_class]
-
-    # Join probabilities given by an ensemble of models following combination mode
-
-    combiners = {
-        'arithmetic': np.mean,
-        'geometric': scipy.stats.gmean,
-        'harmonic': scipy.stats.hmean,
-        'maximum': np.amax
-    }
-    if combination_mode is None:
-        raise ValueError('combination_mode is required')
-    elif combination_mode not in combiners.keys():
-        raise ValueError('Error: invalid option for `combination_mode` ' + str(combination_mode))
-    combiner = combiners[combination_mode]
-    return combiner(probs, axis=0)
-
-
-def mean_probability_distribution(probs, verbose=1, combination_mode='arithmetic'):
-    '''
-    Args:
-        probs: Probabilities after model forwarding
-        verbose: Show text
-        combination_mode: Ensemble combination mode
-
-    Returns: The mean probability for the top-nclasses predictions given
-
-    '''
-
-    # Sort probabilities from high to low, and compute mean
-    probs = np.array(probs)
-    if probs.ndim > 2:
-        prob_mean = np.mean(np.sort(probs)[:, :, ::-1], axis=1)
-        prob_mean = combine_ensemble_probs(prob_mean, combination_mode)
-    else:
-        prob_mean = np.mean(np.sort(probs)[:, ::-1], axis=0)
-    if verbose == 1:
-        for ind, prob in enumerate(prob_mean):
-            print('Confidence mean at giving top %i prediction is %f' % (ind + 1, prob))
-    return prob_mean
-
-
-def uncertainty_dist(probs, verbose=1, combination_mode='arithmetic'):
+def uncertainty_distribution(probs, verbose=1):
     '''
     Args:
         probs: Probabilities after model forwarding
@@ -170,10 +107,6 @@ def uncertainty_dist(probs, verbose=1, combination_mode='arithmetic'):
 
     Returns: The entropy for each of the predictions given [n_images]
     '''
-    probs = np.array(probs)
-    # Check if is ensemble
-    if probs.ndim > 2:
-        probs = combine_ensemble_probs(probs, combination_mode)
 
     entropy = scipy.stats.entropy(probs.T, base=2.0)
 
@@ -320,7 +253,7 @@ def get_top1_entropy_stats(probs, y_true, entropy, combination_mode='arithmetic'
     correct = correct[0]
     errors = errors[0]
     # Get the entropy associated
-    probs_entropy = uncertainty_dist(probs)
+    probs_entropy = uncertainty_distribution(probs)
     error_entropy = probs_entropy[errors]
     correct_entropy = probs_entropy[correct]
 
