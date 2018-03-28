@@ -154,9 +154,6 @@ def combine_probs(probs, combination_mode=None):
 
     Returns: Probabilities combined
     '''
-    # Probabilities of the ensemble input=[n_models, n_images, n_class] --> output=[n_images, n_class]
-
-    # Join probabilities given by an ensemble of models following combination mode
 
     combiners = {
         'arithmetic': np.mean,
@@ -164,9 +161,29 @@ def combine_probs(probs, combination_mode=None):
         'harmonic': scipy.stats.hmean,
         'maximum': np.amax
     }
-    if combination_mode is None:
-        raise ValueError('combination_mode is required')
-    elif combination_mode not in combiners.keys():
-        raise ValueError('Error: invalid option for `combination_mode` ' + str(combination_mode))
+
     combiner = combiners[combination_mode]
-    return combiner(probs, axis=0)
+
+    if combination_mode not in combiners.keys():
+        raise ValueError('Error: invalid option for `combination_mode` ' + str(combination_mode))
+
+    # Probabilities of the ensemble input=[n_models, n_samples, n_classes] --> output=[n_samples, n_classes]
+
+    # Make sure we have a numpy array
+    probs = np.array(probs)
+
+    # Join probabilities given by an ensemble of models following combination mode
+    if probs.ndim == 3:
+        if probs.shape[0] <= 1:
+            return probs[0]
+        else:
+            # Combine ensemble probabilities
+            if combination_mode is not None:
+                return combiner(probs, axis=0)
+            else:
+                raise ValueError('You have multiple models, please enter a valid probability `combination_mode`')
+    elif probs.ndim == 2:
+        return probs
+    else:
+        raise ValueError('Incorrect shape for `probs` array, we accept [n_samples, n_classes] or '
+                         '[n_models, n_samples, n_classes]')
