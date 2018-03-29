@@ -59,9 +59,8 @@ def test_metrics_top_k():
 
 
 def test_uncertainty_distribution():
-    probs = np.array([[[0.4, 0.6], [0.8, 0.2]], [[0.1, 0.9], [0.2, 0.6]], [[0.4, 0.6], [0.8, 0.2]]])
-    combined_probs = utils.combine_probabilities(probs, 'arithmetic')
-    entropy = metrics.uncertainty_distribution(combined_probs)
+    probs = np.array([[0.3, 0.7], [0.6, 0.33]])
+    entropy = metrics.uncertainty_distribution(probs)
     expected_entropy = np.array([0.88, 0.94])
     np.testing.assert_array_equal(entropy, expected_entropy)
 

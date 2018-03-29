@@ -62,7 +62,7 @@ def test_combine_probs():
     # Arithmetic
     probs_combined = utils.combine_probabilities(probs, 'arithmetic')
     assert len(probs_combined.shape) == 2
-    probs_combined_expected = [[0.3, 0.7], [0.6, 0.33]]
+    probs_combined_expected = [[0.3, 0.7], [0.6,  0.333333]]
     np.testing.assert_array_equal(probs_combined, np.array(probs_combined_expected))
 
     # Geometric
