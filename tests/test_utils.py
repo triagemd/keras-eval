@@ -57,25 +57,25 @@ def test_combine_probs():
     probs_combined = utils.combine_probabilities(probs, 'maximum')
     assert len(probs_combined.shape) == 2
     probs_combined_expected = [[0.4, 0.9], [0.8, 0.6]]
-    np.testing.assert_array_equal(probs_combined, np.array(probs_combined_expected))
+    np.testing.assert_array_equal(np.round(probs_combined, decimals=2), np.array(probs_combined_expected))
 
     # Arithmetic
     probs_combined = utils.combine_probabilities(probs, 'arithmetic')
     assert len(probs_combined.shape) == 2
-    probs_combined_expected = [[0.3, 0.7], [0.6,  0.333333]]
-    np.testing.assert_array_equal(probs_combined, np.array(probs_combined_expected))
+    probs_combined_expected = [[0.3, 0.7], [0.6,  0.33]]
+    np.testing.assert_array_equal(np.round(probs_combined, decimals=2), np.array(probs_combined_expected))
 
     # Geometric
     probs_combined = utils.combine_probabilities(probs, 'geometric')
     assert len(probs_combined.shape) == 2
     probs_combined_expected = [[0.25, 0.69], [0.5, 0.29]]
-    np.testing.assert_array_equal(probs_combined, np.array(probs_combined_expected))
+    np.testing.assert_array_equal(np.round(probs_combined, decimals=2), np.array(probs_combined_expected))
 
     # Harmonic
     probs_combined = utils.combine_probabilities(probs, 'harmonic')
     assert len(probs_combined.shape) == 2
     probs_combined_expected = [[0.2, 0.67], [0.4, 0.26]]
-    np.testing.assert_array_equal(probs_combined, np.array(probs_combined_expected))
+    np.testing.assert_array_equal(np.round(probs_combined, decimals=2), np.array(probs_combined_expected))
 
     # One model, ndim = 3
     probs = [[0.4, 0.6], [0.8, 0.2]]
