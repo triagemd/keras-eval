@@ -117,7 +117,7 @@ def uncertainty_distribution(probs, verbose=1):
     return entropy
 
 
-def get_correct_errors_indices(probs, y_true, k, split_k=False, combination_mode='arithmetic'):
+def get_correct_errors_indices(probs, labels, k, split_k=False):
     '''
     Args:
         probs: Probabilities of the model / ensemble [n_images, n_class] / [n_models, n_images, n_class]
@@ -129,10 +129,6 @@ def get_correct_errors_indices(probs, y_true, k, split_k=False, combination_mode
     Returns: Returns A list containing for each of the values of k provided, the indices of the images
             with errors / correct and the probabilities in format [n_images,n_class].
     '''
-    probs = np.array(probs)
-    if probs.ndim > 2:
-        probs = combine_ensemble_probs(probs, combination_mode)
-
     if k is None:
         raise ValueError('k is required')
     k_list = [k] if not isinstance(k, (list, tuple, np.ndarray)) else k
@@ -141,7 +137,7 @@ def get_correct_errors_indices(probs, y_true, k, split_k=False, combination_mode
     correct = []
 
     # Get ground truth classes
-    y_true = y_true.argmax(axis=1)
+    y_true = labels.argmax(axis=1)
 
     for k_val in k_list:
 
@@ -155,17 +151,15 @@ def get_correct_errors_indices(probs, y_true, k, split_k=False, combination_mode
             # the top-k prediction is the first in each row top-k top-(k-1) ... top-1
             errors.append(np.where(preds_match[:, 0] < 1)[0])
             correct.append(np.where(preds_match[:, 0] > 0)[0])
-
         else:
             errors.append(np.where(np.sum(preds_match, axis=1) < 1)[0])
             correct.append(np.where(np.sum(preds_match, axis=1) > 0)[0])
 
-    print('Returning correct predictions and errors for the top k: ')
-    print(k_list)
-    return correct, errors, probs
+    print('Returning correct predictions and errors for the top k: ', k_list)
+    return correct, errors
 
 
-def get_top1_probability_stats(probs, y_true, threshold, combination_mode='arithmetic', verbose=1):
+def get_top1_probability_stats(probs, labels, threshold, combination_mode='arithmetic', verbose=1):
     '''
     Args:
         probs: Probabilities of the model / ensemble [n_images, n_class] / [n_models, n_images, n_class]
@@ -179,7 +173,7 @@ def get_top1_probability_stats(probs, y_true, threshold, combination_mode='arith
 
     '''
     # Get top-1 errors and correct predictions
-    correct, errors, probs = get_correct_errors_indices(probs, y_true, k=1, combination_mode=combination_mode)
+    correct, errors = get_correct_errors_indices(probs, labels, k=1)
     correct = correct[0]
     errors = errors[0]
     # Get the probabilities associated
@@ -235,7 +229,7 @@ def get_top1_probability_stats(probs, y_true, threshold, combination_mode='arith
     return errors_list, correct_list, n_correct, n_errors
 
 
-def get_top1_entropy_stats(probs, y_true, entropy, combination_mode='arithmetic', verbose=1):
+def get_top1_entropy_stats(probs, labels, entropy):
     '''
     Args:
         probs: Probabilities of the model / ensemble [n_images, n_class] / [n_models, n_images, n_class]
@@ -249,7 +243,7 @@ def get_top1_entropy_stats(probs, y_true, entropy, combination_mode='arithmetic'
 
     '''
     # Get top-1 errors and correct predictions
-    correct, errors, probs = get_correct_errors_indices(probs, y_true, k=1, combination_mode=combination_mode)
+    correct, errors = get_correct_errors_indices(probs, labels, k=1)
     correct = correct[0]
     errors = errors[0]
     # Get the entropy associated

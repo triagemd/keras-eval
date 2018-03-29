@@ -56,3 +56,35 @@ def test_metrics_top_k():
     assert np.isnan(met[2]['sensitivity_k1']), "Should be nan since no values predict class2"
     assert met[2]['precision_k1'] == 0.0, "prec should be 0 since TP is 0."
     assert met[1]['sensitivity_k2'] == 0.5, "When k=2, incorrect first sample (as class0 has higher prob)."
+
+
+def test_uncertainty_distribution():
+    probs = np.array([[[0.4, 0.6], [0.8, 0.2]], [[0.1, 0.9], [0.2, 0.6]], [[0.4, 0.6], [0.8, 0.2]]])
+    combined_probs = utils.combine_probabilities(probs, 'arithmetic')
+    entropy = metrics.uncertainty_distribution(combined_probs)
+    expected_entropy = np.array([0.88, 0.94])
+    np.testing.assert_array_equal(entropy, expected_entropy)
+
+
+def test_get_correct_errors_indices():
+    probs = np.array([[0.2, 0.8], [0.6, 0.4], [0.9, 0.1]])
+    labels = np.array([[0, 1], [0, 1], [1, 0]])
+
+    k = [1]
+    correct, errors = metrics.get_correct_errors_indices(probs, labels, k)
+    np.testing.assert_array_equal(correct, [np.array([0, 2])])
+    np.testing.assert_array_equal(errors, [np.array([1])])
+
+    # Resilient to k being int
+    k = 1
+    correct, errors = metrics.get_correct_errors_indices(probs, labels, k)
+    np.testing.assert_array_equal(correct, [np.array([0, 2])])
+    np.testing.assert_array_equal(errors, [np.array([1])])
+
+    # multiple k
+    k = [1, 2]
+    correct, errors = metrics.get_correct_errors_indices(probs, labels, k)
+    np.testing.assert_array_equal(correct[0], np.array([0, 2]))
+    np.testing.assert_array_equal(errors[0], np.array([1]))
+    np.testing.assert_array_equal(correct[1], np.array([0, 1, 2]))
+    np.testing.assert_array_equal(errors[1], np.array([]))

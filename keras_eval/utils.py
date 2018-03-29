@@ -107,7 +107,7 @@ def create_image_generator(data_dir, batch_size, model_spec):
 
 def load_preprocess_image(img_path, model_spec):
     """
-    Return a preprocessed images (probably to use within a deep neural net).
+    Return a preprocessed image (probably to use within a deep neural net).
 
     Args:
         img_name: a string indicating the name and path of the image.
@@ -145,7 +145,7 @@ def load_preprocess_images(folder_path, model_spec):
     return images, image_paths
 
 
-def combine_probs(probs, combination_mode=None):
+def combine_probabilities(probs, combination_mode=None):
     '''
     Args:
         probs: Probabilities given by the ensemble of models
@@ -162,11 +162,6 @@ def combine_probs(probs, combination_mode=None):
         'maximum': np.amax
     }
 
-    combiner = combiners[combination_mode]
-
-    if combination_mode not in combiners.keys():
-        raise ValueError('Error: invalid option for `combination_mode` ' + str(combination_mode))
-
     # Probabilities of the ensemble input=[n_models, n_samples, n_classes] --> output=[n_samples, n_classes]
 
     # Make sure we have a numpy array
@@ -179,7 +174,10 @@ def combine_probs(probs, combination_mode=None):
         else:
             # Combine ensemble probabilities
             if combination_mode is not None:
-                return combiner(probs, axis=0)
+                if combination_mode not in combiners.keys():
+                    raise ValueError('Error: invalid option for `combination_mode` ' + str(combination_mode))
+                else:
+                    return combiners[combination_mode](probs, axis=0)
             else:
                 raise ValueError('You have multiple models, please enter a valid probability `combination_mode`')
     elif probs.ndim == 2:
