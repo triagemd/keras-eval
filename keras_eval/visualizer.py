@@ -96,7 +96,7 @@ def plot_images(image_paths, n_imgs, title=''):
             axes[n_col].imshow(img, aspect='equal')
             axes[n_col].grid('off')
             axes[n_col].axis('off')
-            n_col +=1
+            n_col += 1
 
     else:
         n_rows_total = int(np.ceil(n_imgs / 5))

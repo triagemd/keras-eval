@@ -54,25 +54,25 @@ def test_combine_probs():
     probs = [[[0.4, 0.6], [0.8, 0.2]], [[0.1, 0.9], [0.2, 0.6]], [[0.4, 0.6], [0.8, 0.2]]]
 
     # Maximum
-    probs_combined = utils.combine_probs(probs, 'maximum')
+    probs_combined = utils.combine_probabilities(probs, 'maximum')
     assert len(probs_combined.shape) == 2
     probs_combined_expected = [[0.4, 0.9], [0.8, 0.6]]
     np.testing.assert_array_equal(probs_combined, np.array(probs_combined_expected))
 
     # Arithmetic
-    probs_combined = utils.combine_probs(probs, 'arithmetic')
+    probs_combined = utils.combine_probabilities(probs, 'arithmetic')
     assert len(probs_combined.shape) == 2
     probs_combined_expected = [[0.3, 0.7], [0.6, 0.33]]
     np.testing.assert_array_equal(probs_combined, np.array(probs_combined_expected))
 
     # Geometric
-    probs_combined = utils.combine_probs(probs, 'geometric')
+    probs_combined = utils.combine_probabilities(probs, 'geometric')
     assert len(probs_combined.shape) == 2
     probs_combined_expected = [[0.25, 0.69], [0.5, 0.29]]
     np.testing.assert_array_equal(probs_combined, np.array(probs_combined_expected))
 
     # Harmonic
-    probs_combined = utils.combine_probs(probs, 'harmonic')
+    probs_combined = utils.combine_probabilities(probs, 'harmonic')
     assert len(probs_combined.shape) == 2
     probs_combined_expected = [[0.2, 0.67], [0.4, 0.26]]
     np.testing.assert_array_equal(probs_combined, np.array(probs_combined_expected))
@@ -82,18 +82,18 @@ def test_combine_probs():
     probs = np.array(np.expand_dims(probs, axis=0))
     assert probs.shape == (1, 2, 2)
 
-    probs_combined = utils.combine_probs(probs, 'maximum')
+    probs_combined = utils.combine_probabilities(probs, 'maximum')
     assert probs_combined.shape == (2, 2)
     np.testing.assert_array_equal(probs_combined, np.array(probs))
 
-    probs_combined = utils.combine_probs(probs)
+    probs_combined = utils.combine_probabilities(probs)
     assert probs_combined.shape == (2, 2)
     np.testing.assert_array_equal(probs_combined, np.array(probs))
 
     # One model, ndim=2
     probs = [[0.4, 0.6], [0.8, 0.2]]
     assert probs.shape == (2, 2)
-    probs_combined = utils.combine_probs(probs)
+    probs_combined = utils.combine_probabilities(probs)
     assert probs_combined.shape == (2, 2)
     np.testing.assert_array_equal(probs_combined, np.array(probs))
 
@@ -104,7 +104,7 @@ def test_load_preprocess_image(test_image_path, model_spec_mobilenet):
 
 
 def test_load_preprocess_images(test_folder_image_path, model_spec_mobilenet):
-    images, images_paths = utils.load_preprocess_image(test_folder_image_path, model_spec_mobilenet)
+    images, images_paths = utils.load_preprocess_images(test_folder_image_path, model_spec_mobilenet)
     assert np.array(images).shape == (2, 224, 224, 3)
     assert len(images_paths) == 2
 
@@ -120,6 +120,5 @@ def test_get_class_dictionaries_items():
     output = utils.get_class_dictionaries_items(class_dictionary_default, 'abbrev')
     assert output == ['C_0', 'C_1']
 
-    output = utils.get_class_dictionaries_items(class_dictionary_default, 'classs_name')
+    output = utils.get_class_dictionaries_items(class_dictionary_default, 'class_name')
     assert output == ['Class_ 0', 'Class_ 1']
-
