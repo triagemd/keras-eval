@@ -78,20 +78,16 @@ def test_combine_probs():
     np.testing.assert_array_equal(np.round(probs_combined, decimals=2), np.array(probs_combined_expected))
 
     # One model, ndim = 3
-    probs = [[0.4, 0.6], [0.8, 0.2]]
-    probs = np.array(np.expand_dims(probs, axis=0))
-    assert probs.shape == (1, 2, 2)
+    probs = np.array([[0.4, 0.6], [0.8, 0.2]])
+    probs_exp = np.array(np.expand_dims(probs, axis=0))
+    assert probs_exp.shape == (1, 2, 2)
 
-    probs_combined = utils.combine_probabilities(probs, 'maximum')
-    assert probs_combined.shape == (2, 2)
-    np.testing.assert_array_equal(probs_combined, np.array(probs))
-
-    probs_combined = utils.combine_probabilities(probs)
+    probs_combined = utils.combine_probabilities(probs_exp, 'maximum')
     assert probs_combined.shape == (2, 2)
     np.testing.assert_array_equal(probs_combined, np.array(probs))
 
     # One model, ndim=2
-    probs = [[0.4, 0.6], [0.8, 0.2]]
+    probs = np.array([[0.4, 0.6], [0.8, 0.2]])
     assert probs.shape == (2, 2)
     probs_combined = utils.combine_probabilities(probs)
     assert probs_combined.shape == (2, 2)

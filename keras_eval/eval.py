@@ -308,14 +308,14 @@ class Evaluator(object):
         # Get Error Indices, Number of Correct Predictions, Number of Error Predictions per Threshold
         if type == 'probability':
             threshold = threshold or np.arange(0, 1.01, 0.01)
-            errors_ind, correct_ind, correct, errors = metrics.get_top1_probability_stats(self.probs_combined, labels,
+            correct_ind, errors_ind, correct, errors = metrics.get_top1_probability_stats(self.probs_combined, labels,
                                                                                           threshold, verbose=0)
             n_total_errors = errors[0]
             n_total_correct = correct[0]
 
         elif type == 'entropy':
-            threshold = threshold or np.arange(0, log(probs.shape[1], 2), 0.01)
-            errors_ind, correct_ind, correct, errors = metrics.get_top1_entropy_stats(self.probs_combined, labels,
+            threshold = threshold or np.arange(0, log(probs.shape[1], 2) + 0.01, 0.01)
+            correct_ind, errors_ind, correct, errors = metrics.get_top1_entropy_stats(self.probs_combined, labels,
                                                                                       threshold, verbose=0)
             n_total_errors = errors[-1]
             n_total_correct = correct[-1]
@@ -325,7 +325,7 @@ class Evaluator(object):
 
         visualizer.plotly_threshold(threshold, correct, errors, title='Top-1 Probability Threshold Tuning')
 
-        return errors_ind, correct_ind, correct, errors
+        return correct_ind, errors_ind, correct, errors
 
     def get_image_paths_by_prediction(self, probs, labels, class_names=None, image_paths=None):
         '''

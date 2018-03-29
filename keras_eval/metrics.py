@@ -1,6 +1,6 @@
 from __future__ import print_function, division, absolute_import
 import numpy as np
-import scipy
+import scipy.stats
 from math import log
 
 
@@ -159,7 +159,7 @@ def get_correct_errors_indices(probs, labels, k, split_k=False):
     return correct, errors
 
 
-def get_top1_probability_stats(probs, labels, threshold, combination_mode='arithmetic', verbose=1):
+def get_top1_probability_stats(probs, labels, threshold, verbose=0):
     '''
     Args:
         probs: Probabilities of the model / ensemble [n_images, n_class] / [n_models, n_images, n_class]
@@ -226,10 +226,10 @@ def get_top1_probability_stats(probs, labels, threshold, combination_mode='arith
     n_correct = np.array(n_correct)
     n_errors = np.array(n_errors)
 
-    return errors_list, correct_list, n_correct, n_errors
+    return correct_list, errors_list, n_correct, n_errors
 
 
-def get_top1_entropy_stats(probs, labels, entropy):
+def get_top1_entropy_stats(probs, labels, entropy, verbose=0):
     '''
     Args:
         probs: Probabilities of the model / ensemble [n_images, n_class] / [n_models, n_images, n_class]
@@ -295,4 +295,4 @@ def get_top1_entropy_stats(probs, labels, entropy):
     n_correct = np.array(n_correct)
     n_errors = np.array(n_errors)
 
-    return errors_list, correct_list, n_correct, n_errors
+    return correct_list, errors_list, n_correct, n_errors
