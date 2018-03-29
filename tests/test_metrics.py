@@ -62,7 +62,7 @@ def test_uncertainty_distribution():
     probs = np.array([[0.3, 0.7], [0.6, 0.33]])
     entropy = metrics.uncertainty_distribution(probs)
     expected_entropy = np.array([0.88, 0.94])
-    np.testing.assert_array_equal(entropy, expected_entropy)
+    np.testing.assert_array_equal(np.round(entropy, decimals=2), expected_entropy)
 
 
 def test_get_correct_errors_indices():

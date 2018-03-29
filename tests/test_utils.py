@@ -74,7 +74,7 @@ def test_combine_probs():
     # Harmonic
     probs_combined = utils.combine_probabilities(probs, 'harmonic')
     assert len(probs_combined.shape) == 2
-    probs_combined_expected = [[0.2, 0.67], [0.4, 0.26]]
+    probs_combined_expected = [[0.2, 0.68], [0.4, 0.26]]
     np.testing.assert_array_equal(np.round(probs_combined, decimals=2), np.array(probs_combined_expected))
 
     # One model, ndim = 3
