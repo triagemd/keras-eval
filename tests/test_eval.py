@@ -4,6 +4,7 @@ import json
 from keras_eval.eval import Evaluator
 from keras.applications import mobilenet
 import tensorflow as tf
+import numpy as np
 
 
 def check_evaluate_on_catdog_datasets(eval_args={}):
@@ -83,16 +84,12 @@ def test_get_image_paths_by_prediction():
     probs, labels = evaluator.evaluate()
     image_paths_dictionary = evaluator.get_image_paths_by_prediction(probs, labels)
 
-    assert image_paths_dictionary['C_0_C_0'] == ['/home/albert/github_repos/keras-eval/tests/files/catdog/test/cat/'
-                                                 'cat-1.jpg',
-                                                 '/home/albert/github_repos/keras-eval/tests/files/catdog/test/cat/'
-                                                 'cat-4.jpg']
+    assert image_paths_dictionary['C_0_C_0'] == [os.path.abspath('tests/files/catdog/test/cat/cat-1.jpg'),
+                                                 os.path.abspath('tests/files/catdog/test/cat/cat-4.jpg')]
     assert image_paths_dictionary['C_0_C_1'] == []
     assert image_paths_dictionary['C_1_C_0'] == []
-    assert image_paths_dictionary['C_1_C_1'] == ['/home/albert/github_repos/keras-eval/tests/files/catdog/test/''dog/'
-                                                 'dog-2.jpg',
-                                                 '/home/albert/github_repos/keras-eval/tests/files/catdog/test/dog/'
-                                                 'dog-4.jpg']
+    assert image_paths_dictionary['C_1_C_1'] == [os.path.abspath('tests/files/catdog/test/dog/dog-2.jpg'),
+                                                 os.path.abspath('tests/files/catdog/test/dog/dog-4.jpg')]
 
 
 def test_evaluator_mobilenet_v1_on_catdog_dataset():
@@ -161,7 +158,7 @@ def test_compute_confidence_prediction_distribution():
 
     output = evaluator.compute_confidence_prediction_distribution(probs)
 
-    np.testing.assert_array_equal(output == np.array([0.95398325, 0.0460167]))
+    np.testing.assert_array_equal(output, np.array([0.95398325, 0.0460167], dtype=np.float32))
 
 
 
