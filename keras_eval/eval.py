@@ -148,11 +148,11 @@ class Evaluator(object):
             probs: Probabilities from softmax layer
             labels: Ground truth labels
             combination_mode: Ways of combining the model's probabilities to obtain the final prediction.
-                'maximum': predictions are obtained by choosing the maximum probabity from each class
+                'maximum': predictions are obtained by choosing the maximum probability from each class
                 'geometric': predictions are obtained by a geometric mean of all the probabilities
                 'arithmetic': predictions are obtained by a arithmetic mean of all the probabilities
                 'harmonic': predictions are obtained by a harmonic mean of all the probabilities
-            K: a tuple of the top-k predictions to consider. E.g. K = (1,2,3,4,5) is top-5 preds
+            K: A tuple of the top-k predictions to consider. E.g. K = (1,2,3,4,5) is top-5 preds
             class_names: List containing the class names
             filter_indices: If given take only the predictions corresponding to that indices to compute metrics
             confusion_matrix: If True show the confusion matrix
@@ -286,16 +286,16 @@ class Evaluator(object):
 
         return probs
 
-    def show_threshold_impact(self, probs, labels, comination_mode='arithmetic', type='probability', threshold=None):
+    def show_threshold_impact(self, probs, labels, combination_mode=None, type='probability', threshold=None):
         '''
         Interactive Plot showing the effect of the threshold
         Args:
-            probs: probabilities given by the model [n_samples,n_classes]
-            labels: ground truth labels (categorical)
-            type: 'probability' or 'entropy' for a threshold on network top-1 prob or uncertainty in all predictions
+            probs: Probabilities given by the model [n_samples,n_classes]
+            labels: Ground truth labels (categorical)
+            type: 'Probability' or 'entropy' for a threshold on network top-1 prob or uncertainty in all predictions
             threshold: Custom threshold
-            comination_mode: Ways of combining the model's probabilities to obtain the final prediction.
-                'maximum': predictions are obtained by choosing the maximum probabity from each class
+            combination_mode: Ways of combining the model's probabilities to obtain the final prediction.
+                'maximum': predictions are obtained by choosing the maximum probability from each class
                 'geometric': predictions are obtained by a geometric mean of all the probabilities
                 'arithmetic': predictions are obtained by a arithmetic mean of all the probabilities
                 'harmonic': predictions are obtained by a harmonic mean of all the probabilities
@@ -303,7 +303,7 @@ class Evaluator(object):
         Returns: The index of the images with error or correct per every threshold, and arrays with the percentage.
 
         '''
-        self.probs_combined = utils.combine_probabilities(probs, comination_mode)
+        self.probs_combined = utils.combine_probabilities(probs, combination_mode)
 
         # Get Error Indices, Number of Correct Predictions, Number of Error Predictions per Threshold
         if type == 'probability':
@@ -327,27 +327,30 @@ class Evaluator(object):
 
         return correct_ind, errors_ind, correct, errors
 
-    def get_image_paths_by_prediction(self, probs, labels, class_names=None, image_paths=None):
+    def get_image_paths_by_prediction(self, probs, labels, combination_mode=None, class_names=None, image_paths=None):
         '''
 
         Args:
-            probs: probabilities given by the model [n_samples,n_classes]
-            labels: ground truth labels (categorical)
-            class_names: list with class names (by default last evaluation)
-            image_paths: list with image_paths (by default last evaluation)
+            probs: Probabilities given by the model [n_samples,n_classes]
+            labels: Ground truth labels (categorical)
+            class_names: List with class names (by default last evaluation)
+            image_paths: List with image_paths (by default last evaluation)
+            combination_mode:
 
         Returns: A dictionary containing a list of images per confusion matrix square (relation ClassA_ClassB)
 
         '''
 
+        self.probs_combined = utils.combine_probabilities(probs, combination_mode)
+
         if image_paths is None:
             image_paths = self.image_paths
 
-        assert probs.shape[0] == len(image_paths)
+        assert self.probs_combined.shape[0] == len(image_paths)
 
         class_names = class_names or utils.get_class_dictionaries_items(self.class_dictionaries, key='abbrev')
 
-        predictions = np.argmax(probs, axis=1)
+        predictions = np.argmax(self.probs_combined, axis=1)
         y_true = labels.argmax(axis=1)
         dict_image_paths_class = {}
 
@@ -369,9 +372,9 @@ class Evaluator(object):
         '''
 
         Args:
-            image_paths: list with image_paths
-            n_imgs: number of images to show
-            title: title for the plot
+            image_paths: List with image_paths
+            n_imgs: Number of images to show
+            title: Title for the plot
 
         Returns: Plots images in the screen
 
@@ -382,21 +385,26 @@ class Evaluator(object):
 
         visualizer.plot_images(image_paths, n_imgs, title)
 
-    def compute_confidence_prediction_distribution(self, probs=None, combination_mode='arithmetic', verbose=1):
+    def compute_confidence_prediction_distribution(self, probs=None, combination_mode=None, verbose=1):
         '''
         Compute the mean value of the probability assigned to predictions, or how confident is the classifier
         Args:
-            probs: probabilities given by the model
+            probs: Probabilities given by the model
             combination_mode: Ways of combining the model's probabilities to obtain the final prediction.
             verbose: Show text
 
         Returns:
 
         '''
-        probs = probs or self.probs
+        if probs is None and self.probs is not None:
+            probs = self.probs
         if probs.ndim == 3:
-            prob_mean = np.mean(np.sort(probs)[:, :, ::-1], axis=1)
-            prob_mean = utils.combine_probabilities(prob_mean, combination_mode)
+            if probs.shape[0] <= 1:
+                probs = probs[0]
+                prob_mean = np.mean(np.sort(probs)[:, ::-1], axis=0)
+            else:
+                prob_mean = np.mean(np.sort(probs)[:, :, ::-1], axis=1)
+                prob_mean = utils.combine_probabilities(prob_mean, combination_mode)
         elif probs.ndim == 2:
             prob_mean = np.mean(np.sort(probs)[:, ::-1], axis=0)
         else:
@@ -408,11 +416,11 @@ class Evaluator(object):
 
         return prob_mean
 
-    def compute_uncertainty_distribution(self, probs=None, combination_mode='arithmetic', verbose=1):
+    def compute_uncertainty_distribution(self, probs=None, combination_mode=None, verbose=1):
         '''
         Compute how the uncertainty is distributed
         Args:
-            probs: probabilities given by the model
+            probs: Probabilities given by the model
             combination_mode: Ways of combining the model's probabilities to obtain the final prediction.
             verbose: Show text
 
