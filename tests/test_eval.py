@@ -158,9 +158,4 @@ def test_compute_confidence_prediction_distribution():
 
     output = evaluator.compute_confidence_prediction_distribution(probs)
 
-    np.testing.assert_array_equal(output, np.array([0.95398325, 0.0460167], dtype=np.float32))
-
-
-
-
-
+    np.testing.assert_array_almost_equal(output, np.array([0.95398325, 0.0460167], dtype=np.float32))
