@@ -270,7 +270,7 @@ class Evaluator(object):
         Args:
             image_path: Path where the image is located
 
-        Returns:
+        Returns: Class probabilities for a single image
 
         '''
         probs = []
@@ -335,7 +335,11 @@ class Evaluator(object):
             labels: Ground truth labels (categorical)
             class_names: List with class names (by default last evaluation)
             image_paths: List with image_paths (by default last evaluation)
-            combination_mode:
+            combination_mode: Ways of combining the model's probabilities to obtain the final prediction.
+                'maximum': predictions are obtained by choosing the maximum probabity from each class
+                'geometric': predictions are obtained by a geometric mean of all the probabilities
+                'arithmetic': predictions are obtained by a arithmetic mean of all the probabilities
+                'harmonic': predictions are obtained by a harmonic mean of all the probabilities
 
         Returns: A dictionary containing a list of images per confusion matrix square (relation ClassA_ClassB)
 
@@ -367,7 +371,7 @@ class Evaluator(object):
 
         return dict_image_paths_class
 
-    def plot_images(self, image_paths, n_imgs=None, title=''):
+    def plot_images(self, image_paths, n_imgs=None, title='', save_name=None):
         # Works better defining a number of images between 5 and 30 at a time
         '''
 
@@ -383,7 +387,7 @@ class Evaluator(object):
         if n_imgs is None:
             n_imgs = image_paths.shape[0]
 
-        visualizer.plot_images(image_paths, n_imgs, title)
+        visualizer.plot_images(image_paths, n_imgs, title, save_name)
 
     def compute_confidence_prediction_distribution(self, probs=None, combination_mode=None, verbose=1):
         '''
@@ -391,9 +395,13 @@ class Evaluator(object):
         Args:
             probs: Probabilities given by the model
             combination_mode: Ways of combining the model's probabilities to obtain the final prediction.
+                'maximum': predictions are obtained by choosing the maximum probabity from each class
+                'geometric': predictions are obtained by a geometric mean of all the probabilities
+                'arithmetic': predictions are obtained by a arithmetic mean of all the probabilities
+                'harmonic': predictions are obtained by a harmonic mean of all the probabilities
             verbose: Show text
 
-        Returns:
+        Returns: The mean value of the probability assigned to predictions [top-1, ..., top-k] k = n_classes
 
         '''
         if probs is None and self.probs is not None:
@@ -422,9 +430,13 @@ class Evaluator(object):
         Args:
             probs: Probabilities given by the model
             combination_mode: Ways of combining the model's probabilities to obtain the final prediction.
+                'maximum': predictions are obtained by choosing the maximum probabity from each class
+                'geometric': predictions are obtained by a geometric mean of all the probabilities
+                'arithmetic': predictions are obtained by a arithmetic mean of all the probabilities
+                'harmonic': predictions are obtained by a harmonic mean of all the probabilities
             verbose: Show text
 
-        Returns:
+        Returns: The uncertainty measurement per each sample
 
         '''
         probs = probs or self.probs

@@ -57,6 +57,17 @@ def plot_confusion_matrix(probs, labels, class_names, fontsize=18, figsize=(16, 
 
 
 def plotly_threshold(threshold, correct, errors, title='Threshold Tuning'):
+    '''
+
+    Args:
+        threshold: List of thresholds
+        correct: List of correct predictions per threshold
+        errors: List of error predictions per threshold
+        title: Title of the plot
+
+    Returns: Interactive Plot
+
+    '''
     trace1 = go.Scatter(
         x=threshold,
         y=correct,
@@ -79,12 +90,11 @@ def plotly_threshold(threshold, correct, errors, title='Threshold Tuning'):
     iplot(fig, filename='Threshold Tuning')
 
 
-def plot_images(image_paths, n_imgs, title=''):
+def plot_images(image_paths, n_imgs, title='', save_name=None):
     n_row = 0
     n_col = 0
 
     if n_imgs <= 5:
-        n_rows_total = 1
         f, axes = plt.subplots(nrows=1, ncols=n_imgs, figsize=(n_imgs, n_imgs))
         plt.title(title)
         for i, image_path in enumerate(image_paths):
@@ -116,3 +126,6 @@ def plot_images(image_paths, n_imgs, title=''):
             if n_row == int(np.ceil(n_imgs / 5)):
                 n_row = 0
                 n_col += 1
+
+    if save_name is not None:
+        plt.savefig(save_name)
