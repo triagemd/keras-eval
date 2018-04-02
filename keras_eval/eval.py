@@ -41,6 +41,8 @@ class Evaluator(object):
 
         self.models = []
         self.model_specs = []
+        self.probs = None
+        self.labels = None
 
         if self.model_path is not None:
             self.add_model(model_path=self.model_path)
@@ -140,48 +142,49 @@ class Evaluator(object):
     def get_metrics(self, probs, labels, combination_mode=None, K=(1, 2), class_names=None, filter_indices=None,
                     confusion_matrix=False, save_confusion_matrix_path=None, verbose=1):
         '''
-        Print to screen metrics from experiment given probs and labels
+         Print to screen metrics from experiment given probs and labels
 
         Args:
             probs: Probabilities from softmax layer
             labels: Ground truth labels
-            K: a tuple of the top-k predictions to consider. E.g. K = (1,2,3,4,5) is top-5 preds
+            combination_mode: Ways of combining the model's probabilities to obtain the final prediction.
+                'maximum': predictions are obtained by choosing the maximum probability from each class
+                'geometric': predictions are obtained by a geometric mean of all the probabilities
+                'arithmetic': predictions are obtained by a arithmetic mean of all the probabilities
+                'harmonic': predictions are obtained by a harmonic mean of all the probabilities
+            K: A tuple of the top-k predictions to consider. E.g. K = (1,2,3,4,5) is top-5 preds
+            class_names: List containing the class names
             filter_indices: If given take only the predictions corresponding to that indices to compute metrics
+            confusion_matrix: If True show the confusion matrix
+            save_confusion_matrix_path: If path specified save confusion matrix there
+            verbose:
 
         Returns: Dictionary with metrics for each class
 
         '''
 
         # Check if we have an ensemble or just one model predictions
-        if len(probs.shape) == 3:
-            if probs.shape[0] <= 1:
-                self.probs_combined = probs[0]
-            else:
-                # Combine ensemble probabilities
-                if combination_mode is not None:
-                    self.probs_combined = utils.combine_probs(probs, combination_mode)
-                else:
-                    raise ValueError('You have multiple models, please enter a valid probability `combination_mode`')
-            probs = self.probs_combined
+
+        self.probs_combined = utils.combine_probabilities(probs, combination_mode)
 
         class_names = class_names or utils.get_class_dictionaries_items(self.class_dictionaries, key='abbrev')
 
         if filter_indices is not None:
-            probs = probs[filter_indices]
+            self.probs_combined = self.probs_combined[filter_indices]
             labels = labels[filter_indices]
 
         y_true = labels.argmax(axis=1)
 
         for k in K:
-            acc_k = metrics.accuracy_top_k(probs, y_true, k=k)
+            acc_k = metrics.accuracy_top_k(self.probs_combined, y_true, k=k)
             print('Accuracy at k=%i is %.4f' % (k, acc_k))
 
         # Print sensitivity and precision for different values of K.
-        met = metrics.metrics_top_k(probs, y_true, class_names=class_names, k_vals=K, verbose=verbose)
+        met = metrics.metrics_top_k(self.probs_combined, y_true, class_names=class_names, k_vals=K, verbose=verbose)
 
         # Show metrics visualization as a confusion matrix
         if confusion_matrix:
-            self.plot_confusion_matrix(probs=probs, labels=labels,
+            self.plot_confusion_matrix(probs=self.probs_combined, labels=labels,
                                        class_names=class_names, save_path=save_confusion_matrix_path)
 
         return met
@@ -267,7 +270,7 @@ class Evaluator(object):
         Args:
             image_path: Path where the image is located
 
-        Returns:
+        Returns: Class probabilities for a single image
 
         '''
         probs = []
@@ -283,57 +286,75 @@ class Evaluator(object):
 
         return probs
 
-    def show_threshold_impact(self, probs, labels, type='probability', threshold=None):
+    def show_threshold_impact(self, probs, labels, combination_mode=None, type='probability', threshold=None):
         '''
         Interactive Plot showing the effect of the threshold
         Args:
-            probs: probabilities given by the model [n_samples,n_classes]
-            labels: ground truth labels (categorical)
-            type: 'probability' or 'entropy' for a threshold on network top-1 prob or uncertainty in all predictions
+            probs: Probabilities given by the model [n_samples,n_classes]
+            labels: Ground truth labels (categorical)
+            type: 'Probability' or 'entropy' for a threshold on network top-1 prob or uncertainty in all predictions
             threshold: Custom threshold
+            combination_mode: Ways of combining the model's probabilities to obtain the final prediction.
+                'maximum': predictions are obtained by choosing the maximum probability from each class
+                'geometric': predictions are obtained by a geometric mean of all the probabilities
+                'arithmetic': predictions are obtained by a arithmetic mean of all the probabilities
+                'harmonic': predictions are obtained by a harmonic mean of all the probabilities
 
         Returns: The index of the images with error or correct per every threshold, and arrays with the percentage.
 
         '''
+        self.probs_combined = utils.combine_probabilities(probs, combination_mode)
+
         # Get Error Indices, Number of Correct Predictions, Number of Error Predictions per Threshold
         if type == 'probability':
             threshold = threshold or np.arange(0, 1.01, 0.01)
-            errors_ind, correct_ind, correct, errors = metrics.get_top1_probability_stats(probs, labels,
+            correct_ind, errors_ind, correct, errors = metrics.get_top1_probability_stats(self.probs_combined, labels,
                                                                                           threshold, verbose=0)
-        elif type == 'entropy':
-            threshold = threshold or np.arange(0, log(probs.shape[1], 2), 0.01)
-            errors_ind, correct_ind, correct, errors = metrics.get_top1_entropy_stats(probs, labels,
-                                                                                      threshold, verbose=0)
+            n_total_errors = errors[0]
+            n_total_correct = correct[0]
 
-        # Uncomment for showing percentage (min threshold have to be 0)
-        n_total_errors = errors[0]
-        n_total_correct = correct[0]
-        errors = ((n_total_errors - errors) / n_total_errors) * 100
-        correct = ((correct) / n_total_correct) * 100
+        elif type == 'entropy':
+            threshold = threshold or np.arange(0, log(probs.shape[1], 2) + 0.01, 0.01)
+            correct_ind, errors_ind, correct, errors = metrics.get_top1_entropy_stats(self.probs_combined, labels,
+                                                                                      threshold, verbose=0)
+            n_total_errors = errors[-1]
+            n_total_correct = correct[-1]
+
+        errors = (n_total_errors - errors) / n_total_errors * 100
+        correct = correct / n_total_correct * 100
 
         visualizer.plotly_threshold(threshold, correct, errors, title='Top-1 Probability Threshold Tuning')
 
-        return errors_ind, correct_ind, correct, errors
+        return correct_ind, errors_ind, correct, errors
 
-    def get_image_paths_by_prediction(self, probs, labels=None, class_names=None, image_paths=None):
+    def get_image_paths_by_prediction(self, probs, labels, combination_mode=None, class_names=None, image_paths=None):
         '''
 
         Args:
-            probs: probabilities given by the model [n_samples,n_classes]
-            labels: ground truth labels (categorical) (by default last evaluation)
-            class_names: list with class names (by default last evaluation)
-            image_paths: list with image_paths (by default last evaluation)
+            probs: Probabilities given by the model [n_samples,n_classes]
+            labels: Ground truth labels (categorical)
+            class_names: List with class names (by default last evaluation)
+            image_paths: List with image_paths (by default last evaluation)
+            combination_mode: Ways of combining the model's probabilities to obtain the final prediction.
+                'maximum': predictions are obtained by choosing the maximum probabity from each class
+                'geometric': predictions are obtained by a geometric mean of all the probabilities
+                'arithmetic': predictions are obtained by a arithmetic mean of all the probabilities
+                'harmonic': predictions are obtained by a harmonic mean of all the probabilities
 
         Returns: A dictionary containing a list of images per confusion matrix square (relation ClassA_ClassB)
 
         '''
-        labels = labels or self.labels
-        image_paths = image_paths or self.image_paths
-        assert probs.shape[0] == len(image_paths)
+
+        self.probs_combined = utils.combine_probabilities(probs, combination_mode)
+
+        if image_paths is None:
+            image_paths = self.image_paths
+
+        assert self.probs_combined.shape[0] == len(image_paths)
 
         class_names = class_names or utils.get_class_dictionaries_items(self.class_dictionaries, key='abbrev')
 
-        predictions = np.argmax(probs, axis=1)
+        predictions = np.argmax(self.probs_combined, axis=1)
         y_true = labels.argmax(axis=1)
         dict_image_paths_class = {}
 
@@ -350,19 +371,56 @@ class Evaluator(object):
 
         return dict_image_paths_class
 
-    def plot_images(self, image_paths, n_imgs=None, title=''):
+    def plot_images(self, image_paths, n_imgs=None, title='', save_name=None):
+        # Works better defining a number of images between 5 and 30 at a time
         '''
 
         Args:
-            image_paths: list with image_paths
-            n_imgs: number of images to show
-            title: title for the plot
+            image_paths: List with image_paths
+            n_imgs: Number of images to show
+            title: Title for the plot
 
-        Returns:
+        Returns: Plots images in the screen
 
         '''
         image_paths = np.array(image_paths)
         if n_imgs is None:
             n_imgs = image_paths.shape[0]
 
-        visualizer.plot_images(image_paths, n_imgs, title)
+        visualizer.plot_images(image_paths, n_imgs, title, save_name)
+
+    def compute_confidence_prediction_distribution(self, combination_mode=None, verbose=1):
+        '''
+        Compute the mean value of the probability assigned to predictions, or how confident is the classifier
+        Args:
+            probs: Probabilities given by the model
+            combination_mode: Ways of combining the model's probabilities to obtain the final prediction.
+                'maximum': predictions are obtained by choosing the maximum probabity from each class
+                'geometric': predictions are obtained by a geometric mean of all the probabilities
+                'arithmetic': predictions are obtained by a arithmetic mean of all the probabilities
+                'harmonic': predictions are obtained by a harmonic mean of all the probabilities
+            verbose: Show text
+
+        Returns: The mean value of the probability assigned to predictions [top-1, ..., top-k] k = n_classes
+
+        '''
+
+        return metrics.compute_confidence_prediction_distribution(self.probs, combination_mode, verbose)
+
+    def compute_uncertainty_distribution(self, combination_mode=None, verbose=1):
+        '''
+        Compute how the uncertainty is distributed
+        Args:
+            probs: Probabilities given by the model
+            combination_mode: Ways of combining the model's probabilities to obtain the final prediction.
+                'maximum': predictions are obtained by choosing the maximum probabity from each class
+                'geometric': predictions are obtained by a geometric mean of all the probabilities
+                'arithmetic': predictions are obtained by a arithmetic mean of all the probabilities
+                'harmonic': predictions are obtained by a harmonic mean of all the probabilities
+            verbose: Show text
+
+        Returns: The uncertainty measurement per each sample
+
+        '''
+
+        return metrics.uncertainty_distribution(self.probs, combination_mode, verbose)

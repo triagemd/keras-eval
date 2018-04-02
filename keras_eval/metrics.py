@@ -1,7 +1,8 @@
 from __future__ import print_function, division, absolute_import
 import numpy as np
-import scipy
+import scipy.stats
 from math import log
+import keras_eval.utils as utils
 
 
 def accuracy(y_pred, y_true):
@@ -98,70 +99,27 @@ def metrics_top_k(probs, y_true, class_names, k_vals=(1, 2, 3), verbose=1):
     return met
 
 
-def geometric_mean_3D(probs):
-    return scipy.stats.gmean(probs, axis=0)
-
-
-def arithmetic_mean_3D(probs):
-    return np.mean(probs, axis=0)
-
-
-def harmonic_mean_3D(probs):
-    return scipy.stats.hmean(probs, axis=0)
-
-
-def combine_ensemble_probs(probs, combination_mode=None):
-    '''
-    Args:
-        probs: Probailities given by the ensemble of models
-        combination_mode: combination_mode: 'arithmetic' / 'geometric' / 'harmonic' mean of the predictions or 'maximum'
-           probability value
-
-    Returns: Probabilities combined
-    '''
-    # Probabilities of the ensemble input=[n_models, n_images, n_class] --> output=[n_images, n_class]
-
-    # Join probabilities given by an ensemble of models following combination mode
-
-    combiners = {
-        'arithmetic': np.mean,
-        'geometric': scipy.stats.gmean,
-        'harmonic': scipy.stats.hmean,
-        'maximum': np.amax
-    }
-    if combination_mode is None:
-        raise ValueError('combination_mode is required')
-    elif combination_mode not in combiners.keys():
-        raise ValueError('Error: invalid option for `combination_mode` ' + str(combination_mode))
-    combiner = combiners[combination_mode]
-    return combiner(probs, axis=0)
-
-
-def mean_probability_distribution(probs, verbose=1, combination_mode='arithmetic'):
-    '''
-    Args:
-        probs: Probabilities after model forwarding
-        verbose: Show text
-        combination_mode: Ensemble combination mode
-
-    Returns: The mean probability for the top-nclasses predictions given
-
-    '''
-
-    # Sort probabilities from high to low, and compute mean
-    probs = np.array(probs)
-    if probs.ndim > 2:
-        prob_mean = np.mean(np.sort(probs)[:, :, ::-1], axis=1)
-        prob_mean = combine_ensemble_probs(prob_mean, combination_mode)
-    else:
+def compute_confidence_prediction_distribution(probs, combination_mode=None, verbose=1):
+    if probs.ndim == 3:
+        if probs.shape[0] <= 1:
+            probs = probs[0]
+            prob_mean = np.mean(np.sort(probs)[:, ::-1], axis=0)
+        else:
+            prob_mean = np.mean(np.sort(probs)[:, :, ::-1], axis=1)
+            prob_mean = utils.combine_probabilities(prob_mean, combination_mode)
+    elif probs.ndim == 2:
         prob_mean = np.mean(np.sort(probs)[:, ::-1], axis=0)
+    else:
+        raise ValueError('Incorrect shape for `probs` array, we accept [n_samples, n_classes] or '
+                         '[n_models, n_samples, n_classes]')
     if verbose == 1:
         for ind, prob in enumerate(prob_mean):
             print('Confidence mean at giving top %i prediction is %f' % (ind + 1, prob))
+
     return prob_mean
 
 
-def uncertainty_dist(probs, verbose=1, combination_mode='arithmetic'):
+def uncertainty_distribution(probs, combination_mode=None, verbose=1):
     '''
     Args:
         probs: Probabilities after model forwarding
@@ -170,11 +128,8 @@ def uncertainty_dist(probs, verbose=1, combination_mode='arithmetic'):
 
     Returns: The entropy for each of the predictions given [n_images]
     '''
-    probs = np.array(probs)
-    # Check if is ensemble
-    if probs.ndim > 2:
-        probs = combine_ensemble_probs(probs, combination_mode)
 
+    probs = utils.combine_probabilities(probs, combination_mode)
     entropy = scipy.stats.entropy(probs.T, base=2.0)
 
     if verbose == 1:
@@ -184,7 +139,7 @@ def uncertainty_dist(probs, verbose=1, combination_mode='arithmetic'):
     return entropy
 
 
-def get_correct_errors_indices(probs, y_true, k, split_k=False, combination_mode='arithmetic'):
+def get_correct_errors_indices(probs, labels, k, split_k=False):
     '''
     Args:
         probs: Probabilities of the model / ensemble [n_images, n_class] / [n_models, n_images, n_class]
@@ -196,10 +151,6 @@ def get_correct_errors_indices(probs, y_true, k, split_k=False, combination_mode
     Returns: Returns A list containing for each of the values of k provided, the indices of the images
             with errors / correct and the probabilities in format [n_images,n_class].
     '''
-    probs = np.array(probs)
-    if probs.ndim > 2:
-        probs = combine_ensemble_probs(probs, combination_mode)
-
     if k is None:
         raise ValueError('k is required')
     k_list = [k] if not isinstance(k, (list, tuple, np.ndarray)) else k
@@ -208,7 +159,7 @@ def get_correct_errors_indices(probs, y_true, k, split_k=False, combination_mode
     correct = []
 
     # Get ground truth classes
-    y_true = y_true.argmax(axis=1)
+    y_true = labels.argmax(axis=1)
 
     for k_val in k_list:
 
@@ -222,17 +173,15 @@ def get_correct_errors_indices(probs, y_true, k, split_k=False, combination_mode
             # the top-k prediction is the first in each row top-k top-(k-1) ... top-1
             errors.append(np.where(preds_match[:, 0] < 1)[0])
             correct.append(np.where(preds_match[:, 0] > 0)[0])
-
         else:
             errors.append(np.where(np.sum(preds_match, axis=1) < 1)[0])
             correct.append(np.where(np.sum(preds_match, axis=1) > 0)[0])
 
-    print('Returning correct predictions and errors for the top k: ')
-    print(k_list)
-    return correct, errors, probs
+    print('Returning correct predictions and errors for the top k: ', k_list)
+    return correct, errors
 
 
-def get_top1_probability_stats(probs, y_true, threshold, combination_mode='arithmetic', verbose=1):
+def get_top1_probability_stats(probs, labels, threshold, verbose=0):
     '''
     Args:
         probs: Probabilities of the model / ensemble [n_images, n_class] / [n_models, n_images, n_class]
@@ -246,7 +195,7 @@ def get_top1_probability_stats(probs, y_true, threshold, combination_mode='arith
 
     '''
     # Get top-1 errors and correct predictions
-    correct, errors, probs = get_correct_errors_indices(probs, y_true, k=1, combination_mode=combination_mode)
+    correct, errors = get_correct_errors_indices(probs, labels, k=1)
     correct = correct[0]
     errors = errors[0]
     # Get the probabilities associated
@@ -299,10 +248,10 @@ def get_top1_probability_stats(probs, y_true, threshold, combination_mode='arith
     n_correct = np.array(n_correct)
     n_errors = np.array(n_errors)
 
-    return errors_list, correct_list, n_correct, n_errors
+    return correct_list, errors_list, n_correct, n_errors
 
 
-def get_top1_entropy_stats(probs, y_true, entropy, combination_mode='arithmetic', verbose=1):
+def get_top1_entropy_stats(probs, labels, entropy, verbose=0):
     '''
     Args:
         probs: Probabilities of the model / ensemble [n_images, n_class] / [n_models, n_images, n_class]
@@ -316,11 +265,11 @@ def get_top1_entropy_stats(probs, y_true, entropy, combination_mode='arithmetic'
 
     '''
     # Get top-1 errors and correct predictions
-    correct, errors, probs = get_correct_errors_indices(probs, y_true, k=1, combination_mode=combination_mode)
+    correct, errors = get_correct_errors_indices(probs, labels, k=1)
     correct = correct[0]
     errors = errors[0]
     # Get the entropy associated
-    probs_entropy = uncertainty_dist(probs)
+    probs_entropy = uncertainty_distribution(probs)
     error_entropy = probs_entropy[errors]
     correct_entropy = probs_entropy[correct]
 
@@ -345,7 +294,6 @@ def get_top1_entropy_stats(probs, y_true, entropy, combination_mode='arithmetic'
 
         errors_below_e = np.array(errors_below_e)
         correct_below_e = np.array(correct_below_e)
-
         n_correct.append(correct_below_e.shape[0])
         n_errors.append(errors_below_e.shape[0])
 
@@ -369,4 +317,4 @@ def get_top1_entropy_stats(probs, y_true, entropy, combination_mode='arithmetic'
     n_correct = np.array(n_correct)
     n_errors = np.array(n_errors)
 
-    return errors_list, correct_list, n_correct, n_errors
+    return correct_list, errors_list, n_correct, n_errors
