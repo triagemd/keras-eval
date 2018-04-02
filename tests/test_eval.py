@@ -156,6 +156,30 @@ def test_compute_confidence_prediction_distribution():
 
     probs, labels = evaluator.evaluate()
 
-    output = evaluator.compute_confidence_prediction_distribution(probs)
+    output = evaluator.compute_confidence_prediction_distribution()
 
     np.testing.assert_array_almost_equal(output, np.array([0.95398325, 0.0460167], dtype=np.float32))
+
+
+def test_compute_uncertainty_distribution():
+    specs = {'klass': 'keras.applications.mobilenet.MobileNet',
+             'name': 'mobilenet_v1',
+             'preprocess_args': None,
+             'preprocess_func': 'between_plus_minus_1',
+             'target_size': [224, 224, 3]
+             }
+
+    with open(os.path.abspath('tmp/fixtures/models/mobilenet_1/model_spec.json'), 'w') as outfile:
+        json.dump(specs, outfile)
+
+    evaluator = Evaluator(
+        data_dir=os.path.abspath('tests/files/catdog/test'),
+        batch_size=1,
+        model_path='tmp/fixtures/models/mobilenet_1/mobilenet_v1.h5'
+    )
+
+    probs, labels = evaluator.evaluate()
+
+    output = evaluator.compute_uncertainty_distribution()
+
+    np.testing.assert_array_almost_equal(output, np.array([0.3436, 0.002734, 0.001692, 0.52829], dtype=np.float32))

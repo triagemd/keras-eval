@@ -66,6 +66,13 @@ def test_uncertainty_distribution():
     np.testing.assert_array_equal(np.round(entropy, decimals=2), expected_entropy)
 
 
+def test_compute_confidence_prediction_distribution():
+    probs = np.array([[0.3, 0.7], [0.67, 0.33]])
+    entropy = metrics.uncertainty_distribution(probs)
+    expected_entropy = np.array([0.88, 0.91])
+    np.testing.assert_array_equal(np.round(entropy, decimals=2), expected_entropy)
+
+
 def test_get_correct_errors_indices():
     probs = np.array([[0.2, 0.8], [0.6, 0.4], [0.9, 0.1]])
     labels = np.array([[0, 1], [0, 1], [1, 0]])

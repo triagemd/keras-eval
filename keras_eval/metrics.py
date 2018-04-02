@@ -2,6 +2,7 @@ from __future__ import print_function, division, absolute_import
 import numpy as np
 import scipy.stats
 from math import log
+import keras_eval.utils as utils
 
 
 def accuracy(y_pred, y_true):
@@ -98,7 +99,27 @@ def metrics_top_k(probs, y_true, class_names, k_vals=(1, 2, 3), verbose=1):
     return met
 
 
-def uncertainty_distribution(probs, verbose=1):
+def compute_confidence_prediction_distribution(probs, combination_mode=None, verbose=1):
+    if probs.ndim == 3:
+        if probs.shape[0] <= 1:
+            probs = probs[0]
+            prob_mean = np.mean(np.sort(probs)[:, ::-1], axis=0)
+        else:
+            prob_mean = np.mean(np.sort(probs)[:, :, ::-1], axis=1)
+            prob_mean = utils.combine_probabilities(prob_mean, combination_mode)
+    elif probs.ndim == 2:
+        prob_mean = np.mean(np.sort(probs)[:, ::-1], axis=0)
+    else:
+        raise ValueError('Incorrect shape for `probs` array, we accept [n_samples, n_classes] or '
+                         '[n_models, n_samples, n_classes]')
+    if verbose == 1:
+        for ind, prob in enumerate(prob_mean):
+            print('Confidence mean at giving top %i prediction is %f' % (ind + 1, prob))
+
+    return prob_mean
+
+
+def uncertainty_distribution(probs, combination_mode=None, verbose=1):
     '''
     Args:
         probs: Probabilities after model forwarding
@@ -108,6 +129,7 @@ def uncertainty_distribution(probs, verbose=1):
     Returns: The entropy for each of the predictions given [n_images]
     '''
 
+    probs = utils.combine_probabilities(probs, combination_mode)
     entropy = scipy.stats.entropy(probs.T, base=2.0)
 
     if verbose == 1:
