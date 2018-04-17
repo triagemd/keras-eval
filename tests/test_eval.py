@@ -29,7 +29,7 @@ def check_evaluate_on_catdog_datasets(eval_args={}):
     assert len(evaluator.probs_combined.shape) == 2
 
     # class abbreviations
-    assert evaluator.class_abbrevs == ['C_0', 'C_1']
+    assert evaluator.concept_labels == ['C_0', 'C_1']
 
 
 def check_predict_on_cat_folder(eval_args={}):

@@ -105,16 +105,16 @@ def test_load_preprocess_images(test_folder_image_path, model_spec_mobilenet):
     assert len(images_paths) == 2
 
 
-def test_create_class_dictionary_default():
-    class_dictionary_default = utils.create_class_dictionary_default(2)
-    assert class_dictionary_default == [{'abbrev': 'C_0', 'class_name': 'Class_ 0'},
-                                        {'abbrev': 'C_1', 'class_name': 'Class_ 1'}]
+def test_create_concepts_default():
+    concepts_by_default = utils.create_concepts_default(2)
+    assert concepts_by_default == [{'label': 'C_0', 'id': 'Class_0'},
+                                        {'label': 'C_1', 'id': 'Class_1'}]
 
 
 def test_get_class_dictionaries_items():
-    class_dictionary_default = utils.create_class_dictionary_default(2)
-    output = utils.get_class_dictionaries_items(class_dictionary_default, 'abbrev')
+    concepts_by_default = utils.create_concepts_default(2)
+    output = utils.get_concept_items(concepts_by_default, 'label')
     assert output == ['C_0', 'C_1']
 
-    output = utils.get_class_dictionaries_items(class_dictionary_default, 'class_name')
-    assert output == ['Class_ 0', 'Class_ 1']
+    output = utils.get_concept_items(concepts_by_default, 'id')
+    assert output == ['Class_0', 'Class_1']

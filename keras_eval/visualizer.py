@@ -5,13 +5,13 @@ import plotly.graph_objs as go
 from plotly.offline import iplot
 
 
-def plot_confusion_matrix(probs, labels, class_names, fontsize=18, figsize=(16, 12), cmap=plt.cm.coolwarm_r, save_path=None):
+def plot_confusion_matrix(probs, labels, concept_labels, fontsize=18, figsize=(16, 12), cmap=plt.cm.coolwarm_r, save_path=None):
     '''
 
     Args:
        probs: Output of the CNN
        labels: Ground truth classes (categorical)
-       class_names: List of strings containing classes names
+       concept_labels: List of strings containing classes names
        fontsize: Size of text
        figsize: Size of figure
        cmap: Color choice
@@ -24,11 +24,11 @@ def plot_confusion_matrix(probs, labels, class_names, fontsize=18, figsize=(16, 
     y_pred = np.argmax(probs, axis=1)
     y_true = np.argmax(labels, axis=1)
 
-    n_labels = len(class_names)
+    n_labels = len(concept_labels)
     np.set_printoptions(precision=2)
     plt.rcParams.update({'font.size': fontsize})
 
-    cm = confusion_matrix(y_true, y_pred, range(len(class_names)))
+    cm = confusion_matrix(y_true, y_pred, range(len(concept_labels)))
     cm_normalized = cm.astype('float') / cm.sum(axis=1)[:, np.newaxis]
 
     fig = plt.figure(figsize=figsize)
@@ -37,15 +37,15 @@ def plot_confusion_matrix(probs, labels, class_names, fontsize=18, figsize=(16, 
 
     fig.colorbar(cax)
     ax.xaxis.tick_bottom()
-    ax.set_xticklabels(class_names)
-    ax.set_yticklabels(class_names)
+    ax.set_xticklabels(concept_labels)
+    ax.set_yticklabels(concept_labels)
     plt.xticks(np.arange(0, n_labels, 1.0), rotation='vertical')
     plt.yticks(np.arange(0, n_labels, 1.0))
     plt.ylabel('True label', fontweight='bold')
     plt.xlabel('Predicted label', fontweight='bold')
 
     # http://stackoverflow.com/questions/21712047/matplotlib-imshow-matshow-display-values-on-plot
-    min_val, max_val = 0, len(class_names)
+    min_val, max_val = 0, len(concept_labels)
     ind_array = np.arange(min_val, max_val, 1.0)
     x, y = np.meshgrid(ind_array, ind_array)
     for i, (x_val, y_val) in enumerate(zip(x.flatten(), y.flatten())):

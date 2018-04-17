@@ -32,7 +32,7 @@ def accuracy_top_k(probs, y_true, k):
     return acc
 
 
-def metrics_top_k(probs, y_true, class_names, k_vals=(1, 2, 3), verbose=1):
+def metrics_top_k(probs, y_true, concept_labels, k_vals=(1, 2, 3), verbose=1):
     """
     Compute the sensitivity and precision between the predicted `probs` and the true labels `y_true`.
 
@@ -56,7 +56,7 @@ def metrics_top_k(probs, y_true, class_names, k_vals=(1, 2, 3), verbose=1):
 
     """
     met = []  # {}
-    for idx, label in zip(range(len(class_names)), class_names):
+    for idx, label in zip(range(len(concept_labels)), concept_labels):
         for k in k_vals:
             if k == 0:
                 raise ValueError('`k_vals` cannot contain a `0`')

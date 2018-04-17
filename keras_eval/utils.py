@@ -73,15 +73,15 @@ def load_model(model_path, specs_path=None, custom_objects=None):
     return model, model_spec
 
 
-def create_class_dictionary_default(num_classes):
-    class_dictionary_default = []
+def create_concepts_default(num_classes):
+    concepts_by_default = []
     for i in range(0, num_classes):
-        class_dictionary_default.append({'class_name': 'Class_ ' + str(i), 'abbrev': 'C_' + str(i)})
-    return class_dictionary_default
+        concepts_by_default.append({'id': 'Class_' + str(i), 'label': 'C_' + str(i)})
+    return concepts_by_default
 
 
-def get_class_dictionaries_items(class_dictionaries, key):
-    return [class_dict[key] for class_dict in class_dictionaries]
+def get_concept_items(concepts, key):
+    return [concept[key] for concept in concepts]
 
 
 def create_image_generator(data_dir, batch_size, model_spec):

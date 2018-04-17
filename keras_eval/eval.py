@@ -11,11 +11,13 @@ class Evaluator(object):
 
     OPTIONS = {
         'data_dir': {'type': str, 'default': None},
-        'class_dictionaries': {'type': list, 'default': None},
+        'concepts': {'type': list, 'default': None},
         'ensemble_models_dir': {'type': None, 'default': None},
         'model_path': {'type': None, 'default': None},
         'custom_objects': {'type': None, 'default': None},
         'report_dir': {'type': str, 'default': None},
+        'combination_mode': {'type': str, 'default': None},
+        'id': {'type': str, 'default': 'model'},
         'loss_function': {'type': str, 'default': 'categorical_crossentropy'},
         'metrics': {'type': list, 'default': ['accuracy']},
         'batch_size': {'type': int, 'default': 1},
@@ -72,10 +74,10 @@ class Evaluator(object):
         self.models.pop(model_index)
         self.model_specs.pop(model_index)
 
-    def set_class_dictionaries(self, class_dictionaries):
-        self.class_dictionaries = class_dictionaries
+    def set_concepts(self, concepts):
+        self.concepts = concepts
 
-    def get_complete_image_paths(self, filenames):
+    def _get_complete_image_paths(self, filenames):
         image_paths = []
         for filename in filenames:
             image_paths.append(os.path.join(self.data_dir, filename))
@@ -111,20 +113,20 @@ class Evaluator(object):
             self.probs, self.labels = self.compute_probabilities_generator(data_dir=self.data_dir)
 
             # Create dictionary containing class names
-            if self.class_dictionaries is None:
-                self.class_dictionaries = utils.create_class_dictionary_default(self.num_classes)
+            if self.concepts is None:
+                self.concepts = utils.create_concepts_default(self.num_classes)
 
-            # Obtain Abbreviations to show on the metrics results
-            self.class_abbrevs = utils.get_class_dictionaries_items(self.class_dictionaries, key='abbrev')
+            # Obtain labels to show on the metrics results
+            self.concept_labels = utils.get_concept_items(self.concepts, key='label')
 
             # Compute metrics
             self.get_metrics(probs=self.probs, labels=self.labels, combination_mode=combination_mode,
-                             class_names=self.class_abbrevs, K=K, filter_indices=filter_indices,
+                             concept_labels=self.concept_labels, K=K, filter_indices=filter_indices,
                              confusion_matrix=confusion_matrix, save_confusion_matrix_path=save_confusion_matrix_path)
 
         return self.probs, self.labels
 
-    def plot_confusion_matrix(self, probs, labels, class_names=None, save_path=None):
+    def plot_confusion_matrix(self, probs, labels, concept_labels=None, save_path=None):
         '''
 
         Args:
@@ -136,10 +138,10 @@ class Evaluator(object):
         Returns: Shows the confusion matrix in the screen
 
         '''
-        class_names = class_names or utils.get_class_dictionaries_items(self.class_dictionaries, key='abbrev')
-        visualizer.plot_confusion_matrix(probs=probs, labels=labels, class_names=class_names, save_path=save_path)
+        concept_labels = concept_labels or utils.get_concept_items(self.concepts, key='label')
+        visualizer.plot_confusion_matrix(probs=probs, labels=labels, concept_labels=concept_labels, save_path=save_path)
 
-    def get_metrics(self, probs, labels, combination_mode=None, K=(1, 2), class_names=None, filter_indices=None,
+    def get_metrics(self, probs, labels, combination_mode=None, K=(1, 2), concept_labels=None, filter_indices=None,
                     confusion_matrix=False, save_confusion_matrix_path=None, verbose=1):
         '''
          Print to screen metrics from experiment given probs and labels
@@ -153,13 +155,13 @@ class Evaluator(object):
                 'arithmetic': predictions are obtained by a arithmetic mean of all the probabilities
                 'harmonic': predictions are obtained by a harmonic mean of all the probabilities
             K: A tuple of the top-k predictions to consider. E.g. K = (1,2,3,4,5) is top-5 preds
-            class_names: List containing the class names
+            concept_labels: List containing the concept_labels
             filter_indices: If given take only the predictions corresponding to that indices to compute metrics
             confusion_matrix: If True show the confusion matrix
             save_confusion_matrix_path: If path specified save confusion matrix there
             verbose:
 
-        Returns: Dictionary with metrics for each class
+        Returns: Dictionary with metrics for each concept
 
         '''
 
@@ -167,7 +169,7 @@ class Evaluator(object):
 
         self.probs_combined = utils.combine_probabilities(probs, combination_mode)
 
-        class_names = class_names or utils.get_class_dictionaries_items(self.class_dictionaries, key='abbrev')
+        concept_labels = concept_labels or utils.get_concept_items(self.concepts, key='label')
 
         if filter_indices is not None:
             self.probs_combined = self.probs_combined[filter_indices]
@@ -180,12 +182,12 @@ class Evaluator(object):
             print('Accuracy at k=%i is %.4f' % (k, acc_k))
 
         # Print sensitivity and precision for different values of K.
-        met = metrics.metrics_top_k(self.probs_combined, y_true, class_names=class_names, k_vals=K, verbose=verbose)
+        met = metrics.metrics_top_k(self.probs_combined, y_true, concept_labels=concept_labels, k_vals=K, verbose=verbose)
 
         # Show metrics visualization as a confusion matrix
         if confusion_matrix:
             self.plot_confusion_matrix(probs=self.probs_combined, labels=labels,
-                                       class_names=class_names, save_path=save_confusion_matrix_path)
+                                       concept_labels=concept_labels, save_path=save_confusion_matrix_path)
 
         return met
 
@@ -213,7 +215,7 @@ class Evaluator(object):
 
             self.generator = generator
             self.num_classes = generator.num_classes
-            self.image_paths = self.get_complete_image_paths(generator.filenames)
+            self.image_paths = self._get_complete_image_paths(generator.filenames)
 
             probs = np.array(probs)
 
@@ -290,7 +292,7 @@ class Evaluator(object):
         '''
         Interactive Plot showing the effect of the threshold
         Args:
-            probs: Probabilities given by the model [n_samples,n_classes]
+            probs: Probabilities given by the model [n_samples, n_classes]
             labels: Ground truth labels (categorical)
             type: 'Probability' or 'entropy' for a threshold on network top-1 prob or uncertainty in all predictions
             threshold: Custom threshold
@@ -327,13 +329,13 @@ class Evaluator(object):
 
         return correct_ind, errors_ind, correct, errors
 
-    def get_image_paths_by_prediction(self, probs, labels, combination_mode=None, class_names=None, image_paths=None):
+    def get_image_paths_by_prediction(self, probs, labels, combination_mode=None, concept_labels=None, image_paths=None):
         '''
 
         Args:
             probs: Probabilities given by the model [n_samples,n_classes]
             labels: Ground truth labels (categorical)
-            class_names: List with class names (by default last evaluation)
+            concept_labels: List with class names (by default last evaluation)
             image_paths: List with image_paths (by default last evaluation)
             combination_mode: Ways of combining the model's probabilities to obtain the final prediction.
                 'maximum': predictions are obtained by choosing the maximum probabity from each class
@@ -352,24 +354,24 @@ class Evaluator(object):
 
         assert self.probs_combined.shape[0] == len(image_paths)
 
-        class_names = class_names or utils.get_class_dictionaries_items(self.class_dictionaries, key='abbrev')
+        concept_labels = concept_labels or utils.get_concept_items(self.concepts, key='label')
 
         predictions = np.argmax(self.probs_combined, axis=1)
         y_true = labels.argmax(axis=1)
-        dict_image_paths_class = {}
+        dict_image_paths_concept = {}
 
-        for name_1 in class_names:
-            for name_2 in class_names:
-                dict_image_paths_class.update({name_1 + '_' + name_2: []})
+        for name_1 in concept_labels:
+            for name_2 in concept_labels:
+                dict_image_paths_concept.update({name_1 + '_' + name_2: []})
 
         for i, pred in enumerate(predictions):
-            predicted_label = class_names[pred]
-            correct_label = class_names[y_true[i]]
-            list_image_paths = dict_image_paths_class[str(correct_label + '_' + predicted_label)]
+            predicted_label = concept_labels[pred]
+            correct_label = concept_labels[y_true[i]]
+            list_image_paths = dict_image_paths_concept[str(correct_label + '_' + predicted_label)]
             list_image_paths.append(image_paths[i])
-            dict_image_paths_class.update({correct_label + '_' + predicted_label: list_image_paths})
+            dict_image_paths_concept.update({correct_label + '_' + predicted_label: list_image_paths})
 
-        return dict_image_paths_class
+        return dict_image_paths_concept
 
     def plot_images(self, image_paths, n_imgs=None, title='', save_name=None):
         # Works better defining a number of images between 5 and 30 at a time
