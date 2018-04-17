@@ -62,7 +62,7 @@ def test_combine_probs():
     # Arithmetic
     probs_combined = utils.combine_probabilities(probs, 'arithmetic')
     assert len(probs_combined.shape) == 2
-    probs_combined_expected = [[0.3, 0.7], [0.6,  0.33]]
+    probs_combined_expected = [[0.3, 0.7], [0.6, 0.33]]
     np.testing.assert_array_equal(np.round(probs_combined, decimals=2), np.array(probs_combined_expected))
 
     # Geometric
@@ -108,7 +108,7 @@ def test_load_preprocess_images(test_folder_image_path, model_spec_mobilenet):
 def test_create_concepts_default():
     concepts_by_default = utils.create_concepts_default(2)
     assert concepts_by_default == [{'label': 'C_0', 'id': 'Class_0'},
-                                        {'label': 'C_1', 'id': 'Class_1'}]
+                                   {'label': 'C_1', 'id': 'Class_1'}]
 
 
 def test_get_class_dictionaries_items():

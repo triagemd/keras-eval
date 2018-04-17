@@ -100,7 +100,7 @@ def test_get_correct_errors_indices():
 def test_get_top1_entropy_stats():
     probs = np.array([[0.2, 0.8], [0.6, 0.4], [0.9, 0.1]])
     labels = np.array([[0, 1], [0, 1], [1, 0]])
-    entropy = np.arange(0, log(probs.shape[1]+0.01, 2), 0.1)
+    entropy = np.arange(0, log(probs.shape[1] + 0.01, 2), 0.1)
     correct_list, errors_list, n_correct, n_errors = metrics.get_top1_entropy_stats(probs, labels, entropy)
 
     np.testing.assert_array_equal(n_correct, np.array([0, 0, 0, 0, 0, 1, 1, 1, 2, 2, 2]))
