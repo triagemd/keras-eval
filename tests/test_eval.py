@@ -14,10 +14,10 @@ def check_evaluate_on_catdog_datasets(eval_args={}):
         **eval_args
     )
 
-    probs, labels = evaluator.evaluate()
+    probabilities, labels = evaluator.evaluate()
 
     # n_models x n_samples x n_classes
-    assert len(probs.shape) == 3
+    assert len(probabilities.shape) == 3
 
     # n_samples x n_classes
     assert len(labels.shape) == 2
@@ -26,7 +26,7 @@ def check_evaluate_on_catdog_datasets(eval_args={}):
     assert evaluator.num_classes == 2
 
     # n_samples x n_classes
-    assert len(evaluator.probs_combined.shape) == 2
+    assert len(evaluator.combined_probabilities.shape) == 2
 
     # class abbreviations
     assert evaluator.concept_labels == ['C_0', 'C_1']
@@ -39,10 +39,10 @@ def check_predict_on_cat_folder(eval_args={}):
         **eval_args
     )
 
-    probs = evaluator.predict()
+    probabilities = evaluator.predict()
 
     # n_models x n_samples x n_classes
-    assert len(probs.shape) == 3
+    assert len(probabilities.shape) == 3
 
     # 2 images in the folder
     assert len(evaluator.image_paths) == 2
@@ -55,10 +55,10 @@ def check_predict_single_image(eval_args={}):
         **eval_args
     )
 
-    probs = evaluator.predict()
+    probabilities = evaluator.predict()
 
     # n_models x n_samples x n_classes
-    assert len(probs.shape) == 3
+    assert len(probabilities.shape) == 3
 
     # 1 image predicted
     assert len(evaluator.image_paths) == 1
@@ -81,8 +81,8 @@ def test_get_image_paths_by_prediction():
         model_path='tmp/fixtures/models/mobilenet_1/mobilenet_v1.h5'
     )
 
-    probs, labels = evaluator.evaluate()
-    image_paths_dictionary = evaluator.get_image_paths_by_prediction(probs, labels)
+    probabilities, labels = evaluator.evaluate()
+    image_paths_dictionary = evaluator.get_image_paths_by_prediction(probabilities, labels)
 
     assert image_paths_dictionary['C_0_C_0'] == [os.path.abspath('tests/files/catdog/test/cat/cat-1.jpg'),
                                                  os.path.abspath('tests/files/catdog/test/cat/cat-4.jpg')]
@@ -128,7 +128,7 @@ def test_evaluator_ensemble_mobilenet_v1_on_catdog_dataset():
     with open(os.path.abspath('tmp/fixtures/models/mobilenet_2/model_spec.json'), 'w') as outfile:
         json.dump(specs, outfile)
 
-    eval_options = {'ensemble_models_dir': 'tmp/fixtures/models/'}
+    eval_options = {'ensemble_models_dir': 'tmp/fixtures/models/', 'combination_mode': 'arithmetic'}
 
     check_evaluate_on_catdog_datasets(eval_options)
 
@@ -154,7 +154,7 @@ def test_compute_confidence_prediction_distribution():
         model_path='tmp/fixtures/models/mobilenet_1/mobilenet_v1.h5'
     )
 
-    probs, labels = evaluator.evaluate()
+    probabilities, labels = evaluator.evaluate()
 
     output = evaluator.compute_confidence_prediction_distribution()
 
@@ -178,7 +178,7 @@ def test_compute_uncertainty_distribution():
         model_path='tmp/fixtures/models/mobilenet_1/mobilenet_v1.h5'
     )
 
-    probs, labels = evaluator.evaluate()
+    probabilities, labels = evaluator.evaluate()
 
     output = evaluator.compute_uncertainty_distribution()
 

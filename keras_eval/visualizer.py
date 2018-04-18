@@ -5,11 +5,11 @@ import plotly.graph_objs as go
 from plotly.offline import iplot
 
 
-def plot_confusion_matrix(probs, labels, concept_labels, fontsize=18, figsize=(16, 12), cmap=plt.cm.coolwarm_r, save_path=None):
+def plot_confusion_matrix(probabilities, labels, concept_labels, fontsize=18, figsize=(16, 12), cmap=plt.cm.coolwarm_r, save_path=None):
     '''
 
     Args:
-       probs: Output of the CNN
+       probabilities: Output of the CNN
        labels: Ground truth classes (categorical)
        concept_labels: List of strings containing classes names
        fontsize: Size of text
@@ -21,7 +21,7 @@ def plot_confusion_matrix(probs, labels, concept_labels, fontsize=18, figsize=(1
 
     '''
 
-    y_pred = np.argmax(probs, axis=1)
+    y_pred = np.argmax(probabilities, axis=1)
     y_true = np.argmax(labels, axis=1)
 
     n_labels = len(concept_labels)

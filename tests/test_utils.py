@@ -49,49 +49,49 @@ def test_load_model_ensemble():
     assert models
 
 
-def test_combine_probs():
+def test_combine_probabilities():
     # Ensemble 3 models
-    probs = [[[0.4, 0.6], [0.8, 0.2]], [[0.1, 0.9], [0.2, 0.6]], [[0.4, 0.6], [0.8, 0.2]]]
+    probabilities = [[[0.4, 0.6], [0.8, 0.2]], [[0.1, 0.9], [0.2, 0.6]], [[0.4, 0.6], [0.8, 0.2]]]
 
     # Maximum
-    probs_combined = utils.combine_probabilities(probs, 'maximum')
-    assert len(probs_combined.shape) == 2
-    probs_combined_expected = [[0.4, 0.9], [0.8, 0.6]]
-    np.testing.assert_array_equal(np.round(probs_combined, decimals=2), np.array(probs_combined_expected))
+    combined_probabilities = utils.combine_probabilities(probabilities, 'maximum')
+    assert len(combined_probabilities.shape) == 2
+    combined_probabilities_expected = [[0.4, 0.9], [0.8, 0.6]]
+    np.testing.assert_array_equal(np.round(combined_probabilities, decimals=2), np.array(combined_probabilities_expected))
 
     # Arithmetic
-    probs_combined = utils.combine_probabilities(probs, 'arithmetic')
-    assert len(probs_combined.shape) == 2
-    probs_combined_expected = [[0.3, 0.7], [0.6, 0.33]]
-    np.testing.assert_array_equal(np.round(probs_combined, decimals=2), np.array(probs_combined_expected))
+    combined_probabilities = utils.combine_probabilities(probabilities, 'arithmetic')
+    assert len(combined_probabilities.shape) == 2
+    combined_probabilities_expected = [[0.3, 0.7], [0.6, 0.33]]
+    np.testing.assert_array_equal(np.round(combined_probabilities, decimals=2), np.array(combined_probabilities_expected))
 
     # Geometric
-    probs_combined = utils.combine_probabilities(probs, 'geometric')
-    assert len(probs_combined.shape) == 2
-    probs_combined_expected = [[0.25, 0.69], [0.5, 0.29]]
-    np.testing.assert_array_equal(np.round(probs_combined, decimals=2), np.array(probs_combined_expected))
+    combined_probabilities = utils.combine_probabilities(probabilities, 'geometric')
+    assert len(combined_probabilities.shape) == 2
+    combined_probabilities_expected = [[0.25, 0.69], [0.5, 0.29]]
+    np.testing.assert_array_equal(np.round(combined_probabilities, decimals=2), np.array(combined_probabilities_expected))
 
     # Harmonic
-    probs_combined = utils.combine_probabilities(probs, 'harmonic')
-    assert len(probs_combined.shape) == 2
-    probs_combined_expected = [[0.2, 0.68], [0.4, 0.26]]
-    np.testing.assert_array_equal(np.round(probs_combined, decimals=2), np.array(probs_combined_expected))
+    combined_probabilities = utils.combine_probabilities(probabilities, 'harmonic')
+    assert len(combined_probabilities.shape) == 2
+    combined_probabilities_expected = [[0.2, 0.68], [0.4, 0.26]]
+    np.testing.assert_array_equal(np.round(combined_probabilities, decimals=2), np.array(combined_probabilities_expected))
 
     # One model, ndim = 3
-    probs = np.array([[0.4, 0.6], [0.8, 0.2]])
-    probs_exp = np.array(np.expand_dims(probs, axis=0))
-    assert probs_exp.shape == (1, 2, 2)
+    probabilities = np.array([[0.4, 0.6], [0.8, 0.2]])
+    probabilities_exp = np.array(np.expand_dims(probabilities, axis=0))
+    assert probabilities_exp.shape == (1, 2, 2)
 
-    probs_combined = utils.combine_probabilities(probs_exp, 'maximum')
-    assert probs_combined.shape == (2, 2)
-    np.testing.assert_array_equal(probs_combined, np.array(probs))
+    combined_probabilities = utils.combine_probabilities(probabilities_exp, 'maximum')
+    assert combined_probabilities.shape == (2, 2)
+    np.testing.assert_array_equal(combined_probabilities, np.array(probabilities))
 
     # One model, ndim=2
-    probs = np.array([[0.4, 0.6], [0.8, 0.2]])
-    assert probs.shape == (2, 2)
-    probs_combined = utils.combine_probabilities(probs)
-    assert probs_combined.shape == (2, 2)
-    np.testing.assert_array_equal(probs_combined, np.array(probs))
+    probabilities = np.array([[0.4, 0.6], [0.8, 0.2]])
+    assert probabilities.shape == (2, 2)
+    combined_probabilities = utils.combine_probabilities(probabilities)
+    assert combined_probabilities.shape == (2, 2)
+    np.testing.assert_array_equal(combined_probabilities, np.array(probabilities))
 
 
 def test_load_preprocess_image(test_image_path, model_spec_mobilenet):

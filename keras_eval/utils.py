@@ -145,10 +145,10 @@ def load_preprocess_images(folder_path, model_spec):
     return images, image_paths
 
 
-def combine_probabilities(probs, combination_mode=None):
+def combine_probabilities(probabilities, combination_mode=None):
     '''
     Args:
-        probs: Probabilities given by the ensemble of models
+        probabilities: Probabilities given by the ensemble of models
         combination_mode: combination_mode: 'arithmetic' / 'geometric' / 'harmonic' mean of the predictions or 'maximum'
            probability value
 
@@ -165,23 +165,23 @@ def combine_probabilities(probs, combination_mode=None):
     # Probabilities of the ensemble input=[n_models, n_samples, n_classes] --> output=[n_samples, n_classes]
 
     # Make sure we have a numpy array
-    probs = np.array(probs)
+    probabilities = np.array(probabilities)
 
     # Join probabilities given by an ensemble of models following combination mode
-    if probs.ndim == 3:
-        if probs.shape[0] <= 1:
-            return probs[0]
+    if probabilities.ndim == 3:
+        if probabilities.shape[0] <= 1:
+            return probabilities[0]
         else:
             # Combine ensemble probabilities
             if combination_mode is not None:
                 if combination_mode not in combiners.keys():
                     raise ValueError('Error: invalid option for `combination_mode` ' + str(combination_mode))
                 else:
-                    return combiners[combination_mode](probs, axis=0)
+                    return combiners[combination_mode](probabilities, axis=0)
             else:
                 raise ValueError('You have multiple models, please enter a valid probability `combination_mode`')
-    elif probs.ndim == 2:
-        return probs
+    elif probabilities.ndim == 2:
+        return probabilities
     else:
-        raise ValueError('Incorrect shape for `probs` array, we accept [n_samples, n_classes] or '
+        raise ValueError('Incorrect shape for `probabilities` array, we accept [n_samples, n_classes] or '
                          '[n_models, n_samples, n_classes]')
