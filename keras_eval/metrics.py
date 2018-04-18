@@ -10,14 +10,14 @@ def accuracy(y_pred, y_true):
     return acc
 
 
-def accuracy_top_k(probs, y_true, k):
+def accuracy_top_k(probabilities, y_true, k):
     assert k >= 1, "k must be at least 1."
-    assert len(probs.shape) == 2, "`probs` should be a matrix of n_samples x n_dimensions"
-    assert y_true.shape[0] == probs.shape[0], "The first dimensions should match"
-    assert k <= probs.shape[1], "k should be less than the dimension of probs"
+    assert len(probabilities.shape) == 2, "`probabilities` should be a matrix of n_samples x n_dimensions"
+    assert y_true.shape[0] == probabilities.shape[0], "The first dimensions should match"
+    assert k <= probabilities.shape[1], "k should be less than the dimension of probabilities"
 
     # Sort the predictions. Then get the top k.
-    top_k_preds = probs.argsort(axis=1)[:, -k:]
+    top_k_preds = probabilities.argsort(axis=1)[:, -k:]
 
     # Get True/False values for predictions that match.
     preds_match = top_k_preds == y_true[:, np.newaxis]
@@ -32,19 +32,19 @@ def accuracy_top_k(probs, y_true, k):
     return acc
 
 
-def metrics_top_k(probs, y_true, class_names, k_vals=(1, 2, 3), verbose=1):
+def metrics_top_k(probabilities, y_true, concept_labels, k_vals=(1, 2, 3), verbose=1):
     """
-    Compute the sensitivity and precision between the predicted `probs` and the true labels `y_true`.
+    Compute the sensitivity and precision between the predicted `probabilities` and the true labels `y_true`.
 
     Notes:
         The precision is only computed when k=1, since it is not clear how to compute when k>1.
         np.nan values are used for undefined values (i.e., divide by zero errors).
-            This occurs if `y_probs` has no predictions for a certain class,
+            This occurs if `y_probabilities` has no predictions for a certain class,
             and/or if there is no values for `y_true` for a certain class.
 
     Args:
         y_true: a list/numpy array of true class labels (*not* encoded as 1-hot).
-        y_probs: a numpy array of 1-hot encoded predicted probabilities.
+        y_probabilities: a numpy array of 1-hot encoded predicted probabilities.
         labels: a list of the names of the labels.
         k_vals: a list of the values of k to use.
         print_screen: boolean that when True prints the results to screen.
@@ -56,12 +56,12 @@ def metrics_top_k(probs, y_true, class_names, k_vals=(1, 2, 3), verbose=1):
 
     """
     met = []  # {}
-    for idx, label in zip(range(len(class_names)), class_names):
+    for idx, label in zip(range(len(concept_labels)), concept_labels):
         for k in k_vals:
             if k == 0:
                 raise ValueError('`k_vals` cannot contain a `0`')
 
-            top_k_preds = probs.argsort(axis=1)[:, -k:]
+            top_k_preds = probabilities.argsort(axis=1)[:, -k:]
             preds_match = (top_k_preds == y_true[:, np.newaxis])
             in_top_k = np.sum(preds_match, axis=1) > 0
             tp_top_k = np.sum(in_top_k[(y_true == idx)])
@@ -99,18 +99,18 @@ def metrics_top_k(probs, y_true, class_names, k_vals=(1, 2, 3), verbose=1):
     return met
 
 
-def compute_confidence_prediction_distribution(probs, combination_mode=None, verbose=1):
-    if probs.ndim == 3:
-        if probs.shape[0] <= 1:
-            probs = probs[0]
-            prob_mean = np.mean(np.sort(probs)[:, ::-1], axis=0)
+def compute_confidence_prediction_distribution(probabilities, combination_mode=None, verbose=1):
+    if probabilities.ndim == 3:
+        if probabilities.shape[0] <= 1:
+            probabilities = probabilities[0]
+            prob_mean = np.mean(np.sort(probabilities)[:, ::-1], axis=0)
         else:
-            prob_mean = np.mean(np.sort(probs)[:, :, ::-1], axis=1)
+            prob_mean = np.mean(np.sort(probabilities)[:, :, ::-1], axis=1)
             prob_mean = utils.combine_probabilities(prob_mean, combination_mode)
-    elif probs.ndim == 2:
-        prob_mean = np.mean(np.sort(probs)[:, ::-1], axis=0)
+    elif probabilities.ndim == 2:
+        prob_mean = np.mean(np.sort(probabilities)[:, ::-1], axis=0)
     else:
-        raise ValueError('Incorrect shape for `probs` array, we accept [n_samples, n_classes] or '
+        raise ValueError('Incorrect shape for `probabilities` array, we accept [n_samples, n_classes] or '
                          '[n_models, n_samples, n_classes]')
     if verbose == 1:
         for ind, prob in enumerate(prob_mean):
@@ -119,30 +119,30 @@ def compute_confidence_prediction_distribution(probs, combination_mode=None, ver
     return prob_mean
 
 
-def uncertainty_distribution(probs, combination_mode=None, verbose=1):
+def uncertainty_distribution(probabilities, combination_mode=None, verbose=1):
     '''
     Args:
-        probs: Probabilities after model forwarding
+        probabilities: Probabilities after model forwarding
         verbose: Show text
         combination_mode: Ensemble combination mode
 
     Returns: The entropy for each of the predictions given [n_images]
     '''
 
-    probs = utils.combine_probabilities(probs, combination_mode)
-    entropy = scipy.stats.entropy(probs.T, base=2.0)
+    probabilities = utils.combine_probabilities(probabilities, combination_mode)
+    entropy = scipy.stats.entropy(probabilities.T, base=2.0)
 
     if verbose == 1:
-        print('There are %i classes ' % probs.shape[1])
-        print('Max uncertainty value is %.3f' % log(probs.shape[1], 2))
+        print('There are %i classes ' % probabilities.shape[1])
+        print('Max uncertainty value is %.3f' % log(probabilities.shape[1], 2))
         print('The mean entropy or uncertainty per image is %.3f' % np.mean(entropy))
     return entropy
 
 
-def get_correct_errors_indices(probs, labels, k, split_k=False):
+def get_correct_errors_indices(probabilities, labels, k, split_k=False):
     '''
     Args:
-        probs: Probabilities of the model / ensemble [n_images, n_class] / [n_models, n_images, n_class]
+        probabilities: Probabilities of the model / ensemble [n_images, n_class] / [n_models, n_images, n_class]
         y_true:  Ground truth [n_images, n_class]
         k: Top k probabilities to compute the errors / correct
         split_k: If true, not consider top-n being n<k to compute the top-k correct/error predictions
@@ -163,10 +163,10 @@ def get_correct_errors_indices(probs, labels, k, split_k=False):
 
     for k_val in k_list:
 
-        probs_class = probs.argsort(axis=1)[:, -k_val:]
+        probabilities_class = probabilities.argsort(axis=1)[:, -k_val:]
 
         # Get True/False values for predictions that match.
-        preds_match = probs_class == y_true[:, np.newaxis]
+        preds_match = probabilities_class == y_true[:, np.newaxis]
 
         # Find the positions of the errors / correct
         if split_k:
@@ -181,10 +181,10 @@ def get_correct_errors_indices(probs, labels, k, split_k=False):
     return correct, errors
 
 
-def get_top1_probability_stats(probs, labels, threshold, verbose=0):
+def get_top1_probability_stats(probabilities, labels, threshold, verbose=0):
     '''
     Args:
-        probs: Probabilities of the model / ensemble [n_images, n_class] / [n_models, n_images, n_class]
+        probabilities: Probabilities of the model / ensemble [n_images, n_class] / [n_models, n_images, n_class]
         y_true: Ground truth [n_images, n_class]
         threshold: Value or set of values, can be list, numpy array or tuple
         combination_mode:  For ensembling probabilities
@@ -195,12 +195,12 @@ def get_top1_probability_stats(probs, labels, threshold, verbose=0):
 
     '''
     # Get top-1 errors and correct predictions
-    correct, errors = get_correct_errors_indices(probs, labels, k=1)
+    correct, errors = get_correct_errors_indices(probabilities, labels, k=1)
     correct = correct[0]
     errors = errors[0]
     # Get the probabilities associated
-    error_probabilities = probs[errors]
-    correct_probabilities = probs[correct]
+    error_probabilities = probabilities[errors]
+    correct_probabilities = probabilities[correct]
     # Get the top probability
     top_error_probability = np.sort(error_probabilities, axis=1)[:, ::-1][:, 0]
     top_correct_probability = np.sort(correct_probabilities, axis=1)[:, ::-1][:, 0]
@@ -251,10 +251,10 @@ def get_top1_probability_stats(probs, labels, threshold, verbose=0):
     return correct_list, errors_list, n_correct, n_errors
 
 
-def get_top1_entropy_stats(probs, labels, entropy, verbose=0):
+def get_top1_entropy_stats(probabilities, labels, entropy, verbose=0):
     '''
     Args:
-        probs: Probabilities of the model / ensemble [n_images, n_class] / [n_models, n_images, n_class]
+        probabilities: Probabilities of the model / ensemble [n_images, n_class] / [n_models, n_images, n_class]
         y_true: Ground truth [n_images, n_class]
         entropy: Value or set of values, can be list or numpy array with max entropy values
         combination_mode: For ensembling probabilities
@@ -265,13 +265,13 @@ def get_top1_entropy_stats(probs, labels, entropy, verbose=0):
 
     '''
     # Get top-1 errors and correct predictions
-    correct, errors = get_correct_errors_indices(probs, labels, k=1)
+    correct, errors = get_correct_errors_indices(probabilities, labels, k=1)
     correct = correct[0]
     errors = errors[0]
     # Get the entropy associated
-    probs_entropy = uncertainty_distribution(probs)
-    error_entropy = probs_entropy[errors]
-    correct_entropy = probs_entropy[correct]
+    probabilities_entropy = uncertainty_distribution(probabilities)
+    error_entropy = probabilities_entropy[errors]
+    correct_entropy = probabilities_entropy[correct]
 
     # If we input a threshold / set of thresholds extract the indices of the images that we will misclassify
     if entropy is None:
