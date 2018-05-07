@@ -1,3 +1,4 @@
+from __future__ import print_function
 import os
 import copy
 import numpy as np
@@ -92,15 +93,15 @@ class Evaluator(object):
             image_paths.append(os.path.join(self.data_dir, filename))
         return image_paths
 
-    def evaluate(self, data_dir=None, K=[1], filter_indices=None, confusion_matrix=False,
-                 save_confusion_matrix_path=None):
+    def evaluate(self, data_dir=None, top_k=1, filter_indices=None, confusion_matrix=False,
+                 save_confusion_matrix_path=None, verbose=1):
         '''
         Evaluate a set of images. Each sub-folder under 'data_dir/' will be considered as a different class.
         E.g. 'data_dir/class_1/dog.jpg' , 'data_dir/class_2/cat.jpg
 
         Args:
             data_dir: Data directory to load the images from
-            K: A tuple of the top-k predictions to consider. E.g. K = (1,2,3,4,5) is top-5 preds
+            top_k: The top-k predictions to consider. E.g. top_k = 5 is top-5 preds
             filter_indices: If given take only the predictions corresponding to that indices to compute metrics
             confusion_matrix: True/False whether to show the confusion matrix
             save_confusion_matrix_path: If path specified save confusion matrix there
@@ -119,7 +120,7 @@ class Evaluator(object):
             raise ValueError('No data directory found, please specify a valid data directory under variable `data_dir`')
         else:
             # Create Keras image generator and obtain predictions
-            self.probabilities, self.labels = self.compute_probabilities_generator(data_dir=self.data_dir)
+            self.probabilities, self.labels = self._compute_probabilities_generator(data_dir=self.data_dir)
 
             # Create dictionary containing class names
             if self.concepts is None:
@@ -129,13 +130,17 @@ class Evaluator(object):
             self.concept_labels = utils.get_concept_items(self.concepts, key='label')
 
             # Compute metrics
-            self.get_metrics(probabilities=self.probabilities, labels=self.labels, concept_labels=self.concept_labels, K=K,
-                             filter_indices=filter_indices, confusion_matrix=confusion_matrix,
-                             save_confusion_matrix_path=save_confusion_matrix_path)
+            self.results = self.get_metrics(probabilities=self.probabilities, labels=self.labels,
+                                            concept_labels=self.concept_labels, top_k=top_k, filter_indices=filter_indices,
+                                            confusion_matrix=confusion_matrix,
+                                            save_confusion_matrix_path=save_confusion_matrix_path)
+
+            if verbose:
+                self.print_results(self.results)
 
         return self.probabilities, self.labels
 
-    def plot_confusion_matrix(self, probabilities, labels, concept_labels=None, save_path=None):
+    def plot_confusion_matrix(self, confusion_matrix, concept_labels=None, save_path=None):
         '''
 
         Args:
@@ -148,10 +153,10 @@ class Evaluator(object):
 
         '''
         concept_labels = concept_labels or utils.get_concept_items(self.concepts, key='label')
-        visualizer.plot_confusion_matrix(probabilities=probabilities, labels=labels, concept_labels=concept_labels, save_path=save_path)
+        visualizer.plot_confusion_matrix(confusion_matrix, concepts=concept_labels, save_path=save_path)
 
-    def get_metrics(self, probabilities, labels, K=(1, 2), concept_labels=None, filter_indices=None,
-                    confusion_matrix=False, save_confusion_matrix_path=None, verbose=1):
+    def get_metrics(self, probabilities, labels, top_k=1, concept_labels=None, filter_indices=None,
+                    confusion_matrix=False, save_confusion_matrix_path=None, verbose=0):
         '''
          Print to screen metrics from experiment given probabilities and labels
 
@@ -183,21 +188,17 @@ class Evaluator(object):
 
         y_true = labels.argmax(axis=1)
 
-        for k in K:
-            acc_k = metrics.accuracy_top_k(self.combined_probabilities, y_true, k=k)
-            print('Accuracy at k=%i is %.4f' % (k, acc_k))
-
         # Print sensitivity and precision for different values of K.
-        met = metrics.metrics_top_k(self.combined_probabilities, y_true, concept_labels=concept_labels, k_vals=K, verbose=verbose)
+        results = metrics.metrics_top_k(self.combined_probabilities, y_true, concepts=concept_labels, top_k=top_k)
 
         # Show metrics visualization as a confusion matrix
         if confusion_matrix:
-            self.plot_confusion_matrix(probabilities=self.combined_probabilities, labels=labels,
+            self.plot_confusion_matrix(confusion_matrix=results['global']['confusion_matrix'],
                                        concept_labels=concept_labels, save_path=save_confusion_matrix_path)
 
-        return met
+        return results
 
-    def compute_probabilities_generator(self, data_dir=None):
+    def _compute_probabilities_generator(self, data_dir=None):
         '''
 
         Args:
@@ -334,7 +335,7 @@ class Evaluator(object):
         errors = (n_total_errors - errors) / n_total_errors * 100
         correct = correct / n_total_correct * 100
 
-        visualizer.plotly_threshold(threshold, correct, errors, title='Top-1 Probability Threshold Tuning')
+        visualizer.plot_threshold(threshold, correct, errors, title='Top-1 Probability Threshold Tuning')
 
         return correct_ind, errors_ind, correct, errors
 
@@ -432,3 +433,40 @@ class Evaluator(object):
         '''
 
         return metrics.uncertainty_distribution(self.probabilities, self.combination_mode, verbose)
+
+    def plot_top_k_sensitivity_by_concept(self):
+        concepts = utils.get_concept_items(self.concepts, key='label')
+        metrics = [item['sensitivity'] for item in self.results['by_concept']]
+        visualizer.plot_concept_metrics(concepts, metrics, 'Top-k', 'Sensitivity')
+
+    def plot_top_k_accuracy(self):
+        metrics = self.results['global']['accuracy']
+        visualizer.plot_concept_metrics(['all'], [metrics], 'Top-k', 'Accuracy')
+
+    def print_results(self, results, round_decimals=3, percentage=False):
+        print_concept = True
+        print('--- Results ---\n')
+        print('--- Global Metrics ---\n')
+        for key, values in results['global'].items():
+            if key != 'confusion_matrix':
+                for i in range(0, len(values)):
+                    val = round(values[i], round_decimals)
+                    if percentage:
+                        val = val * 100
+                    print('| ' ' @k=' + str(i) + ', ' + key + '=' + '%.3f' % val, end=' ')
+                print('|')
+        print('')
+        print('--- Class Metrics ---\n')
+        for concept in results['by_concept']:
+            for key, values in concept.items():
+                if print_concept:
+                    print('| ' + concept['concept'] + ' ', end='')
+                    print_concept = False
+                if key != 'concept':
+                    for i in range(0, len(values)):
+                        val = round(values[i], round_decimals)
+                        if percentage:
+                            val = val * 100
+                        print('| ' ' @k=' + str(i) + ', ' + key + '=' + '%.3f' % val, end=' ')
+            print('|')
+            print_concept = True

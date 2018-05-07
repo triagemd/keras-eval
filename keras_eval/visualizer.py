@@ -1,17 +1,15 @@
 import numpy as np
 import matplotlib.pyplot as plt
-from sklearn.metrics import confusion_matrix
 import plotly.graph_objs as go
 from plotly.offline import iplot
 
 
-def plot_confusion_matrix(probabilities, labels, concept_labels, fontsize=18, figsize=(16, 12), cmap=plt.cm.coolwarm_r, save_path=None):
+def plot_confusion_matrix(cm, concepts, normalize=False, fontsize=18, figsize=(16, 12),
+                          cmap=plt.cm.coolwarm_r, save_path=None):
     '''
 
     Args:
-       probabilities: Output of the CNN
-       labels: Ground truth classes (categorical)
-       concept_labels: List of strings containing classes names
+       concepts: Name of the classes
        fontsize: Size of text
        figsize: Size of figure
        cmap: Color choice
@@ -20,16 +18,19 @@ def plot_confusion_matrix(probabilities, labels, concept_labels, fontsize=18, fi
     Returns: Nothing, shows confusion matrix
 
     '''
+    if cm.ndim != 2 or cm.shape[0] != cm.shape[1]:
+        raise ValueError('Invalid confusion matrix shape, it should be square and ndim=2')
 
-    y_pred = np.argmax(probabilities, axis=1)
-    y_true = np.argmax(labels, axis=1)
+    if cm.shape[0] != len(concepts) or cm.shape[1] != len(concepts):
+        raise ValueError('Number of concepts (%i) and dimensions of confusion matrix do not coincide (%i, %i)' %
+                         (len(concepts), cm.shape[0], cm.shape[1]))
 
-    n_labels = len(concept_labels)
-    np.set_printoptions(precision=2)
     plt.rcParams.update({'font.size': fontsize})
 
-    cm = confusion_matrix(y_true, y_pred, range(len(concept_labels)))
     cm_normalized = cm.astype('float') / cm.sum(axis=1)[:, np.newaxis]
+
+    if normalize:
+        cm = cm_normalized
 
     fig = plt.figure(figsize=figsize)
     ax = fig.add_subplot(111)
@@ -37,15 +38,16 @@ def plot_confusion_matrix(probabilities, labels, concept_labels, fontsize=18, fi
 
     fig.colorbar(cax)
     ax.xaxis.tick_bottom()
-    ax.set_xticklabels(concept_labels)
-    ax.set_yticklabels(concept_labels)
+    n_labels = len(concepts)
+    ax.set_xticklabels(concepts)
+    ax.set_yticklabels(concepts)
     plt.xticks(np.arange(0, n_labels, 1.0), rotation='vertical')
     plt.yticks(np.arange(0, n_labels, 1.0))
     plt.ylabel('True label', fontweight='bold')
     plt.xlabel('Predicted label', fontweight='bold')
 
     # http://stackoverflow.com/questions/21712047/matplotlib-imshow-matshow-display-values-on-plot
-    min_val, max_val = 0, len(concept_labels)
+    min_val, max_val = 0, len(concepts)
     ind_array = np.arange(min_val, max_val, 1.0)
     x, y = np.meshgrid(ind_array, ind_array)
     for i, (x_val, y_val) in enumerate(zip(x.flatten(), y.flatten())):
@@ -56,7 +58,7 @@ def plot_confusion_matrix(probabilities, labels, concept_labels, fontsize=18, fi
         plt.savefig(save_path)
 
 
-def plotly_threshold(threshold, correct, errors, title='Threshold Tuning'):
+def plot_threshold(threshold, correct, errors, title='Threshold Tuning'):
     '''
 
     Args:
@@ -68,6 +70,10 @@ def plotly_threshold(threshold, correct, errors, title='Threshold Tuning'):
     Returns: Interactive Plot
 
     '''
+    if not len(threshold) == len(correct) == len(errors):
+        raise ValueError('The length of the arrays introduced do not coincide (%i), (%i), (%i)'
+                         % (len(threshold), len(correct), len(errors)))
+
     trace1 = go.Scatter(
         x=threshold,
         y=correct,
@@ -129,3 +135,28 @@ def plot_images(image_paths, n_imgs, title='', save_name=None):
 
     if save_name is not None:
         plt.savefig(save_name)
+
+
+def plot_concept_metrics(concepts, metrics, x_axis_label, y_axis_label, title=None):
+    if len(concepts) != len(metrics):
+        raise ValueError('Dimensions of concepts (%i) and metrics array (%i) do not match' % (len(concepts),
+                                                                                              len(metrics)))
+    data = [[] for i in range(len(concepts))]
+    for i in range(len(concepts)):
+        data[i] = go.Scatter(
+            x=np.arange(1, len(metrics[i]) + 1),
+            y=metrics[i],
+            mode='lines',
+            name=concepts[i],
+        )
+    layout = go.Layout(
+        title=title,
+        xaxis=dict(
+            title=x_axis_label
+        ),
+        yaxis=dict(
+            title=y_axis_label
+        ),
+    )
+    fig = go.Figure(data=data, layout=layout)
+    iplot(fig, filename='line-mode')
