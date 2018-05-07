@@ -1,8 +1,8 @@
 import pytest
 import numpy as np
-from keras_eval.metrics import metrics_top_k, get_correct_errors_indices, uncertainty_distribution, \
-    compute_confidence_prediction_distribution, get_correct_errors_indices, get_top1_entropy_stats, \
-    get_top1_probability_stats
+from keras_eval.metrics import metrics_top_k, uncertainty_distribution, get_top1_probability_stats, \
+    compute_confidence_prediction_distribution, get_correct_errors_indices, get_top1_entropy_stats
+
 from math import log
 
 
