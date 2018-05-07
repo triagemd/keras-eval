@@ -64,7 +64,7 @@ def test_uncertainty_distribution():
 def test_compute_confidence_prediction_distribution():
     probabilities = np.array([[0.3, 0.7], [0.67, 0.33]])
     confidence_prediction = compute_confidence_prediction_distribution(probabilities)
-    expected_confidence = np.array([0.685, 0.315])
+    expected_confidence = np.array([0.68, 0.32])
     np.testing.assert_array_equal(np.round(confidence_prediction, decimals=2), expected_confidence)
 
 
