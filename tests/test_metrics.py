@@ -1,76 +1,71 @@
+import pytest
 import numpy as np
-import keras_eval.metrics as metrics
+from keras_eval.metrics import metrics_top_k, uncertainty_distribution, get_top1_probability_stats, \
+    compute_confidence_prediction_distribution, get_correct_errors_indices, get_top1_entropy_stats
+
 from math import log
 
 
-def test_accuracy_top_k():
-    y_true = np.asarray([0, 1, 0, 1])
-    probabilities = np.asarray([[1, 0], [0, 1], [1, 0], [0, 1]])
-    pred_acc = metrics.accuracy_top_k(probabilities, y_true, k=1)
-    assert pred_acc == 1, "All should be true!"
-
-    probabilities = np.asarray([[0, 1], [1, 0], [0, 1], [1, 0]])
-    pred_acc = metrics.accuracy_top_k(probabilities, y_true, k=1)
-    assert pred_acc == 0, "All should be False!"
-
-    pred_acc = metrics.accuracy_top_k(probabilities, y_true, k=2)
-    assert pred_acc == 1, "All should be True!"
-
-    probabilities = np.asarray([[0.3, 0.7], [0.4, 0.6], [0.9, 0.1], [0.2, 0.8]])  # First sample an error.
-    pred_acc = metrics.accuracy_top_k(probabilities, y_true, k=1)
-    assert pred_acc == 0.75, "Accuracy should have 1/4 error."
-    pred_acc = metrics.accuracy_top_k(probabilities, y_true, k=2)
-    assert pred_acc == 1, "Accuracy should have 0 error since k=2."
-    # Add an extra class.
-    probabilities = np.asarray([[0.1, 0.7, 0.2], [0.4, 0.6, 0], [0.9, 0.1, 0], [0.2, 0.8, 0]])  # First sample an error.
-    pred_acc = metrics.accuracy_top_k(probabilities, y_true, k=2)
-    assert pred_acc == 0.75, "Accuracy should have 1/4 error when k=2, since extra class"
-
-
 def test_metrics_top_k():
-    class_names = ['class0', 'class1']
-    y_true = np.asarray([1, 1, 0])  # 3 samples, 2 classes.
-    y_probabilities = np.asarray([[0, 1], [0.1, 0.9], [0.8, 0.2]])
+    concepts = ['class0', 'class1', 'class3']
+    ground_truth = np.asarray([0, 1, 2, 2])  # 4 samples, 3 classes.
+    probabilities = np.asarray([[1, 0, 0], [0.2, 0.2, 0.6], [0.8, 0.2, 0], [0.35, 0.25, 0.4]])
 
-    met = metrics.metrics_top_k(y_probabilities, y_true, class_names, k_vals=[1, 2], verbose=0)
-    assert met[0]['sensitivity_k1'] == 1.0, 'sens should be 1 when k=1.'
-    assert met[1]['sensitivity_k1'] == 1.0, 'sens should be 1 when k=1.'
-    assert met[0]['precision_k1'] == 1.0, 'prec should be 1 when k=1.'
-    assert met[1]['precision_k1'] == 1.0, 'prec should be 1 when k=1.'
-    assert met[0]['sensitivity_k2'] == 1.0, 'sens should be 1 when k=2.'
-    assert met[1]['sensitivity_k1'] == 1.0, 'sens should be 1 when k=2.'
+    # 2 Correct, 2 Mistakes
+    metrics = metrics_top_k(probabilities, ground_truth, concepts, top_k=1)
+    expected = {
+        'by_concept': [
+            {'concept': 'class0', 'precision': [0.5], 'sensitivity': [1.0]},
+            {'concept': 'class1', 'precision': [np.nan], 'sensitivity': [0.0]},
+            {'concept': 'class3', 'precision': [0.5], 'sensitivity': [0.5]}],
+        'global': {
+            'accuracy': [0.5],
+            'confusion_matrix': np.array([[1, 0, 0], [0, 0, 1], [1, 0, 1]]),
+            'precision': [0.375],
+            'sensitivity': [0.5]}}
 
-    y_probabilities = np.asarray([[1, 0], [0.1, 0.9], [0.8, 0.2]])  # First one is predicted incorrectly.
-    met = metrics.metrics_top_k(y_probabilities, y_true, class_names, k_vals=[1, 2], verbose=0)
-    assert met[0]['sensitivity_k1'] == 1.0, 'sens should be 1 when k=1, since all correct for class 0.'
-    assert met[1]['sensitivity_k1'] == 0.5, 'sens should be 0.5 when k=1, since first is incorrect.'
-    assert met[0]['precision_k1'] == 0.5, 'prec should be 0.5 when k=1, since predicts extra class 0.'
-    assert met[1]['precision_k1'] == 1.0, 'prec should be 1 when k=1, since does not over predict.'
-    assert met[0]['sensitivity_k2'] == 1.0, 'sens should be 1 when k=2.'
-    assert met[1]['sensitivity_k2'] == 1.0, 'sens should be 1 when k=2.'
+    np.testing.assert_equal(metrics, expected)
 
-    class_names = ['class0', 'class1', 'class2']
-    y_probabilities = np.asarray([[0.1, 0, 0.9], [0.1, 0.9, 0], [0.8, 0.2, 0]])  # Add extra class. First sample is incorrect.
-    met = metrics.metrics_top_k(y_probabilities, y_true, class_names, k_vals=[1, 2], verbose=0)
-    assert met[0]['sensitivity_k1'] == 1.0, 'sens should be 1 when k=1, since all correct for class 0.'
-    assert met[1]['sensitivity_k1'] == 0.5, 'sens should be 0.5 when k=1, since first is incorrect.'
-    assert np.isnan(met[2]['sensitivity_k1']), "Should be nan since no values predict class2"
-    assert met[2]['precision_k1'] == 0.0, "prec should be 0 since TP is 0."
-    assert met[1]['sensitivity_k2'] == 0.5, "When k=2, incorrect first sample (as class0 has higher prob)."
+    # Assert error when top_k <= 0 or > len(concepts)
+    with pytest.raises(ValueError) as exception:
+        metrics = metrics_top_k(probabilities, ground_truth, concepts, top_k=0)
+    expected = '`top_k` value should be between 1 and the total number of concepts (3)'
+    actual = str(exception).split('ValueError: ')[1]
+    assert actual == expected
+
+    with pytest.raises(ValueError) as exception:
+        metrics = metrics_top_k(probabilities, ground_truth, concepts, top_k=10)
+    expected = '`top_k` value should be between 1 and the total number of concepts (3)'
+    actual = str(exception).split('ValueError: ')[1]
+    assert actual == expected
+
+    with pytest.raises(ValueError) as exception:
+        metrics = metrics_top_k(probabilities, ground_truth, concepts, top_k=-1)
+    expected = '`top_k` value should be between 1 and the total number of concepts (3)'
+    actual = str(exception).split('ValueError: ')[1]
+    assert actual == expected
+
+    # Assert error when number of samples do not coincide
+    ground_truth = np.asarray([0, 1, 2, 2, 1])
+    with pytest.raises(ValueError) as exception:
+        metrics = metrics_top_k(probabilities, ground_truth, concepts, top_k=-1)
+    expected = 'The number predicted samples (4) is different from the ground truth samples (5)'
+    actual = str(exception).split('ValueError: ')[1]
+    assert actual == expected
 
 
 def test_uncertainty_distribution():
     probabilities = np.array([[0.3, 0.7], [0.67, 0.33]])
-    entropy = metrics.uncertainty_distribution(probabilities)
+    entropy = uncertainty_distribution(probabilities)
     expected_entropy = np.array([0.88, 0.91])
     np.testing.assert_array_equal(np.round(entropy, decimals=2), expected_entropy)
 
 
 def test_compute_confidence_prediction_distribution():
     probabilities = np.array([[0.3, 0.7], [0.67, 0.33]])
-    entropy = metrics.uncertainty_distribution(probabilities)
-    expected_entropy = np.array([0.88, 0.91])
-    np.testing.assert_array_equal(np.round(entropy, decimals=2), expected_entropy)
+    confidence_prediction = compute_confidence_prediction_distribution(probabilities)
+    expected_confidence = np.array([0.68, 0.32])
+    np.testing.assert_array_equal(np.round(confidence_prediction, decimals=2), expected_confidence)
 
 
 def test_get_correct_errors_indices():
@@ -78,19 +73,19 @@ def test_get_correct_errors_indices():
     labels = np.array([[0, 1], [0, 1], [1, 0]])
 
     k = [1]
-    correct, errors = metrics.get_correct_errors_indices(probabilities, labels, k)
+    correct, errors = get_correct_errors_indices(probabilities, labels, k)
     np.testing.assert_array_equal(correct, [np.array([0, 2])])
     np.testing.assert_array_equal(errors, [np.array([1])])
 
     # Resilient to k being int
     k = 1
-    correct, errors = metrics.get_correct_errors_indices(probabilities, labels, k)
+    correct, errors = get_correct_errors_indices(probabilities, labels, k)
     np.testing.assert_array_equal(correct, [np.array([0, 2])])
     np.testing.assert_array_equal(errors, [np.array([1])])
 
     # multiple k
     k = [1, 2]
-    correct, errors = metrics.get_correct_errors_indices(probabilities, labels, k)
+    correct, errors = get_correct_errors_indices(probabilities, labels, k)
     np.testing.assert_array_equal(correct[0], np.array([0, 2]))
     np.testing.assert_array_equal(errors[0], np.array([1]))
     np.testing.assert_array_equal(correct[1], np.array([0, 1, 2]))
@@ -101,7 +96,7 @@ def test_get_top1_entropy_stats():
     probabilities = np.array([[0.2, 0.8], [0.6, 0.4], [0.9, 0.1]])
     labels = np.array([[0, 1], [0, 1], [1, 0]])
     entropy = np.arange(0, log(probabilities.shape[1] + 0.01, 2), 0.1)
-    correct_list, errors_list, n_correct, n_errors = metrics.get_top1_entropy_stats(probabilities, labels, entropy)
+    correct_list, errors_list, n_correct, n_errors = get_top1_entropy_stats(probabilities, labels, entropy)
 
     np.testing.assert_array_equal(n_correct, np.array([0, 0, 0, 0, 0, 1, 1, 1, 2, 2, 2]))
     np.testing.assert_array_equal(n_errors, np.array([0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1]))
@@ -114,7 +109,7 @@ def test_get_top1_entropy_stats():
 
     # One value
     entropy = [0.5]
-    correct_list, errors_list, n_correct, n_errors = metrics.get_top1_entropy_stats(probabilities, labels, entropy)
+    correct_list, errors_list, n_correct, n_errors = get_top1_entropy_stats(probabilities, labels, entropy)
     np.testing.assert_array_equal(n_correct, np.array([1]))
     np.testing.assert_array_equal(n_errors, np.array([0]))
 
@@ -129,7 +124,7 @@ def test_get_top1_probability_stats():
     probabilities = np.array([[0.2, 0.8], [0.6, 0.4], [0.9, 0.1]])
     labels = np.array([[0, 1], [0, 1], [1, 0]])
     threshold = np.arange(0, 1.01, 0.1)
-    correct_list, errors_list, n_correct, n_errors = metrics.get_top1_probability_stats(probabilities, labels, threshold)
+    correct_list, errors_list, n_correct, n_errors = get_top1_probability_stats(probabilities, labels, threshold)
 
     np.testing.assert_array_equal(n_correct, np.array([2, 2, 2, 2, 2, 2, 2, 2, 1, 0, 0]))
     np.testing.assert_array_equal(n_errors, np.array([1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0]))
@@ -142,7 +137,7 @@ def test_get_top1_probability_stats():
 
     # One value
     threshold = [0.5]
-    correct_list, errors_list, n_correct, n_errors = metrics.get_top1_probability_stats(probabilities, labels, threshold)
+    correct_list, errors_list, n_correct, n_errors = get_top1_probability_stats(probabilities, labels, threshold)
     np.testing.assert_array_equal(n_correct, np.array([2]))
     np.testing.assert_array_equal(n_errors, np.array([1]))
 
