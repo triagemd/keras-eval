@@ -44,6 +44,7 @@ class Evaluator(object):
         if len(extra_options) > 0:
             raise ValueError('unsupported options given: %s' % (', '.join(extra_options), ))
 
+        self.results = None
         self.models = []
         self.model_specs = []
         self.probabilities = None
@@ -361,7 +362,9 @@ class Evaluator(object):
         if image_paths is None:
             image_paths = self.image_paths
 
-        assert self.combined_probabilities.shape[0] == len(image_paths)
+        if self.combined_probabilities.shape[0] != len(image_paths):
+            raise ValueError('Length of probabilities (%i) do not coincide with the number of image paths (%i)' %
+                             (self.combined_probabilities.shape[0], len(image_paths)))
 
         concept_labels = concept_labels or utils.get_concept_items(self.concepts, key='label')
 
@@ -414,7 +417,8 @@ class Evaluator(object):
         Returns: The mean value of the probability assigned to predictions [top-1, ..., top-k] k = n_classes
 
         '''
-
+        if self.probabilities is None:
+            raise ValueError('probabilities value is None, please run a evaluation first')
         return metrics.compute_confidence_prediction_distribution(self.probabilities, self.combination_mode, verbose)
 
     def compute_uncertainty_distribution(self, verbose=1):
@@ -431,19 +435,27 @@ class Evaluator(object):
         Returns: The uncertainty measurement per each sample
 
         '''
-
+        if self.probabilities is None:
+            raise ValueError('probabilities value is None, please run a evaluation first')
         return metrics.uncertainty_distribution(self.probabilities, self.combination_mode, verbose)
 
     def plot_top_k_sensitivity_by_concept(self):
+        if self.results is None:
+            raise ValueError('results parameter is None, please run a evaluation first')
         concepts = utils.get_concept_items(self.concepts, key='label')
         metrics = [item['sensitivity'] for item in self.results['by_concept']]
         visualizer.plot_concept_metrics(concepts, metrics, 'Top-k', 'Sensitivity')
 
     def plot_top_k_accuracy(self):
+        if self.results is None:
+            raise ValueError('results parameter is None, please run a evaluation first')
         metrics = self.results['global']['accuracy']
         visualizer.plot_concept_metrics(['all'], [metrics], 'Top-k', 'Accuracy')
 
-    def print_results(self, results, round_decimals=3, percentage=False):
+    @staticmethod
+    def print_results(results=None, round_decimals=3, percentage=False):
+        if results is None:
+            raise ValueError('results parameter is None, please specify a value')
         print_concept = True
         print('--- Results ---\n')
         print('--- Global Metrics ---\n')
