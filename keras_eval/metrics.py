@@ -73,14 +73,12 @@ def metrics_top_k(probabilities, ground_truth, concepts, top_k):
                     global_precision.append(precision * total_samples_concept)
 
                 metrics['by_concept'].append({
-                    'concept': concept,
-                    'sensitivity': [sensitivity],
-                    'precision': [precision]})
+                    'concept': concept, 'metrics': {'sensitivity': [sensitivity], 'precision': [precision]}})
 
                 metrics['global']['confusion_matrix'] = confusion_matrix(ground_truth, top_k_preds,
                                                                          labels=range(len(concepts)))
             else:
-                metrics['by_concept'][idx]['sensitivity'].append(sensitivity)
+                metrics['by_concept'][idx]['metrics']['sensitivity'].append(sensitivity)
 
         # Normalize by number of samples
         metrics['global']['sensitivity'].append(global_sensitivity / total_samples)
