@@ -15,9 +15,12 @@ def test_metrics_top_k():
     metrics = metrics_top_k(probabilities, ground_truth, concepts, top_k=1)
     expected = {
         'by_concept': [
-            {'concept': 'class0', 'precision': [0.5], 'sensitivity': [1.0]},
-            {'concept': 'class1', 'precision': [np.nan], 'sensitivity': [0.0]},
-            {'concept': 'class3', 'precision': [0.5], 'sensitivity': [0.5]}],
+            {'concept': 'class0',
+             'metrics': {'precision': [0.5], 'sensitivity': [1.0]}},
+            {'concept': 'class1',
+             'metrics': {'precision': [np.nan], 'sensitivity': [0.0]}},
+            {'concept': 'class3',
+             'metrics': {'precision': [0.5], 'sensitivity': [0.5]}}],
         'global': {
             'accuracy': [0.5],
             'confusion_matrix': np.array([[1, 0, 0], [0, 0, 1], [1, 0, 1]]),
