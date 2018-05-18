@@ -18,6 +18,7 @@ setup(
         'Pillow',
         'scipy',
         'numpy',
+        'pandas',
         'plotly',
         'matplotlib',
         'sklearn',

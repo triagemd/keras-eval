@@ -2,10 +2,12 @@ from __future__ import print_function
 import os
 import copy
 import numpy as np
-from math import log
+import pandas as pd
 import keras_eval.utils as utils
 import keras_eval.metrics as metrics
 import keras_eval.visualizer as visualizer
+
+from math import log
 
 
 class Evaluator(object):
@@ -443,7 +445,7 @@ class Evaluator(object):
         if self.results is None:
             raise ValueError('results parameter is None, please run a evaluation first')
         concepts = utils.get_concept_items(self.concepts, key='label')
-        metrics = [item['sensitivity'] for item in self.results['by_concept']]
+        metrics = [item['metrics']['sensitivity'] for item in self.results['by_concept']]
         visualizer.plot_concept_metrics(concepts, metrics, 'Top-k', 'Sensitivity')
 
     def plot_top_k_accuracy(self):
@@ -456,7 +458,6 @@ class Evaluator(object):
     def print_results(results=None, round_decimals=3, percentage=False):
         if results is None:
             raise ValueError('results parameter is None, please specify a value')
-        print_concept = True
         print('--- Results ---\n')
         print('--- Global Metrics ---\n')
         for key, values in results['global'].items():
@@ -470,15 +471,52 @@ class Evaluator(object):
         print('')
         print('--- Class Metrics ---\n')
         for concept in results['by_concept']:
-            for key, values in concept.items():
-                if print_concept:
+            for key_1, val_1 in concept.items():
+                if key_1 is 'concept':
                     print('| ' + concept['concept'] + ' ', end='')
-                    print_concept = False
-                if key != 'concept':
-                    for i in range(0, len(values)):
-                        val = round(values[i], round_decimals)
-                        if percentage:
-                            val = val * 100
-                        print('| ' ' @k=' + str(i) + ', ' + key + '=' + '%.3f' % val, end=' ')
+                if key_1 is 'metrics':
+                    for key_2, val_2 in val_1.items():
+                        for i in range(0, len(val_2)):
+                            val = round(val_2[i], round_decimals)
+                            if percentage:
+                                val = val * 100
+                            print('| ' ' @k=' + str(i) + ', ' + key_2 + '=' + '%.3f' % val, end=' ')
             print('|')
-            print_concept = True
+
+    def results_to_df(self, csv_path=None, round_decimals=3):
+        '''
+        Generate a Pandas Dataframe with the results. If csv_path is provided, it writes the Dataframe to a CSV file.
+        Args:
+            csv_path:
+            round_decimals:
+
+        Returns: Pandas Dataframe with results.
+        '''
+        if self.results is None:
+            raise ValueError('results parameter is None, please run a evaluation first')
+
+        df = pd.DataFrame({'model': os.path.basename(self.model_path)}, index=range(1))
+
+        for global_metric in self.results['global']:
+            if global_metric is 'confusion_matrix':
+                df['TN'] = self.results['global'][global_metric][0, 0]
+                df['FN'] = self.results['global'][global_metric][1, 0]
+                df['TP'] = self.results['global'][global_metric][1, 1]
+                df['FP'] = self.results['global'][global_metric][0, 1]
+            elif global_metric is 'precision':
+                df[global_metric] = round(self.results['global'][global_metric][0], round_decimals)
+            else:
+                for k in range(len(self.results['global'][global_metric])):
+                    df[global_metric + '_top_' + str(k + 1)] = round(self.results['global'][global_metric][k], round_decimals)
+
+        for concept in self.results['by_concept']:
+            for key, value in concept['metrics'].items():
+                if key is 'precision':
+                    df[concept['concept'] + '_' + str(key)] = round(value[0], round_decimals)
+                else:
+                    for i in range(0, len(value)):
+                        df[concept['concept'] + '_' + str(key) + '_top_' + str(i + 1)] = round(value[i], round_decimals)
+        if csv_path:
+            df.to_csv(csv_path, index=False)
+
+        return df
