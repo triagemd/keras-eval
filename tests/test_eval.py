@@ -120,7 +120,7 @@ def test_compute_confidence_prediction_distribution(evaluator_mobilenet):
     actual = str(exception).split('ValueError: ')[1]
     assert actual == expected
 
-    _, _ = evaluator_mobilenet.evaluate(os.path.abspath('tests/files/catdog/test'))
+    evaluator_mobilenet.evaluate(os.path.abspath('tests/files/catdog/test'))
 
     output = evaluator_mobilenet.compute_confidence_prediction_distribution()
 
@@ -134,7 +134,7 @@ def test_compute_uncertainty_distribution(evaluator_mobilenet):
     actual = str(exception).split('ValueError: ')[1]
     assert actual == expected
 
-    _, _ = evaluator_mobilenet.evaluate(os.path.abspath('tests/files/catdog/test'))
+    evaluator_mobilenet.evaluate(os.path.abspath('tests/files/catdog/test'))
 
     output = evaluator_mobilenet.compute_uncertainty_distribution()
 
@@ -167,7 +167,7 @@ def test_plot_top_k_sensitivity_by_concept(evaluator_mobilenet):
 
 
 def test_results_to_df(evaluator_mobilenet):
-    _, _ = evaluator_mobilenet.evaluate(os.path.abspath('tests/files/catdog/test'), top_k=2)
+    evaluator_mobilenet.evaluate(os.path.abspath('tests/files/catdog/test'), top_k=2)
     df = evaluator_mobilenet.results_to_df()
     assert df.model[0] == 'mobilenet_v1.h5'
     assert df.accuracy_top_1[0] == df.accuracy_top_2[0] == df.sensitivity_top_1[0] == df.sensitivity_top_2[0] == 1.0
