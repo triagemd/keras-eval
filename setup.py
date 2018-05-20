@@ -14,6 +14,7 @@ setup(
     install_requires=[
         'Keras>=2.1.6',
         'h5py',
+        'tensorflow',
         'Pillow',
         'scipy',
         'numpy',
