@@ -1,9 +1,12 @@
 from __future__ import print_function, division, absolute_import
+
 import numpy as np
 import scipy.stats
-from math import log
 import keras_eval.utils as utils
-from sklearn.metrics import confusion_matrix
+
+from math import log
+from keras.utils.np_utils import to_categorical
+from sklearn.metrics import confusion_matrix, roc_auc_score
 
 
 def metrics_top_k(probabilities, ground_truth, concepts, top_k):
@@ -18,8 +21,8 @@ def metrics_top_k(probabilities, ground_truth, concepts, top_k):
             and/or if there is no values for `ground_truth` for a certain class.
 
     Args:
-        ground_truth: a numpy array of true class labels (*not* encoded as 1-hot).
         probabilities: a numpy array of the predicted probabilities.
+        ground_truth: a numpy array of true class labels (*not* encoded as 1-hot).
         concepts: a list containing the names of the classes.
         top_k: a number specifying the top-k results to compute. E.g. 2 will compute top-1 and top-2
 
@@ -54,7 +57,7 @@ def metrics_top_k(probabilities, ground_truth, concepts, top_k):
         in_top_k = np.sum(matches_k, axis=1) > 0
         global_accuracy_k.append(np.sum(in_top_k) / float(len(in_top_k)))
 
-        for idx, concept in zip(range(len(concepts)), concepts):
+        for idx, concept in enumerate(concepts):
             tp_top_k = np.sum(in_top_k[(ground_truth == idx)])
             total_samples_concept = np.sum(ground_truth == idx)
 
@@ -71,9 +74,12 @@ def metrics_top_k(probabilities, ground_truth, concepts, top_k):
                 else:
                     precision = float(tp_top_k) / total_samples_predicted_as_concept
                     global_precision.append(precision * total_samples_concept)
+                    F1 = 2*(precision*sensitivity)/(precision+sensitivity)
+                    global_F1.append(F1 * total_samples_concept)
 
                 metrics['by_concept'].append({
-                    'concept': concept, 'metrics': {'sensitivity': [sensitivity], 'precision': [precision]}})
+                    'concept': concept, 'metrics': {'sensitivity': [sensitivity], 'precision': [precision],
+                                                    'F1': [F1]}})
 
                 metrics['global']['confusion_matrix'] = confusion_matrix(ground_truth, top_k_preds,
                                                                          labels=range(len(concepts)))
@@ -85,8 +91,87 @@ def metrics_top_k(probabilities, ground_truth, concepts, top_k):
 
     metrics['global']['accuracy'] = global_accuracy_k
     metrics['global']['precision'] = [(sum(global_precision) / total_samples)]
+    metrics['global']['F1'] = [(sum(global_F1) / total_samples)]
 
     return metrics
+
+def AUROC(probabilities, ground_truth, concepts):
+    """
+    Compute the Area Under the ROC (AUROC) for each concept.
+
+    Args:
+        probabilities: a numpy array of the predicted probabilities.
+        ground_truth: a numpy array of true class labels (*not* encoded as 1-hot).
+        concepts: a list containing the names of the classes.
+
+    Returns:
+        metrics: a list of dictionary of concept and metric values.
+            e.g. metrics = [{'concept':'concept_1','AUROC':0.95},{'concept':'concept_2','AUROC':0.90}]
+    """
+    one_hot_ground_truth = to_categorical(ground_truth)
+
+    metrics = []
+    for idx, concept in enumerate(concepts):
+        others_true = np.logical_not(one_hot_ground_truth[:, idx]).astype(int)
+        concept_true = one_hot_ground_truth[:, idx]
+        y_true = np.column_stack((others_true, concept_true))
+
+        others_probs = 1 - probabilities[:, idx]
+        concep_probs = probabilities[:, idx]
+        y_probs = np.column_stack((others_probs, concep_probs))
+
+        auroc_value = roc_auc_score(y_true=y_true, y_score=y_probs)
+
+        metrics.append({'concept': concept, 'AUROC': auroc_value})
+
+    return metrics
+
+def average_precision(actual, predicted, k=10):
+    """
+    Computes the average precision at k between two lists of items.
+
+    Based on https://github.com/benhamner/Metrics/blob/master/Python/ml_metrics/average_precision.py#L3
+
+    Args:
+        actual : (list) A list of elements that are to be predicted (order doesn't matter)
+        predicted : (list) A list of predicted elements (order does matter)
+        k : (int, optional) The maximum number of predicted elements
+
+    Returns:
+        score : (double) The average precision at k over the input lists
+    """
+    if len(predicted) > k:
+        predicted = predicted[:k]
+
+    score = 0.0
+    num_hits = 0.0
+
+    for i, p in enumerate(predicted):
+        if p in actual and p not in predicted[:i]:
+            num_hits += 1.0
+            score += num_hits / (i + 1.0)
+
+    if not actual:
+        return 0.0
+
+    return score / min(len(actual), k)
+
+
+def mean_average_precision(actual, predicted, k=10):
+    """
+    Computes the mean average precision at k between two lists of lists of items.
+
+    Based on https://github.com/benhamner/Metrics/blob/master/Python/ml_metrics/average_precision.py#L41
+
+    Args:
+        actual : (list) A list of elements that are to be predicted (order doesn't matter)
+        predicted : (list) A list of predicted elements (order does matter)
+        k : (int, optional) The maximum number of predicted elements
+    Returns:
+        score : (double) The mean average precision at k over the input lists
+
+    """
+    return np.mean([apk(a,p,k) for a,p in zip(actual, predicted)])
 
 
 def compute_confidence_prediction_distribution(probabilities, combination_mode=None, verbose=1):
