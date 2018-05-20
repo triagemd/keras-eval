@@ -5,7 +5,7 @@ from setuptools import setup, find_packages
 
 setup(
     name='keras-eval',
-    version='0.0.9',
+    version='0.0.10',
     description='A evaluation abstraction for Keras models.',
     author='Triage Technologies Inc.',
     author_email='ai@triage.com',
@@ -14,7 +14,6 @@ setup(
     install_requires=[
         'Keras>=2.1.6',
         'h5py',
-        'tensorflow',
         'Pillow',
         'scipy',
         'numpy',
