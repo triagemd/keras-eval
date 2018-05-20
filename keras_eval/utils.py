@@ -2,11 +2,12 @@ import os
 import keras
 import json
 import numpy as np
-import scipy
+import scipy.stats
+import tensorflow as tf
+
 from keras_model_specs import ModelSpec
 from keras.preprocessing import image
 from keras.applications import mobilenet
-import tensorflow as tf
 
 
 def create_default_custom_objects():
