@@ -196,7 +196,7 @@ class Evaluator(object):
 
         # Show metrics visualization as a confusion matrix
         if confusion_matrix:
-            self.plot_confusion_matrix(confusion_matrix=results['global']['confusion_matrix'],
+            self.plot_confusion_matrix(confusion_matrix=results['average']['confusion_matrix'],
                                        concept_labels=concept_labels, save_path=save_confusion_matrix_path)
 
         return results
@@ -445,13 +445,13 @@ class Evaluator(object):
         if self.results is None:
             raise ValueError('results parameter is None, please run a evaluation first')
         concepts = utils.get_concept_items(self.concepts, key='label')
-        metrics = [item['metrics']['sensitivity'] for item in self.results['by_concept']]
+        metrics = [item['metrics']['sensitivity'] for item in self.results['individual']]
         visualizer.plot_concept_metrics(concepts, metrics, 'Top-k', 'Sensitivity')
 
     def plot_top_k_accuracy(self):
         if self.results is None:
             raise ValueError('results parameter is None, please run a evaluation first')
-        metrics = self.results['global']['accuracy']
+        metrics = self.results['average']['accuracy']
         visualizer.plot_concept_metrics(['all'], [metrics], 'Top-k', 'Accuracy')
 
     @staticmethod
@@ -459,8 +459,8 @@ class Evaluator(object):
         if results is None:
             raise ValueError('results parameter is None, please specify a value')
         print('--- Results ---\n')
-        print('--- Global Metrics ---\n')
-        for key, values in results['global'].items():
+        print('--- Average Metrics ---\n')
+        for key, values in results['average'].items():
             if key != 'confusion_matrix':
                 for i in range(0, len(values)):
                     val = round(values[i], round_decimals)
@@ -469,8 +469,8 @@ class Evaluator(object):
                     print('| ' ' @k=' + str(i) + ', ' + key + '=' + '%.3f' % val, end=' ')
                 print('|')
         print('')
-        print('--- Class Metrics ---\n')
-        for concept in results['by_concept']:
+        print('--- Individual Metrics ---\n')
+        for concept in results['individual']:
             for key_1, val_1 in concept.items():
                 if key_1 is 'concept':
                     print('| ' + concept['concept'] + ' ', end='')
@@ -497,19 +497,19 @@ class Evaluator(object):
 
         df = pd.DataFrame({'model': os.path.basename(self.model_path)}, index=range(1))
 
-        for global_metric in self.results['global']:
+        for global_metric in self.results['average']:
             if global_metric is 'confusion_matrix':
-                df['TN'] = self.results['global'][global_metric][0, 0]
-                df['FN'] = self.results['global'][global_metric][1, 0]
-                df['TP'] = self.results['global'][global_metric][1, 1]
-                df['FP'] = self.results['global'][global_metric][0, 1]
+                df['TN'] = self.results['average'][global_metric][0, 0]
+                df['FN'] = self.results['average'][global_metric][1, 0]
+                df['TP'] = self.results['average'][global_metric][1, 1]
+                df['FP'] = self.results['average'][global_metric][0, 1]
             elif global_metric is 'precision':
-                df[global_metric] = round(self.results['global'][global_metric][0], round_decimals)
+                df[global_metric] = round(self.results['average'][global_metric][0], round_decimals)
             else:
-                for k in range(len(self.results['global'][global_metric])):
-                    df[global_metric + '_top_' + str(k + 1)] = round(self.results['global'][global_metric][k], round_decimals)
+                for k in range(len(self.results['average'][global_metric])):
+                    df[global_metric + '_top_' + str(k + 1)] = round(self.results['average'][global_metric][k], round_decimals)
 
-        for concept in self.results['by_concept']:
+        for concept in self.results['individual']:
             for key, value in concept['metrics'].items():
                 if key is 'precision':
                     df[concept['concept'] + '_' + str(key)] = round(value[0], round_decimals)
