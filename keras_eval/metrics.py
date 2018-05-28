@@ -98,7 +98,7 @@ def metrics_top_k(y_probs, y_true, concepts, top_k):
                 average_f1_score.append(f1_score * total_samples_concept)
 
                 _, tpr, _ = roc_curve(one_hot_y_true[:, idx], y_probs[:, idx])
-                auroc = 100 * sum(tpr) / len(y_probs)
+                auroc = sum(tpr) / len(y_probs)
                 average_auroc.append(auroc * total_samples_concept)
 
                 metrics['individual'].append({
