@@ -17,6 +17,10 @@ def safe_divide(numerator, denominator):
         return numerator / denominator
 
 
+def round_list(input_list, decimals=7):
+    return [round(x, ndigits=decimals) for x in input_list]
+
+
 def create_default_custom_objects():
     '''
 
