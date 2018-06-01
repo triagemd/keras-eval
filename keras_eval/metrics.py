@@ -5,7 +5,7 @@ import scipy.stats
 import keras_eval.utils as utils
 
 from math import log
-from sklearn.metrics import confusion_matrix, roc_curve, average_precision_score
+from sklearn.metrics import confusion_matrix, roc_curve
 from keras.utils.np_utils import to_categorical
 
 
@@ -21,8 +21,8 @@ def metrics_top_k(y_probs, y_true, concepts, top_k):
             and/or if there is no values for `y_true` for a certain class.
 
     Args:
-        y_true: a numpy array of true class labels (*not* encoded as 1-hot).
-        y_probs: a numpy array of the predicted y_probs.
+        y_true: a numpy array of the true class labels (*not* encoded as 1-hot).
+        y_probs: a numpy array of the class probabilities.
         concepts: a list containing the names of the classes.
         top_k: a number specifying the top-k results to compute. E.g. 2 will compute top-1 and top-2
 
@@ -48,11 +48,11 @@ def metrics_top_k(y_probs, y_true, concepts, top_k):
 
     metrics = {'average': {}, 'individual': []}
     average_accuracy_k = []
-    mean_average_precision = []
+    average_sensitivity = []
+    average_precision = []
     average_specificity = []
+    average_fall_out = []
     average_npv = []
-    average_miss_rate = []
-    average_fallout = []
     average_f1_score = []
     average_auroc = []
 
@@ -66,62 +66,52 @@ def metrics_top_k(y_probs, y_true, concepts, top_k):
         in_top_k = np.sum(matches_k, axis=1) > 0
         average_accuracy_k.append(np.sum(in_top_k) / float(len(in_top_k)))
 
-        for idx, concept in zip(range(len(concepts)), concepts):
+        for idx, concept in enumerate(concepts):
             tp_top_k = np.sum(in_top_k[(y_true == idx)])
             total_samples_concept = np.sum(y_true == idx)
 
-            if total_samples_concept == 0:
-                sensitivity = np.nan
-            else:
-                sensitivity = float(tp_top_k) / total_samples_concept
+            sensitivity = utils.safe_divide(float(tp_top_k), total_samples_concept)
+            average_sensitivity.append(sensitivity * total_samples_concept)
 
             if k == 1:
                 tn, fp, fn, tp = confusion_matrix(one_hot_y_true[:, idx], one_hot_top_k_preds[:, idx]).ravel()
 
-                precision = tp / (tp + fp)
-                average_precision = average_precision_score(one_hot_y_true[:, idx], one_hot_top_k_preds[:, idx])
-                mean_average_precision.append(precision * total_samples_concept)
+                precision = utils.safe_divide(tp, tp + fp)
+                average_precision.append(precision * total_samples_concept)
 
-                specificity = tn / (tn + fp)
+                specificity = utils.safe_divide(tn, tn + fp)
                 average_specificity.append(specificity * total_samples_concept)
 
-                npv = tn / (tn + fn)
+                fall_out = 1 - specificity
+                average_fall_out.append(fall_out * total_samples_concept)
+
+                npv = utils.safe_divide(tn, tn + fn)
                 average_npv.append(npv * total_samples_concept)
 
-                miss_rate = 1 - sensitivity
-                average_miss_rate.append(miss_rate * total_samples_concept)
-
-                fallout = 1 - specificity
-                average_fallout.append(fallout * total_samples_concept)
-
-                f1_score = 2 * (precision * sensitivity) / (precision + sensitivity)
+                f1_score = 2 * utils.safe_divide(precision * sensitivity, precision + sensitivity)
                 average_f1_score.append(f1_score * total_samples_concept)
 
-                _, tpr, _ = roc_curve(one_hot_y_true[:, idx], y_probs[:, idx])
-                auroc = sum(tpr) / len(y_probs)
+                fpr, tpr, _ = roc_curve(y_true, y_probs[:, idx], pos_label=idx)
+                auroc = np.mean(tpr)
                 average_auroc.append(auroc * total_samples_concept)
 
                 metrics['individual'].append({
                     'concept': concept, 'metrics': {'sensitivity': [sensitivity], 'precision': [precision],
-                                                    'average_precision': [average_precision],
-                                                    'specificity': [specificity], 'NPV': [npv],
-                                                    'miss_rate': [miss_rate], 'fallout': [fallout],
-                                                    'f1_score': [f1_score], 'AUROC': [auroc]}})
+                                                    'fall_out': [fall_out], 'f1_score': [f1_score], 'AUROC': [auroc]}})
 
                 metrics['average']['confusion_matrix'] = confusion_matrix(y_true, top_k_preds,
-                                                                         labels=range(len(concepts)))
+                                                                          labels=range(len(concepts)))
             else:
                 metrics['individual'][idx]['metrics']['sensitivity'].append(sensitivity)
 
-
     metrics['average']['accuracy'] = average_accuracy_k
-    metrics['average']['mean_avg_precision'] = [(sum(mean_average_precision) / total_samples)]
-    metrics['average']['specificity'] = [(sum(average_specificity) / total_samples)]
-    metrics['average']['npv'] = [(sum(average_npv) / total_samples)]
-    metrics['average']['miss_rate'] = [(sum(average_miss_rate) / total_samples)]
-    metrics['average']['fallout'] = [(sum(average_fallout) / total_samples)]
-    metrics['average']['f1_score'] = [(sum(average_f1_score) / total_samples)]
-    metrics['average']['auroc'] = [(sum(average_auroc) / total_samples)]
+    metrics['average']['sensitivity'] = [utils.safe_divide(sum(average_sensitivity), total_samples)]
+    metrics['average']['precision'] = [utils.safe_divide(sum(average_precision), total_samples)]
+    metrics['average']['specificity'] = [utils.safe_divide(sum(average_specificity), total_samples)]
+    metrics['average']['fall_out'] = [utils.safe_divide(sum(average_fall_out), total_samples)]
+    metrics['average']['npv'] = [utils.safe_divide(sum(average_npv), total_samples)]
+    metrics['average']['f1_score'] = [utils.safe_divide(sum(average_f1_score), total_samples)]
+    metrics['average']['auroc'] = [utils.safe_divide(sum(average_auroc), total_samples)]
 
     return metrics
 
