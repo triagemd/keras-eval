@@ -9,7 +9,7 @@ from sklearn.metrics import confusion_matrix, roc_curve
 from keras.utils.np_utils import to_categorical
 
 
-def metrics_top_k(y_probs, y_true, concepts, top_k):
+def metrics_top_k(y_probs, y_true, concepts, top_k, round_decimals=7):
     """
     Compute the accuracy, sensitivity and precision between the predicted `y_probs` and the true labels
     `y_true`.
@@ -25,6 +25,7 @@ def metrics_top_k(y_probs, y_true, concepts, top_k):
         y_probs: a numpy array of the class probabilities.
         concepts: a list containing the names of the classes.
         top_k: a number specifying the top-k results to compute. E.g. 2 will compute top-1 and top-2
+        round_decimals: Integer indicating the number of decimals to rounded.
 
     Returns:
         metrics: a dictionary of lists of dictionaries containing the results.
@@ -70,29 +71,29 @@ def metrics_top_k(y_probs, y_true, concepts, top_k):
             tp_top_k = np.sum(in_top_k[(y_true == idx)])
             total_samples_concept = np.sum(y_true == idx)
 
-            sensitivity = utils.safe_divide(float(tp_top_k), total_samples_concept)
+            sensitivity = round(utils.safe_divide(float(tp_top_k), total_samples_concept), round_decimals)
             average_sensitivity.append(sensitivity * total_samples_concept)
 
             if k == 1:
                 tn, fp, fn, tp = confusion_matrix(one_hot_y_true[:, idx], one_hot_top_k_preds[:, idx]).astype(np.float32).ravel()
 
-                precision = utils.safe_divide(tp, tp + fp)
+                precision = round(utils.safe_divide(tp, tp + fp), round_decimals)
                 average_precision.append(precision * total_samples_concept)
 
-                specificity = utils.safe_divide(tn, tn + fp)
+                specificity = round(utils.safe_divide(tn, tn + fp), round_decimals)
                 average_specificity.append(specificity * total_samples_concept)
 
-                fall_out = 1 - specificity
+                fall_out = round(1 - specificity, round_decimals)
                 average_fall_out.append(fall_out * total_samples_concept)
 
-                npv = utils.safe_divide(tn, tn + fn)
+                npv = round(utils.safe_divide(tn, tn + fn), round_decimals)
                 average_npv.append(npv * total_samples_concept)
 
-                f1_score = 2 * utils.safe_divide(precision * sensitivity, precision + sensitivity)
+                f1_score = round(2 * utils.safe_divide(precision * sensitivity, precision + sensitivity), round_decimals)
                 average_f1_score.append(f1_score * total_samples_concept)
 
                 fpr, tpr, _ = roc_curve(y_true, y_probs[:, idx], pos_label=idx)
-                auroc = np.mean(tpr)
+                auroc = round(np.mean(tpr), round_decimals)
                 average_auroc.append(auroc * total_samples_concept)
 
                 metrics['individual'].append({
@@ -104,14 +105,14 @@ def metrics_top_k(y_probs, y_true, concepts, top_k):
             else:
                 metrics['individual'][idx]['metrics']['sensitivity'].append(sensitivity)
 
-    metrics['average']['accuracy'] = average_accuracy_k
-    metrics['average']['sensitivity'] = [utils.safe_divide(sum(average_sensitivity), total_samples)]
-    metrics['average']['precision'] = [utils.safe_divide(sum(average_precision), total_samples)]
-    metrics['average']['specificity'] = [utils.safe_divide(sum(average_specificity), total_samples)]
-    metrics['average']['fall_out'] = [utils.safe_divide(sum(average_fall_out), total_samples)]
-    metrics['average']['npv'] = [utils.safe_divide(sum(average_npv), total_samples)]
-    metrics['average']['f1_score'] = [utils.safe_divide(sum(average_f1_score), total_samples)]
-    metrics['average']['auroc'] = [utils.safe_divide(sum(average_auroc), total_samples)]
+    metrics['average']['accuracy'] = utils.round_list(average_accuracy_k)
+    metrics['average']['sensitivity'] = utils.round_list([utils.safe_divide(sum(average_sensitivity), total_samples)], round_decimals)
+    metrics['average']['precision'] = utils.round_list([utils.safe_divide(sum(average_precision), total_samples)], round_decimals)
+    metrics['average']['specificity'] = utils.round_list([utils.safe_divide(sum(average_specificity), total_samples)], round_decimals)
+    metrics['average']['fall_out'] = utils.round_list([utils.safe_divide(sum(average_fall_out), total_samples)], round_decimals)
+    metrics['average']['npv'] = utils.round_list([utils.safe_divide(sum(average_npv), total_samples)], round_decimals)
+    metrics['average']['f1_score'] = utils.round_list([utils.safe_divide(sum(average_f1_score), total_samples)], round_decimals)
+    metrics['average']['auroc'] = utils.round_list([utils.safe_divide(sum(average_auroc), total_samples)], round_decimals)
 
     return metrics
 
