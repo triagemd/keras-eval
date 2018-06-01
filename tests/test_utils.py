@@ -29,6 +29,11 @@ def model_spec_mobilenet():
     return ModelSpec.get('mobilenet_v1', preprocess_func='mean_subtraction', preprocess_args=dataset_mean)
 
 
+def test_safe_divide():
+    assert np.isnan(utils.safe_divide(10.0, 0.0))
+    assert utils.safe_divide(10.0, 5.0) == 2.0
+
+
 def test_load_model():
     custom_objects = {'relu6': mobilenet.relu6, 'DepthwiseConv2D': mobilenet.DepthwiseConv2D, "tf": tf}
     model_path = 'tmp/fixtures/models/mobilenet_1/mobilenet_v1.h5'
@@ -108,14 +113,14 @@ def test_load_preprocess_images(test_folder_image_path, model_spec_mobilenet):
 
 def test_create_concepts_default():
     concepts_by_default = utils.create_concepts_default(2)
-    assert concepts_by_default == [{'label': 'C_0', 'id': 'Class_0'},
-                                   {'label': 'C_1', 'id': 'Class_1'}]
+    assert concepts_by_default == [{'label': 'Class_0', 'id': 'C_0'},
+                                   {'label': 'Class_1', 'id': 'C_1'}]
 
 
 def test_get_class_dictionaries_items():
     concepts_by_default = utils.create_concepts_default(2)
     output = utils.get_concept_items(concepts_by_default, 'label')
-    assert output == ['C_0', 'C_1']
+    assert output == ['Class_0', 'Class_1']
 
     output = utils.get_concept_items(concepts_by_default, 'id')
-    assert output == ['Class_0', 'Class_1']
+    assert output == ['C_0', 'C_1']
