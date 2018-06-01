@@ -74,7 +74,7 @@ def metrics_top_k(y_probs, y_true, concepts, top_k):
             average_sensitivity.append(sensitivity * total_samples_concept)
 
             if k == 1:
-                tn, fp, fn, tp = confusion_matrix(one_hot_y_true[:, idx], one_hot_top_k_preds[:, idx]).ravel()
+                tn, fp, fn, tp = confusion_matrix(one_hot_y_true[:, idx], one_hot_top_k_preds[:, idx]).astype(np.float32).ravel()
 
                 precision = utils.safe_divide(tp, tp + fp)
                 average_precision.append(precision * total_samples_concept)
