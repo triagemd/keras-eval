@@ -34,6 +34,13 @@ def test_safe_divide():
     assert utils.safe_divide(10.0, 5.0) == 2.0
 
 
+def test_round_list():
+    input_list = [0.6666666666, 0.3333333333]
+    assert utils.round_list(input_list, decimals=2) == [0.67, 0.33]
+    assert utils.round_list(input_list, decimals=4) == [0.6667, 0.3333]
+    assert utils.round_list(input_list, decimals=6) == [0.666667, 0.333333]
+
+
 def test_load_model():
     custom_objects = {'relu6': mobilenet.relu6, 'DepthwiseConv2D': mobilenet.DepthwiseConv2D, "tf": tf}
     model_path = 'tmp/fixtures/models/mobilenet_1/mobilenet_v1.h5'
