@@ -10,6 +10,13 @@ from keras.preprocessing import image
 from keras.applications import mobilenet
 
 
+def safe_divide(numerator, denominator):
+    if denominator == 0:
+        return np.nan
+    else:
+        return numerator / denominator
+
+
 def create_default_custom_objects():
     '''
 
@@ -77,7 +84,7 @@ def load_model(model_path, specs_path=None, custom_objects=None):
 def create_concepts_default(num_classes):
     concepts_by_default = []
     for i in range(0, num_classes):
-        concepts_by_default.append({'id': 'Class_' + str(i), 'label': 'C_' + str(i)})
+        concepts_by_default.append({'id': 'C_' + str(i), 'label': 'Class_' + str(i)})
     return concepts_by_default
 
 
