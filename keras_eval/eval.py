@@ -471,24 +471,21 @@ class Evaluator(object):
         print('')
         print('--- Individual Metrics ---\n')
         for concept in results['individual']:
-            for key_1, val_1 in concept.items():
-                if key_1 is 'concept':
-                    print('| ' + concept['concept'] + ' ', end='')
-                if key_1 is 'metrics':
-                    for key_2, val_2 in val_1.items():
-                        for i in range(0, len(val_2)):
-                            val = round(val_2[i], round_decimals)
-                            if percentage:
-                                val = val * 100
-                            print('| ' ' @k=' + str(i) + ', ' + key_2 + '=' + '%.3f' % val, end=' ')
+            print('| ' + concept['concept'] + ' ', end='')
+            for key, val in concept['metrics'].items():
+                for i in range(0, len(val)):
+                    value = round(val[i], round_decimals)
+                    if percentage:
+                        value = value * 100
+                    print('| ' ' @k=' + str(i) + ', ' + key + '=' + '%.3f' % value, end=' ')
             print('|')
 
     def results_to_df(self, csv_path=None, round_decimals=3):
         '''
         Generate a Pandas Dataframe with the results. If csv_path is provided, it writes the Dataframe to a CSV file.
         Args:
-            csv_path:
-            round_decimals:
+            csv_path: String indicating the file name to save the CSV file.
+            round_decimals: Integer indicating the number of decimals to rounded.
 
         Returns: Pandas Dataframe with results.
         '''
