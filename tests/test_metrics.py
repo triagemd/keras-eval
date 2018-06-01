@@ -1,8 +1,8 @@
 import pytest
 import numpy as np
+import keras_eval.metrics as metrics
 
 from math import log
-import keras_eval.metrics as metrics
 
 
 def test_metrics_top_k():
@@ -16,15 +16,15 @@ def test_metrics_top_k():
                             'auroc': [0.5625],
                             'confusion_matrix': np.array([[1, 0, 0], [0, 0, 1], [1, 0, 1]]),
                             'f1_score': [np.nan],
-                            'fall_out': [0.33333333333333337],
+                            'fall_out': [0.3333333],
                             'npv': [0.6875],
                             'precision': [np.nan],
                             'sensitivity': [0.5],
-                            'specificity': [0.6666666666666666]},
+                            'specificity': [0.6666667]},
                 'individual': [{'concept': 'class0',
                                 'metrics': {'AUROC': [1.0],
-                                            'f1_score': [0.6666666666666666],
-                                            'fall_out': [0.33333333333333337],
+                                            'f1_score': [0.6666667],
+                                            'fall_out': [0.3333333],
                                             'precision': [0.5],
                                             'sensitivity': [1.0]}},
                                {'concept': 'class1',
