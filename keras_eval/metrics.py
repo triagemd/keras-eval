@@ -79,7 +79,7 @@ def metrics_top_k(y_probs, y_true, concepts, top_k, round_decimals=7):
             total_samples_concept = np.sum(y_true == idx)
 
             # top-k sensitivity
-            sensitivity = utils.safe_divide(tp_top_k, total_samples_concept)
+            sensitivity = float(utils.safe_divide(tp_top_k, total_samples_concept))
             average_sensitivity += sensitivity * total_samples_concept
 
             if k == 1:
