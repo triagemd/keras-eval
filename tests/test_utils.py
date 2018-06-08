@@ -30,8 +30,6 @@ def model_spec_mobilenet():
 
 
 def test_load_model():
-    import pdb
-    pdb.set_trace()
     custom_objects = {'relu6': mobilenet.relu6, "tf": tf}
     model_path = 'tmp/fixtures/models/mobilenet_1/mobilenet_v1.h5'
     model_spec_path = 'tmp/fixtures/models/mobilenet_2/model_spec.json'
