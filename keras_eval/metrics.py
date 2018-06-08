@@ -3,100 +3,90 @@ import numpy as np
 import scipy.stats
 from math import log
 import keras_eval.utils as utils
+from sklearn.metrics import confusion_matrix
 
 
-def accuracy(y_pred, y_true):
-    acc = np.sum(y_true == y_pred) / float(len(y_true))
-    return acc
-
-
-def accuracy_top_k(probabilities, y_true, k):
-    assert k >= 1, "k must be at least 1."
-    assert len(probabilities.shape) == 2, "`probabilities` should be a matrix of n_samples x n_dimensions"
-    assert y_true.shape[0] == probabilities.shape[0], "The first dimensions should match"
-    assert k <= probabilities.shape[1], "k should be less than the dimension of probabilities"
-
-    # Sort the predictions. Then get the top k.
-    top_k_preds = probabilities.argsort(axis=1)[:, -k:]
-
-    # Get True/False values for predictions that match.
-    preds_match = top_k_preds == y_true[:, np.newaxis]
-
-    # If the row is greater than 0, then at least one of them matched.
-    in_top_k = np.sum(preds_match, axis=1) > 0
-
-    # in_top_k is binary, so we can simply sum over how many are positive,
-    # divided by how many predictions there are.
-    acc = np.sum(in_top_k) / float(len(in_top_k))
-
-    return acc
-
-
-def metrics_top_k(probabilities, y_true, concept_labels, k_vals=(1, 2, 3), verbose=1):
+def metrics_top_k(probabilities, ground_truth, concepts, top_k):
     """
-    Compute the sensitivity and precision between the predicted `probabilities` and the true labels `y_true`.
+    Compute the accuracy, sensitivity and precision between the predicted `probabilities` and the true labels
+    `ground_truth`.
 
     Notes:
         The precision is only computed when k=1, since it is not clear how to compute when k>1.
         np.nan values are used for undefined values (i.e., divide by zero errors).
             This occurs if `y_probabilities` has no predictions for a certain class,
-            and/or if there is no values for `y_true` for a certain class.
+            and/or if there is no values for `ground_truth` for a certain class.
 
     Args:
-        y_true: a list/numpy array of true class labels (*not* encoded as 1-hot).
-        y_probabilities: a numpy array of 1-hot encoded predicted probabilities.
-        labels: a list of the names of the labels.
-        k_vals: a list of the values of k to use.
-        print_screen: boolean that when True prints the results to screen.
+        ground_truth: a numpy array of true class labels (*not* encoded as 1-hot).
+        probabilities: a numpy array of the predicted probabilities.
+        concepts: a list containing the names of the classes.
+        top_k: a number specifying the top-k results to compute. E.g. 2 will compute top-1 and top-2
 
     Returns:
-        mets: a dictionary of lists of dictionaries containing the results.
+        metrics: a dictionary of lists of dictionaries containing the results.
             The dict keys correspond to the input `labels`.
             For clarity, see the tests in `tests/test_metrics/test_metrics_top_k()`
 
     """
-    met = []  # {}
-    for idx, label in zip(range(len(concept_labels)), concept_labels):
-        for k in k_vals:
-            if k == 0:
-                raise ValueError('`k_vals` cannot contain a `0`')
+    if len(probabilities) != len(ground_truth):
+        raise ValueError('The number predicted samples (%i) is different from the ground truth samples (%i)' %
+                         (len(probabilities), len(ground_truth)))
 
-            top_k_preds = probabilities.argsort(axis=1)[:, -k:]
-            preds_match = (top_k_preds == y_true[:, np.newaxis])
-            in_top_k = np.sum(preds_match, axis=1) > 0
-            tp_top_k = np.sum(in_top_k[(y_true == idx)])
+    if top_k <= 0 or top_k > len(concepts):
+        raise ValueError('`top_k` value should be between 1 and the total number of concepts (%i)' % len(concepts))
 
-            tp_fn = np.sum(y_true == idx)
-            if tp_fn == 0:
+    top_k = np.arange(1, top_k + 1, 1)
+    # Sort predicions from higher to smaller and get class indices
+    top_preds = probabilities.argsort(axis=1)[:, ::-1]
+    total_samples = ground_truth.shape[0]
+
+    metrics = {'global': {'sensitivity': []}, 'by_concept': []}
+    global_accuracy_k = []
+    global_precision = []
+
+    for k in top_k:
+        global_sensitivity = 0
+        # Select top-k predictions
+        top_k_preds = top_preds[:, 0:k]
+        # Match predictions with ground truth
+        matches_k = (top_k_preds == ground_truth[:, np.newaxis])
+        in_top_k = np.sum(matches_k, axis=1) > 0
+        global_accuracy_k.append(np.sum(in_top_k) / float(len(in_top_k)))
+
+        for idx, concept in zip(range(len(concepts)), concepts):
+            tp_top_k = np.sum(in_top_k[(ground_truth == idx)])
+            total_samples_concept = np.sum(ground_truth == idx)
+
+            if total_samples_concept == 0:
                 sensitivity = np.nan
             else:
-                sensitivity = float(tp_top_k) / tp_fn
+                sensitivity = float(tp_top_k) / total_samples_concept
+                global_sensitivity += sensitivity * total_samples_concept
 
             if k == 1:
-                y_pred = np.squeeze(top_k_preds)
-                tp_fp = np.sum(y_pred == idx)
-
-                if tp_fp == 0:
+                total_samples_predicted_as_concept = np.sum(np.squeeze(top_k_preds) == idx)
+                if total_samples_predicted_as_concept == 0:
                     precision = np.nan
                 else:
-                    precision = float(tp_top_k) / tp_fp
+                    precision = float(tp_top_k) / total_samples_predicted_as_concept
+                    global_precision.append(precision * total_samples_concept)
 
-                met.append({'label': label, 'sensitivity_k' + str(k): sensitivity, 'precision_k' + str(k): precision})
+                metrics['by_concept'].append({
+                    'concept': concept, 'metrics': {'sensitivity': [sensitivity], 'precision': [precision]}})
 
-                # met[label] = [{'k': k, 'sensitivity': sensitivity, 'precision': precision}]
-                if verbose:
-                    print('| %s | @k=1, sens:%.3f , prec:%.3f |' % (label.ljust(5), sensitivity, precision),
-                          end='')
+                metrics['global']['confusion_matrix'] = confusion_matrix(ground_truth, top_k_preds,
+                                                                         labels=range(len(concepts)))
             else:
-                met[idx].update({'sensitivity_k' + str(k): sensitivity})
-                # met[label].append({'k': k, 'sens': sensitivity})
-                if verbose:
-                    print(' @k=%i, sens:%.3f |' % (k, sensitivity), end='')
+                metrics['by_concept'][idx]['metrics']['sensitivity'].append(sensitivity)
 
-        if verbose:
-            print('')
+        # Normalize by number of samples
+        metrics['global']['sensitivity'].append(global_sensitivity / total_samples)
 
-    return met
+    metrics['global']['accuracy'] = global_accuracy_k
+    metrics['global']['precision'] = [(sum(global_precision) / total_samples)]
+
+    return metrics
 
 
 def compute_confidence_prediction_distribution(probabilities, combination_mode=None, verbose=1):

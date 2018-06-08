@@ -58,8 +58,8 @@ If you are evaluating an ensemble of models, we currently allow for these probab
 **evaluate**
 ```
 data_dir = 'tests/files/catdog/test/'
-probs, labels = evaluator.evaluate(data_dir=None, K=[1], filter_indices=None, confusion_matrix=False, save_confusion_matrix_path=None, combination_mode=None)
-# probs.shape = [n_models, n_samples, n_classes]
+probabilities, labels = evaluator.evaluate(data_dir=None, top_k=2, filter_indices=None, confusion_matrix=False, save_confusion_matrix_path=None, verbose=1)
+# probabilities.shape = [n_models, n_samples, n_classes]
 # labels.shape = [n_samples, n_classes]
 ```
 
