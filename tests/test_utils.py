@@ -1,9 +1,10 @@
 import keras_eval.utils as utils
 import numpy as np
-from keras.applications import mobilenet
-import tensorflow as tf
-import pytest
 import os
+import pytest
+import tensorflow as tf
+
+from keras import applications
 from keras_model_specs import ModelSpec
 
 
@@ -29,7 +30,9 @@ def model_spec_mobilenet():
 
 
 def test_load_model():
-    custom_objects = {'relu6': mobilenet.relu6, 'DepthwiseConv2D': mobilenet.DepthwiseConv2D, "tf": tf}
+    custom_objects = {'relu6': applications.mobilenet.relu6,
+                      'DepthwiseConv2D': applications.mobilenet.DepthwiseConv2D,
+                      "tf": tf}
     model_path = 'tmp/fixtures/models/mobilenet_1/mobilenet_v1.h5'
     model_spec_path = 'tmp/fixtures/models/mobilenet_2/model_spec.json'
 
@@ -44,7 +47,9 @@ def test_load_model():
 
 def test_load_model_ensemble():
     ensemble_dir = 'tmp/fixtures/models'
-    custom_objects = {'relu6': mobilenet.relu6, 'DepthwiseConv2D': mobilenet.DepthwiseConv2D, "tf": tf}
+    custom_objects = {'relu6': applications.mobilenet.relu6,
+                      'DepthwiseConv2D': applications.mobilenet.DepthwiseConv2D,
+                      "tf": tf}
     models = utils.load_multi_model(ensemble_dir, custom_objects=custom_objects)
     assert models
 
@@ -57,25 +62,29 @@ def test_combine_probabilities():
     combined_probabilities = utils.combine_probabilities(probabilities, 'maximum')
     assert len(combined_probabilities.shape) == 2
     combined_probabilities_expected = [[0.4, 0.9], [0.8, 0.6]]
-    np.testing.assert_array_equal(np.round(combined_probabilities, decimals=2), np.array(combined_probabilities_expected))
+    np.testing.assert_array_equal(np.round(combined_probabilities, decimals=2),
+                                  np.array(combined_probabilities_expected))
 
     # Arithmetic
     combined_probabilities = utils.combine_probabilities(probabilities, 'arithmetic')
     assert len(combined_probabilities.shape) == 2
     combined_probabilities_expected = [[0.3, 0.7], [0.6, 0.33]]
-    np.testing.assert_array_equal(np.round(combined_probabilities, decimals=2), np.array(combined_probabilities_expected))
+    np.testing.assert_array_equal(np.round(combined_probabilities, decimals=2),
+                                  np.array(combined_probabilities_expected))
 
     # Geometric
     combined_probabilities = utils.combine_probabilities(probabilities, 'geometric')
     assert len(combined_probabilities.shape) == 2
     combined_probabilities_expected = [[0.25, 0.69], [0.5, 0.29]]
-    np.testing.assert_array_equal(np.round(combined_probabilities, decimals=2), np.array(combined_probabilities_expected))
+    np.testing.assert_array_equal(np.round(combined_probabilities, decimals=2),
+                                  np.array(combined_probabilities_expected))
 
     # Harmonic
     combined_probabilities = utils.combine_probabilities(probabilities, 'harmonic')
     assert len(combined_probabilities.shape) == 2
     combined_probabilities_expected = [[0.2, 0.68], [0.4, 0.26]]
-    np.testing.assert_array_equal(np.round(combined_probabilities, decimals=2), np.array(combined_probabilities_expected))
+    np.testing.assert_array_equal(np.round(combined_probabilities, decimals=2),
+                                  np.array(combined_probabilities_expected))
 
     # One model, ndim = 3
     probabilities = np.array([[0.4, 0.6], [0.8, 0.2]])
