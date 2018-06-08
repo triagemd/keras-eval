@@ -1,5 +1,4 @@
 import json
-import keras
 import numpy as np
 import os
 import tensorflow as tf
@@ -105,7 +104,7 @@ def test_evaluator_mobilenet_v1_on_catdog_dataset():
         json.dump(specs, outfile)
 
     custom_objects = {'relu6': applications.mobilenet.relu6,
-                      'DepthwiseConv2D':applications.mobilenet.DepthwiseConv2D,
+                      'DepthwiseConv2D': applications.mobilenet.DepthwiseConv2D,
                       "tf": tf}
 
     eval_options = {'custom_objects': custom_objects, 'model_path': 'tmp/fixtures/models/mobilenet_1/mobilenet_v1.h5'}
