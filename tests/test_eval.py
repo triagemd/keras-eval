@@ -1,6 +1,6 @@
-import os
 import json
 import numpy as np
+import os
 import pytest
 
 from keras_eval.eval import Evaluator
