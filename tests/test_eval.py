@@ -1,9 +1,11 @@
-import os
 import json
 import numpy as np
 import pytest
+import os
+import tensorflow as tf
 
 from keras_eval.eval import Evaluator
+from keras import applications
 
 
 @pytest.fixture('function')
@@ -97,6 +99,24 @@ def test_get_image_paths_by_prediction(evaluator_mobilenet):
                                                  os.path.abspath('tests/files/catdog/test/dog/dog-4.jpg')]
 
 
+def test_evaluator_mobilenet_v1_on_catdog_dataset():
+    specs = {'klass': 'keras.applications.mobilenet.MobileNet',
+             'name': 'mobilenet_v1',
+             'preprocess_args': None,
+             'preprocess_func': 'between_plus_minus_1',
+             'target_size': [224, 224, 3]
+             }
+
+    with open(os.path.abspath('tmp/fixtures/models/mobilenet_1/model_spec.json'), 'w') as outfile:
+        json.dump(specs, outfile)
+
+    custom_objects = {'relu6': applications.mobilenet.relu6,
+                      'DepthwiseConv2D': applications.mobilenet.DepthwiseConv2D,
+                      "tf": tf}
+
+    eval_options = {'custom_objects': custom_objects, 'model_path': 'tmp/fixtures/models/mobilenet_1/mobilenet_v1.h5'}
+
+    
 def test_evaluator_single_mobilenet_v1_on_catdog_dataset(evaluator_mobilenet):
     check_evaluate_on_catdog_dataset(evaluator_mobilenet)
 
