@@ -1,10 +1,11 @@
 import keras_eval.utils as utils
 import numpy as np
-from keras.applications import mobilenet
-import tensorflow as tf
-import pytest
 import os
+import pytest
+import tensorflow as tf
+
 from keras_model_specs import ModelSpec
+from keras_applications import mobilenet
 
 
 @pytest.fixture('session')
@@ -29,7 +30,9 @@ def model_spec_mobilenet():
 
 
 def test_load_model():
-    custom_objects = {'relu6': mobilenet.relu6, 'DepthwiseConv2D': mobilenet.DepthwiseConv2D, "tf": tf}
+    import pdb
+    pdb.set_trace()
+    custom_objects = {'relu6': mobilenet.relu6, "tf": tf}
     model_path = 'tmp/fixtures/models/mobilenet_1/mobilenet_v1.h5'
     model_spec_path = 'tmp/fixtures/models/mobilenet_2/model_spec.json'
 
@@ -44,7 +47,7 @@ def test_load_model():
 
 def test_load_model_ensemble():
     ensemble_dir = 'tmp/fixtures/models'
-    custom_objects = {'relu6': mobilenet.relu6, 'DepthwiseConv2D': mobilenet.DepthwiseConv2D, "tf": tf}
+    custom_objects = {'relu6': mobilenet.relu6, "tf": tf}
     models = utils.load_multi_model(ensemble_dir, custom_objects=custom_objects)
     assert models
 

@@ -1,12 +1,13 @@
-import os
-import keras
 import json
+import keras.models
 import numpy as np
 import scipy
+import os
+import tensorflow as tf
+
+from keras_applications import mobilenet
 from keras_model_specs import ModelSpec
 from keras.preprocessing import image
-from keras.applications import mobilenet
-import tensorflow as tf
 
 
 def create_default_custom_objects():
@@ -15,7 +16,7 @@ def create_default_custom_objects():
     Returns: Default custom objects for Keras models supported in keras.applications
 
     '''
-    return {'relu6': mobilenet.relu6, 'DepthwiseConv2D': mobilenet.DepthwiseConv2D, "tf": tf}
+    return {'relu6': mobilenet.relu6, "tf": tf}
 
 
 def load_multi_model(models_dir, custom_objects=None):

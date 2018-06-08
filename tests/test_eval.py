@@ -1,7 +1,8 @@
-import os
 import json
 import numpy as np
+import os
 import pytest
+import tensorflow as tf
 
 from keras_eval.eval import Evaluator
 
