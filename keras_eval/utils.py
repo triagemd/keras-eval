@@ -1,13 +1,24 @@
-import json
-import keras.models
-import numpy as np
-import scipy
 import os
+import json
+import scipy
+import numpy as np
+import keras.models
 import tensorflow as tf
 
-from keras_applications import mobilenet
-from keras_model_specs import ModelSpec
 from keras.preprocessing import image
+from keras_model_specs import ModelSpec
+from keras_applications import mobilenet
+
+
+def safe_divide(numerator, denominator):
+    if denominator == 0:
+        return np.nan
+    else:
+        return numerator / denominator
+
+
+def round_list(input_list, decimals=7):
+    return [round(x, ndigits=decimals) for x in input_list]
 
 
 def create_default_custom_objects():
@@ -77,7 +88,7 @@ def load_model(model_path, specs_path=None, custom_objects=None):
 def create_concepts_default(num_classes):
     concepts_by_default = []
     for i in range(0, num_classes):
-        concepts_by_default.append({'id': 'Class_' + str(i), 'label': 'C_' + str(i)})
+        concepts_by_default.append({'id': 'C_' + str(i), 'label': 'Class_' + str(i)})
     return concepts_by_default
 
 

@@ -1,8 +1,8 @@
-import keras_eval.utils as utils
-import numpy as np
 import os
 import pytest
+import numpy as np
 import tensorflow as tf
+import keras_eval.utils as utils
 
 from keras_model_specs import ModelSpec
 from keras_applications import mobilenet
@@ -27,6 +27,18 @@ def test_image_path():
 def model_spec_mobilenet():
     dataset_mean = [142.69182214, 119.05833338, 106.89884415]
     return ModelSpec.get('mobilenet_v1', preprocess_func='mean_subtraction', preprocess_args=dataset_mean)
+
+
+def test_safe_divide():
+    assert np.isnan(utils.safe_divide(10.0, 0.0))
+    assert utils.safe_divide(10.0, 5.0) == 2.0
+
+
+def test_round_list():
+    input_list = [0.6666666666, 0.3333333333]
+    assert utils.round_list(input_list, decimals=2) == [0.67, 0.33]
+    assert utils.round_list(input_list, decimals=4) == [0.6667, 0.3333]
+    assert utils.round_list(input_list, decimals=6) == [0.666667, 0.333333]
 
 
 def test_load_model():
@@ -58,25 +70,25 @@ def test_combine_probabilities():
     combined_probabilities = utils.combine_probabilities(probabilities, 'maximum')
     assert len(combined_probabilities.shape) == 2
     combined_probabilities_expected = [[0.4, 0.9], [0.8, 0.6]]
-    np.testing.assert_array_equal(np.round(combined_probabilities, decimals=2), np.array(combined_probabilities_expected))
+    np.testing.assert_array_equal(np.round(combined_probabilities, decimals=2), combined_probabilities_expected)
 
     # Arithmetic
     combined_probabilities = utils.combine_probabilities(probabilities, 'arithmetic')
     assert len(combined_probabilities.shape) == 2
     combined_probabilities_expected = [[0.3, 0.7], [0.6, 0.33]]
-    np.testing.assert_array_equal(np.round(combined_probabilities, decimals=2), np.array(combined_probabilities_expected))
+    np.testing.assert_array_equal(np.round(combined_probabilities, decimals=2), combined_probabilities_expected)
 
     # Geometric
     combined_probabilities = utils.combine_probabilities(probabilities, 'geometric')
     assert len(combined_probabilities.shape) == 2
     combined_probabilities_expected = [[0.25, 0.69], [0.5, 0.29]]
-    np.testing.assert_array_equal(np.round(combined_probabilities, decimals=2), np.array(combined_probabilities_expected))
+    np.testing.assert_array_equal(np.round(combined_probabilities, decimals=2), combined_probabilities_expected)
 
     # Harmonic
     combined_probabilities = utils.combine_probabilities(probabilities, 'harmonic')
     assert len(combined_probabilities.shape) == 2
     combined_probabilities_expected = [[0.2, 0.68], [0.4, 0.26]]
-    np.testing.assert_array_equal(np.round(combined_probabilities, decimals=2), np.array(combined_probabilities_expected))
+    np.testing.assert_array_equal(np.round(combined_probabilities, decimals=2), combined_probabilities_expected)
 
     # One model, ndim = 3
     probabilities = np.array([[0.4, 0.6], [0.8, 0.2]])
@@ -85,14 +97,14 @@ def test_combine_probabilities():
 
     combined_probabilities = utils.combine_probabilities(probabilities_exp, 'maximum')
     assert combined_probabilities.shape == (2, 2)
-    np.testing.assert_array_equal(combined_probabilities, np.array(probabilities))
+    np.testing.assert_array_equal(combined_probabilities, probabilities)
 
     # One model, ndim=2
     probabilities = np.array([[0.4, 0.6], [0.8, 0.2]])
     assert probabilities.shape == (2, 2)
     combined_probabilities = utils.combine_probabilities(probabilities)
     assert combined_probabilities.shape == (2, 2)
-    np.testing.assert_array_equal(combined_probabilities, np.array(probabilities))
+    np.testing.assert_array_equal(combined_probabilities, probabilities)
 
 
 def test_load_preprocess_image(test_image_path, model_spec_mobilenet):
@@ -108,14 +120,14 @@ def test_load_preprocess_images(test_folder_image_path, model_spec_mobilenet):
 
 def test_create_concepts_default():
     concepts_by_default = utils.create_concepts_default(2)
-    assert concepts_by_default == [{'label': 'C_0', 'id': 'Class_0'},
-                                   {'label': 'C_1', 'id': 'Class_1'}]
+    assert concepts_by_default == [{'label': 'Class_0', 'id': 'C_0'},
+                                   {'label': 'Class_1', 'id': 'C_1'}]
 
 
 def test_get_class_dictionaries_items():
     concepts_by_default = utils.create_concepts_default(2)
     output = utils.get_concept_items(concepts_by_default, 'label')
-    assert output == ['C_0', 'C_1']
+    assert output == ['Class_0', 'Class_1']
 
     output = utils.get_concept_items(concepts_by_default, 'id')
-    assert output == ['Class_0', 'Class_1']
+    assert output == ['C_0', 'C_1']

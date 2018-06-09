@@ -62,7 +62,7 @@ def check_evaluate_on_catdog_dataset(evaluator):
     assert len(evaluator.combined_probabilities.shape) == 2
 
     # class abbreviations
-    assert evaluator.concept_labels == ['C_0', 'C_1']
+    assert evaluator.concept_labels == ['Class_0', 'Class_1']
 
 
 def check_predict_on_cat_folder(evaluator):
@@ -89,12 +89,12 @@ def test_get_image_paths_by_prediction(evaluator_mobilenet):
     probabilities, labels = evaluator_mobilenet.evaluate(os.path.abspath('tests/files/catdog/test'))
     image_paths_dictionary = evaluator_mobilenet.get_image_paths_by_prediction(probabilities, labels)
 
-    assert image_paths_dictionary['C_0_C_0'] == [os.path.abspath('tests/files/catdog/test/cat/cat-1.jpg'),
-                                                 os.path.abspath('tests/files/catdog/test/cat/cat-4.jpg')]
-    assert image_paths_dictionary['C_0_C_1'] == []
-    assert image_paths_dictionary['C_1_C_0'] == []
-    assert image_paths_dictionary['C_1_C_1'] == [os.path.abspath('tests/files/catdog/test/dog/dog-2.jpg'),
-                                                 os.path.abspath('tests/files/catdog/test/dog/dog-4.jpg')]
+    assert image_paths_dictionary['Class_0_Class_0'] == [os.path.abspath('tests/files/catdog/test/cat/cat-1.jpg'),
+                                                         os.path.abspath('tests/files/catdog/test/cat/cat-4.jpg')]
+    assert image_paths_dictionary['Class_0_Class_1'] == []
+    assert image_paths_dictionary['Class_1_Class_0'] == []
+    assert image_paths_dictionary['Class_1_Class_1'] == [os.path.abspath('tests/files/catdog/test/dog/dog-2.jpg'),
+                                                         os.path.abspath('tests/files/catdog/test/dog/dog-4.jpg')]
 
 
 def test_evaluator_single_mobilenet_v1_on_catdog_dataset(evaluator_mobilenet):
@@ -141,15 +141,6 @@ def test_compute_uncertainty_distribution(evaluator_mobilenet):
     np.testing.assert_array_almost_equal(output, np.array([0.3436, 0.002734, 0.001692, 0.52829], dtype=np.float32))
 
 
-def test_print_results(evaluator_mobilenet):
-    results = None
-    with pytest.raises(ValueError) as exception:
-        evaluator_mobilenet.print_results(results)
-    expected = 'results parameter is None, please specify a value'
-    actual = str(exception).split('ValueError: ')[1]
-    assert actual == expected
-
-
 def test_plot_top_k_accuracy(evaluator_mobilenet):
     with pytest.raises(ValueError) as exception:
         evaluator_mobilenet.plot_top_k_accuracy()
@@ -166,12 +157,23 @@ def test_plot_top_k_sensitivity_by_concept(evaluator_mobilenet):
     assert actual == expected
 
 
-def test_results_to_df(evaluator_mobilenet):
-    evaluator_mobilenet.evaluate(os.path.abspath('tests/files/catdog/test'), top_k=2)
-    df = evaluator_mobilenet.results_to_df()
-    assert df.model[0] == 'mobilenet_v1.h5'
-    assert df.accuracy_top_1[0] == df.accuracy_top_2[0] == df.sensitivity_top_1[0] == df.sensitivity_top_2[0] == 1.0
-    assert df.precision[0] == df.C_0_sensitivity_top_1[0] == df.C_0_sensitivity_top_2[0] == df.C_0_precision[0] == 1.0
-    assert df.C_1_sensitivity_top_1[0] == df.C_1_sensitivity_top_2[0] == df.C_1_precision[0] == 1.0
-    assert df.TN[0] == df.TP[0] == 2
-    assert df.FN[0] == df.FP[0] == 0
+def test_show_results(evaluator_mobilenet):
+    evaluator_mobilenet.evaluate(os.path.abspath('tests/files/catdog/test'))
+
+    average_df = evaluator_mobilenet.show_results('average')
+    assert average_df['model'][0] == 'mobilenet_v1.h5'
+    assert average_df['accuracy'][0] == average_df['precision'][0] == average_df['sensitivity'][0] == \
+        average_df['specificity'][0] == average_df['f1_score'][0] == 1.0
+    assert average_df['positives'][0] == 4
+    assert average_df['negatives'][0] == 0
+    assert average_df['auroc'][0] == 0.833
+    assert average_df['fdr'][0] == 0.0
+
+    individual_df = evaluator_mobilenet.show_results('individual')
+    assert individual_df['class'][0] == 'C_0'
+    assert individual_df['class'][1] == 'C_1'
+    assert individual_df['precision'][0] == individual_df['precision'][1] == 1.0
+    assert individual_df['f1_score'][0] == individual_df['f1_score'][1] == 1.0
+    assert individual_df['TP'][0] == individual_df['TP'][1] == 2
+    assert individual_df['FP'][0] == individual_df['FP'][1] == individual_df['FN'][1] == individual_df['FN'][1] == 0
+    assert individual_df['AUROC'][0] == individual_df['AUROC'][1] == 0.833

@@ -97,7 +97,7 @@ class Evaluator(object):
         return image_paths
 
     def evaluate(self, data_dir=None, top_k=1, filter_indices=None, confusion_matrix=False,
-                 save_confusion_matrix_path=None, verbose=1):
+                 save_confusion_matrix_path=None):
         '''
         Evaluate a set of images. Each sub-folder under 'data_dir/' will be considered as a different class.
         E.g. 'data_dir/class_1/dog.jpg' , 'data_dir/class_2/cat.jpg
@@ -137,9 +137,6 @@ class Evaluator(object):
                                             concept_labels=self.concept_labels, top_k=top_k, filter_indices=filter_indices,
                                             confusion_matrix=confusion_matrix,
                                             save_confusion_matrix_path=save_confusion_matrix_path)
-
-            if verbose:
-                self.print_results(self.results)
 
         return self.probabilities, self.labels
 
@@ -196,7 +193,7 @@ class Evaluator(object):
 
         # Show metrics visualization as a confusion matrix
         if confusion_matrix:
-            self.plot_confusion_matrix(confusion_matrix=results['global']['confusion_matrix'],
+            self.plot_confusion_matrix(confusion_matrix=results['average']['confusion_matrix'],
                                        concept_labels=concept_labels, save_path=save_confusion_matrix_path)
 
         return results
@@ -445,77 +442,58 @@ class Evaluator(object):
         if self.results is None:
             raise ValueError('results parameter is None, please run a evaluation first')
         concepts = utils.get_concept_items(self.concepts, key='label')
-        metrics = [item['metrics']['sensitivity'] for item in self.results['by_concept']]
+        metrics = [item['metrics']['sensitivity'] for item in self.results['individual']]
         visualizer.plot_concept_metrics(concepts, metrics, 'Top-k', 'Sensitivity')
 
     def plot_top_k_accuracy(self):
         if self.results is None:
             raise ValueError('results parameter is None, please run a evaluation first')
-        metrics = self.results['global']['accuracy']
+        metrics = self.results['average']['accuracy']
         visualizer.plot_concept_metrics(['all'], [metrics], 'Top-k', 'Accuracy')
 
-    @staticmethod
-    def print_results(results=None, round_decimals=3, percentage=False):
-        if results is None:
-            raise ValueError('results parameter is None, please specify a value')
-        print('--- Results ---\n')
-        print('--- Global Metrics ---\n')
-        for key, values in results['global'].items():
-            if key != 'confusion_matrix':
-                for i in range(0, len(values)):
-                    val = round(values[i], round_decimals)
-                    if percentage:
-                        val = val * 100
-                    print('| ' ' @k=' + str(i) + ', ' + key + '=' + '%.3f' % val, end=' ')
-                print('|')
-        print('')
-        print('--- Class Metrics ---\n')
-        for concept in results['by_concept']:
-            for key_1, val_1 in concept.items():
-                if key_1 is 'concept':
-                    print('| ' + concept['concept'] + ' ', end='')
-                if key_1 is 'metrics':
-                    for key_2, val_2 in val_1.items():
-                        for i in range(0, len(val_2)):
-                            val = round(val_2[i], round_decimals)
-                            if percentage:
-                                val = val * 100
-                            print('| ' ' @k=' + str(i) + ', ' + key_2 + '=' + '%.3f' % val, end=' ')
-            print('|')
+    def show_results(self, mode='average', csv_path=None, round_decimals=3):
 
-    def results_to_df(self, csv_path=None, round_decimals=3):
-        '''
-        Generate a Pandas Dataframe with the results. If csv_path is provided, it writes the Dataframe to a CSV file.
-        Args:
-            csv_path:
-            round_decimals:
+        if mode not in ['average', 'individual']:
+            raise ValueError('results mode must be either "average" or "individual"')
 
-        Returns: Pandas Dataframe with results.
-        '''
         if self.results is None:
             raise ValueError('results parameter is None, please run a evaluation first')
 
-        df = pd.DataFrame({'model': os.path.basename(self.model_path)}, index=range(1))
+        if mode is 'average':
+            df = pd.DataFrame({'model': os.path.basename(self.model_path)}, index=range(1))
 
-        for global_metric in self.results['global']:
-            if global_metric is 'confusion_matrix':
-                df['TN'] = self.results['global'][global_metric][0, 0]
-                df['FN'] = self.results['global'][global_metric][1, 0]
-                df['TP'] = self.results['global'][global_metric][1, 1]
-                df['FP'] = self.results['global'][global_metric][0, 1]
-            elif global_metric is 'precision':
-                df[global_metric] = round(self.results['global'][global_metric][0], round_decimals)
-            else:
-                for k in range(len(self.results['global'][global_metric])):
-                    df[global_metric + '_top_' + str(k + 1)] = round(self.results['global'][global_metric][k], round_decimals)
+            for metric in self.results['average'].keys():
+                if metric is not 'confusion_matrix':
+                    if len(self.results['average'][metric]) == 1:
+                        df[metric] = round(self.results['average'][metric][0], round_decimals)
+                    else:
+                        for k in range(len(self.results['average'][metric])):
+                            df[metric + '_top_' + str(k + 1)] = round(self.results['average'][metric][k], round_decimals)
 
-        for concept in self.results['by_concept']:
-            for key, value in concept['metrics'].items():
-                if key is 'precision':
-                    df[concept['concept'] + '_' + str(key)] = round(value[0], round_decimals)
+        if mode is 'individual':
+            df = pd.DataFrame()
+            metrics = self.results['individual'][0]['metrics'].keys()
+            df['class'] = utils.get_concept_items(self.concepts, key='id')
+
+            for metric in metrics:
+                if not isinstance(self.results['individual'][0]['metrics'][metric], list):
+                    concept_list = []
+                    for idx, concept in enumerate(df['class']):
+                        concept_list.append(round(self.results['individual'][idx]['metrics'][metric], round_decimals))
+                    df[metric] = concept_list
+                elif len(self.results['individual'][0]['metrics'][metric]) == 1:
+                    concept_list = []
+                    for idx, concept in enumerate(df['class']):
+                        concept_list = round(self.results['individual'][idx]['metrics'][metric][0], round_decimals)
+                    df[metric] = concept_list
                 else:
-                    for i in range(0, len(value)):
-                        df[concept['concept'] + '_' + str(key) + '_top_' + str(i + 1)] = round(value[i], round_decimals)
+                    for k in range(len(self.results['individual'][0]['metrics'][metric])):
+                        concept_list = []
+                        for idx, concept in enumerate(df['class']):
+                            concept_list.append(
+                                round(self.results['individual'][idx]['metrics'][metric][k], round_decimals))
+                        df[metric + '_top_' + str(k + 1)] = concept_list
+
         if csv_path:
             df.to_csv(csv_path, index=False)
 
