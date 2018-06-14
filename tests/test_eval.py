@@ -162,16 +162,15 @@ def test_show_results(evaluator_mobilenet):
 
     average_df = evaluator_mobilenet.show_results('average')
     assert average_df['model'][0] == 'mobilenet_v1.h5'
-    assert average_df['accuracy'][0] == average_df['precision'][0] == average_df['sensitivity'][0] == \
-        average_df['specificity'][0] == average_df['f1_score'][0] == 1.0
-    assert average_df['positives'][0] == 4
-    assert average_df['negatives'][0] == 0
+    assert average_df['accuracy'][0] == average_df['precision'][0] == average_df['sensitivity'][0] \
+           == average_df['f1_score'][0] == 1.0
     assert average_df['auroc'][0] == 0.833
     assert average_df['fdr'][0] == 0.0
 
     individual_df = evaluator_mobilenet.show_results('individual')
     assert individual_df['class'][0] == 'C_0'
     assert individual_df['class'][1] == 'C_1'
+    assert individual_df['sensitivity'][0] == individual_df['sensitivity'][1] == 1.0
     assert individual_df['precision'][0] == individual_df['precision'][1] == 1.0
     assert individual_df['f1_score'][0] == individual_df['f1_score'][1] == 1.0
     assert individual_df['TP'][0] == individual_df['TP'][1] == 2
