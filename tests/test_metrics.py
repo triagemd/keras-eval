@@ -17,8 +17,6 @@ def test_metrics_top_k():
                             'confusion_matrix': np.array([[1, 0, 0], [0, 0, 1], [1, 0, 1]]),
                             'f1_score': [np.nan],
                             'fdr': [np.nan],
-                            'negatives': [2],
-                            'positives': [2],
                             'precision': [np.nan],
                             'sensitivity': [0.5],
                             'specificity': [0.6666667]},
@@ -30,7 +28,7 @@ def test_metrics_top_k():
                                             'TP': 1,
                                             'f1_score': 0.6666667,
                                             'precision': 0.5,
-                                            'sensitivity': [1.0]}},
+                                            'sensitivity': 1.0}},
                                {'concept': 'class1',
                                 'metrics': {'AUROC': 0.5,
                                             'FDR': np.nan,
@@ -39,7 +37,7 @@ def test_metrics_top_k():
                                             'TP': 0,
                                             'f1_score': np.nan,
                                             'precision': np.nan,
-                                            'sensitivity': [0.0]}},
+                                            'sensitivity': 0.0}},
                                {'concept': 'class3',
                                 'metrics': {'AUROC': 0.375,
                                             'FDR': 0.5,
@@ -48,7 +46,7 @@ def test_metrics_top_k():
                                             'TP': 1,
                                             'f1_score': 0.5,
                                             'precision': 0.5,
-                                            'sensitivity': [0.5]}}]}
+                                            'sensitivity': 0.5}}]}
 
     np.testing.assert_equal(actual, expected)
 
