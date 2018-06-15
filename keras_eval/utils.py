@@ -8,6 +8,7 @@ import tensorflow as tf
 from keras.preprocessing import image
 from keras_model_specs import ModelSpec
 from keras_applications import mobilenet
+import keras_model_specs.models.custom_layers as custom_layers
 
 
 def safe_divide(numerator, denominator):
@@ -24,10 +25,10 @@ def round_list(input_list, decimals=7):
 def create_default_custom_objects():
     '''
 
-    Returns: Default custom objects for Keras models supported in keras.applications
+    Returns: Default custom objects for Keras models supported in keras_applications
 
     '''
-    return {'relu6': mobilenet.relu6, "tf": tf}
+    return {'relu6': mobilenet.relu6, "tf": tf, 'Scale': custom_layers.Scale}
 
 
 def load_multi_model(models_dir, custom_objects=None):
