@@ -158,7 +158,7 @@ def load_preprocess_images(folder_path, model_spec):
     return images, image_paths
 
 
-def combine_probabilities(probabilities, combination_mode=None):
+def combine_probabilities(probabilities, combination_mode='arithmetic'):
     '''
     Args:
         probabilities: Probabilities given by the ensemble of models
@@ -186,13 +186,11 @@ def combine_probabilities(probabilities, combination_mode=None):
             return probabilities[0]
         else:
             # Combine ensemble probabilities
-            if combination_mode is not None:
-                if combination_mode not in combiners.keys():
-                    raise ValueError('Error: invalid option for `combination_mode` ' + str(combination_mode))
-                else:
-                    return combiners[combination_mode](probabilities, axis=0)
+            if combination_mode not in combiners.keys():
+                raise ValueError('Error: invalid option for `combination_mode` ' + str(combination_mode))
             else:
-                raise ValueError('You have multiple models, please enter a valid probability `combination_mode`')
+                return combiners[combination_mode](probabilities, axis=0)
+
     elif probabilities.ndim == 2:
         return probabilities
     else:
