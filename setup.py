@@ -5,7 +5,7 @@ from setuptools import setup, find_packages
 
 setup(
     name='keras-eval',
-    version='0.0.14',
+    version='0.0.15',
     description='A evaluation abstraction for Keras models.',
     author='Triage Technologies Inc.',
     author_email='ai@triage.com',
