@@ -460,7 +460,7 @@ class Evaluator(object):
             raise ValueError('results parameter is None, please run a evaluation first')
 
         if mode is 'average':
-            df = pd.DataFrame({'model': os.path.basename(self.model_path)}, index=range(1))
+            df = pd.DataFrame({'model': self.id}, index=range(1))
 
             for metric in self.results['average'].keys():
                 if metric is not 'confusion_matrix':
