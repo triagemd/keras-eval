@@ -20,7 +20,7 @@ class Evaluator(object):
         'custom_objects': {'type': None, 'default': None},
         'report_dir': {'type': str, 'default': None},
         'combination_mode': {'type': str, 'default': None},
-        'id': {'type': str, 'default': 'model'},
+        'id': {'type': str, 'default': None},
         'loss_function': {'type': str, 'default': 'categorical_crossentropy'},
         'metrics': {'type': list, 'default': ['accuracy']},
         'batch_size': {'type': int, 'default': 1},
@@ -41,6 +41,9 @@ class Evaluator(object):
                 self.set_combination_mode(value)
             else:
                 setattr(self, key, value)
+            if key == 'id' and self.model_path is not None:
+                if value is None:
+                    self.id = os.path.basename(self.model_path)
 
         extra_options = set(options.keys()) - set(self.OPTIONS.keys())
         if len(extra_options) > 0:
