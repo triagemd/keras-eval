@@ -28,7 +28,7 @@ class Evaluator(object):
     }
 
     def __init__(self, **options):
-        # Be able to load keras.applications models by default
+        # Be able to load keras_applications models by default
         self.custom_objects = utils.create_default_custom_objects()
 
         for key, option in self.OPTIONS.items():
@@ -41,9 +41,9 @@ class Evaluator(object):
                 self.set_combination_mode(value)
             else:
                 setattr(self, key, value)
-            if key == 'id' and self.model_path is not None:
+            if key == 'id' and options.get('model_path') is not None:
                 if value is None:
-                    self.id = os.path.basename(self.model_path)
+                    self.id = os.path.basename(options.get('model_path'))
 
         extra_options = set(options.keys()) - set(self.OPTIONS.keys())
         if len(extra_options) > 0:
