@@ -4,6 +4,7 @@ import scipy
 import numpy as np
 import keras.models
 import tensorflow as tf
+import pandas as pd
 
 from keras.preprocessing import image
 from keras_model_specs import ModelSpec
@@ -196,3 +197,49 @@ def combine_probabilities(probabilities, combination_mode='arithmetic'):
     else:
         raise ValueError('Incorrect shape for `probabilities` array, we accept [n_samples, n_classes] or '
                          '[n_models, n_samples, n_classes]')
+
+
+def show_results(results, concepts, id='default_model', mode='average', csv_path=None, round_decimals=3):
+
+    if mode not in ['average', 'individual']:
+        raise ValueError('results mode must be either "average" or "individual"')
+
+    if mode is 'average':
+        df = pd.DataFrame({'model': id}, index=range(1))
+
+        for metric in results['average'].keys():
+            if metric is not 'confusion_matrix':
+                if len(results['average'][metric]) == 1:
+                    df[metric] = round(results['average'][metric][0], round_decimals)
+                else:
+                    for k in range(len(results['average'][metric])):
+                        df[metric + '_top_' + str(k + 1)] = round(results['average'][metric][k], round_decimals)
+
+    if mode is 'individual':
+        df = pd.DataFrame()
+        metrics = results['individual'][0]['metrics'].keys()
+        df['class'] = get_concept_items(concepts, key='id')
+
+        for metric in metrics:
+            if not isinstance(results['individual'][0]['metrics'][metric], list):
+                concept_list = []
+                for idx, concept in enumerate(df['class']):
+                    concept_list.append(round(results['individual'][idx]['metrics'][metric], round_decimals))
+                df[metric] = concept_list
+            elif len(results['individual'][0]['metrics'][metric]) == 1:
+                concept_list = []
+                for idx, concept in enumerate(df['class']):
+                    concept_list = round(results['individual'][idx]['metrics'][metric][0], round_decimals)
+                df[metric] = concept_list
+            else:
+                for k in range(len(results['individual'][0]['metrics'][metric])):
+                    concept_list = []
+                    for idx, concept in enumerate(df['class']):
+                        concept_list.append(
+                            round(results['individual'][idx]['metrics'][metric][k], round_decimals))
+                    df[metric + '_top_' + str(k + 1)] = concept_list
+
+    if csv_path:
+        df.to_csv(csv_path, index=False)
+
+    return df
