@@ -67,10 +67,11 @@ def metrics_top_k(y_probs, y_true, concepts, top_k, round_decimals=7):
 
     # top-1 metrics
     one_hot_top_1_preds = to_categorical(top_preds[:, 0:1])
+
     for idx, concept in enumerate(concepts):
         total_samples_concept = np.sum(y_true == idx)
 
-        tn, fp, fn, tp = confusion_matrix(one_hot_y_true[:, idx], one_hot_top_1_preds[:, idx]).astype(
+        tn, fp, fn, tp = confusion_matrix(one_hot_y_true[:, idx], one_hot_top_1_preds[:, idx], labels=[0, 1]).astype(
             np.float32).ravel()
 
         sensitivity = round(utils.safe_divide(tp, tp + fn), round_decimals)
