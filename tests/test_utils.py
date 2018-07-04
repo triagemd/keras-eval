@@ -131,3 +131,41 @@ def test_get_class_dictionaries_items():
 
     output = utils.get_concept_items(concepts_by_default, 'id')
     assert output == ['C_0', 'C_1']
+
+
+def test_show_results():
+    results = {'individual':
+               [{'concept':
+                 'Class_0', 'metrics': {'TP': 2, 'precision': 1.0, 'AUROC': 0.8333333, 'sensitivity': 1.0,
+                                        'FN': 0, 'FDR': 0.0, 'f1_score': 1.0, 'FP': 0}},
+                {'concept': 'Class_1', 'metrics': {'TP': 2, 'precision': 1.0, 'AUROC': 0.8333333,
+                                                   'sensitivity': 1.0, 'FN': 0, 'FDR': 0.0,
+                                                   'f1_score': 1.0, 'FP': 0}}],
+               'average': {'precision': [1.0], 'confusion_matrix': np.array([[2, 0], [0, 2]]), 'sensitivity': [1.0],
+                           'auroc': [0.8333333], 'f1_score': [1.0], 'accuracy': [1.0],
+                           'specificity': [1.0], 'fdr': [0.0]}}
+
+    concepts = [{'id': 'C_0', 'label': 'Class_0'}, {'id': 'C_1', 'label': 'Class_1'}]
+    # Assert error when incorrect mode
+    with pytest.raises(ValueError) as exception:
+        utils.show_results(results, concepts, mode='asdf')
+    expected = 'results mode must be either "average" or "individual"'
+    actual = str(exception).split('ValueError: ')[1]
+    assert actual == expected
+
+    average_df = utils.show_results(results, concepts)
+    assert average_df['model'][0] == 'default_model'
+    assert average_df['accuracy'][0] == average_df['precision'][0] == average_df['sensitivity'][0] \
+        == average_df['f1_score'][0] == 1.0
+    assert average_df['auroc'][0] == 0.833
+    assert average_df['fdr'][0] == 0.0
+
+    individual_df = utils.show_results(results, concepts, mode='individual')
+    assert individual_df['class'][0] == 'C_0'
+    assert individual_df['class'][1] == 'C_1'
+    assert individual_df['sensitivity'][0] == individual_df['sensitivity'][1] == 1.0
+    assert individual_df['precision'][0] == individual_df['precision'][1] == 1.0
+    assert individual_df['f1_score'][0] == individual_df['f1_score'][1] == 1.0
+    assert individual_df['TP'][0] == individual_df['TP'][1] == 2
+    assert individual_df['FP'][0] == individual_df['FP'][1] == individual_df['FN'][1] == individual_df['FN'][1] == 0
+    assert individual_df['AUROC'][0] == individual_df['AUROC'][1] == 0.833

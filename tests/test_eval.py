@@ -158,16 +158,23 @@ def test_plot_top_k_sensitivity_by_concept(evaluator_mobilenet):
 
 
 def test_show_results(evaluator_mobilenet):
+    # Assert error without results
+    with pytest.raises(ValueError) as exception:
+        evaluator_mobilenet.show_results('average')
+    expected = 'results parameter is None, please run a evaluation first'
+    actual = str(exception).split('ValueError: ')[1]
+    assert actual == expected
+
     evaluator_mobilenet.evaluate(os.path.abspath('tests/files/catdog/test'))
 
-    average_df = evaluator_mobilenet.show_results('average')
+    average_df = evaluator_mobilenet.show_results(mode='average')
     assert average_df['model'][0] == 'mobilenet_v1.h5'
     assert average_df['accuracy'][0] == average_df['precision'][0] == average_df['sensitivity'][0] \
         == average_df['f1_score'][0] == 1.0
     assert average_df['auroc'][0] == 0.833
     assert average_df['fdr'][0] == 0.0
 
-    individual_df = evaluator_mobilenet.show_results('individual')
+    individual_df = evaluator_mobilenet.show_results(mode='individual')
     assert individual_df['class'][0] == 'C_0'
     assert individual_df['class'][1] == 'C_1'
     assert individual_df['sensitivity'][0] == individual_df['sensitivity'][1] == 1.0
