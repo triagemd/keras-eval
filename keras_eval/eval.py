@@ -2,7 +2,6 @@ from __future__ import print_function
 import os
 import copy
 import numpy as np
-import pandas as pd
 import keras_eval.utils as utils
 import keras_eval.metrics as metrics
 import keras_eval.visualizer as visualizer
@@ -455,49 +454,7 @@ class Evaluator(object):
         visualizer.plot_concept_metrics(['all'], [metrics], 'Top-k', 'Accuracy')
 
     def show_results(self, mode='average', csv_path=None, round_decimals=3):
-
-        if mode not in ['average', 'individual']:
-            raise ValueError('results mode must be either "average" or "individual"')
-
         if self.results is None:
             raise ValueError('results parameter is None, please run a evaluation first')
 
-        if mode is 'average':
-            df = pd.DataFrame({'model': self.id}, index=range(1))
-
-            for metric in self.results['average'].keys():
-                if metric is not 'confusion_matrix':
-                    if len(self.results['average'][metric]) == 1:
-                        df[metric] = round(self.results['average'][metric][0], round_decimals)
-                    else:
-                        for k in range(len(self.results['average'][metric])):
-                            df[metric + '_top_' + str(k + 1)] = round(self.results['average'][metric][k], round_decimals)
-
-        if mode is 'individual':
-            df = pd.DataFrame()
-            metrics = self.results['individual'][0]['metrics'].keys()
-            df['class'] = utils.get_concept_items(self.concepts, key='id')
-
-            for metric in metrics:
-                if not isinstance(self.results['individual'][0]['metrics'][metric], list):
-                    concept_list = []
-                    for idx, concept in enumerate(df['class']):
-                        concept_list.append(round(self.results['individual'][idx]['metrics'][metric], round_decimals))
-                    df[metric] = concept_list
-                elif len(self.results['individual'][0]['metrics'][metric]) == 1:
-                    concept_list = []
-                    for idx, concept in enumerate(df['class']):
-                        concept_list = round(self.results['individual'][idx]['metrics'][metric][0], round_decimals)
-                    df[metric] = concept_list
-                else:
-                    for k in range(len(self.results['individual'][0]['metrics'][metric])):
-                        concept_list = []
-                        for idx, concept in enumerate(df['class']):
-                            concept_list.append(
-                                round(self.results['individual'][idx]['metrics'][metric][k], round_decimals))
-                        df[metric + '_top_' + str(k + 1)] = concept_list
-
-        if csv_path:
-            df.to_csv(csv_path, index=False)
-
-        return df
+        return utils.show_results(self.results, self.concepts, self.id, mode, csv_path, round_decimals)
