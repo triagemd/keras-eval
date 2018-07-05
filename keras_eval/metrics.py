@@ -49,7 +49,7 @@ def metrics_top_k(y_probs, y_true, concepts, top_k, round_decimals=7):
     average_auroc = []
 
     top_k = np.arange(1, top_k + 1, 1)
-    one_hot_y_true = to_categorical(y_true)
+    one_hot_y_true = to_categorical(y_true, num_classes=len(concepts))
 
     # Sort predicions from higher to smaller and get class indices
     top_preds = y_probs.argsort(axis=1)[:, ::-1]
@@ -66,11 +66,10 @@ def metrics_top_k(y_probs, y_true, concepts, top_k, round_decimals=7):
         average_accuracy_k.append(np.sum(in_top_k) / float(len(in_top_k)))
 
     # top-1 metrics
-    one_hot_top_1_preds = to_categorical(top_preds[:, 0:1])
+    one_hot_top_1_preds = to_categorical(top_preds[:, 0:1], num_classes=len(concepts))
 
     for idx, concept in enumerate(concepts):
         total_samples_concept = np.sum(y_true == idx)
-
         tn, fp, fn, tp = confusion_matrix(one_hot_y_true[:, idx], one_hot_top_1_preds[:, idx], labels=[0, 1]).astype(
             np.float32).ravel()
 
@@ -99,7 +98,7 @@ def metrics_top_k(y_probs, y_true, concepts, top_k, round_decimals=7):
                                             'sensitivity': sensitivity, 'precision': precision,
                                             'f1_score': f1_score, 'FDR': fdr, 'AUROC': auroc}})
 
-    metrics['average']['confusion_matrix'] = confusion_matrix(y_true, top_preds[:, 0])
+    metrics['average']['confusion_matrix'] = confusion_matrix(y_true, top_preds[:, 0], labels=np.arange(0, len(concepts)))
     metrics['average']['accuracy'] = utils.round_list(average_accuracy_k)
     metrics['average']['sensitivity'] = utils.round_list([utils.safe_divide(sum(average_sensitivity), total_samples)],
                                                          round_decimals)
