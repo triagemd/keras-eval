@@ -98,7 +98,7 @@ def metrics_top_k(y_probs, y_true, concepts, top_k, round_decimals=7):
                                             'sensitivity': sensitivity, 'precision': precision,
                                             'f1_score': f1_score, 'FDR': fdr, 'AUROC': auroc}})
 
-    metrics['average']['confusion_matrix'] = confusion_matrix(y_true, top_preds[:, 0], labels=np.arange(0,len(concepts)))
+    metrics['average']['confusion_matrix'] = confusion_matrix(y_true, top_preds[:, 0], labels=np.arange(0, len(concepts)))
     metrics['average']['accuracy'] = utils.round_list(average_accuracy_k)
     metrics['average']['sensitivity'] = utils.round_list([utils.safe_divide(sum(average_sensitivity), total_samples)],
                                                          round_decimals)
