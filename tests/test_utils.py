@@ -155,10 +155,7 @@ def test_show_results():
 
     average_df = utils.show_results(results, concepts)
     assert average_df['model'][0] == 'default_model'
-    assert average_df['accuracy'][0] == average_df['precision'][0] == average_df['sensitivity'][0] \
-        == average_df['f1_score'][0] == 1.0
-    assert average_df['auroc'][0] == 0.833
-    assert average_df['fdr'][0] == 0.0
+    assert average_df['accuracy'][0] == average_df['precision'][0] == average_df['f1_score'][0] == 1.0
 
     individual_df = utils.show_results(results, concepts, mode='individual')
     assert individual_df['class'][0] == 'C_0'
