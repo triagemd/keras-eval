@@ -3,50 +3,51 @@ import numpy as np
 import keras_eval.metrics as metrics
 
 from math import log
+from collections import OrderedDict
 
 
-def test_metrics_top_k():
+def test_metrics_top_k_multi_class():
     concepts = ['class0', 'class1', 'class3']
     y_true = np.asarray([0, 1, 2, 2])  # 4 samples, 3 classes.
     y_probs = np.asarray([[1, 0, 0], [0.2, 0.2, 0.6], [0.8, 0.2, 0], [0.35, 0.25, 0.4]])
 
     # 2 Correct, 2 Mistakes
     actual = metrics.metrics_top_k(y_probs, y_true, concepts, top_k=1)
-    expected = {'average': {'accuracy': [0.5],
-                            'auroc': [0.5625],
-                            'confusion_matrix': np.array([[1, 0, 0], [0, 0, 1], [1, 0, 1]]),
-                            'f1_score': [np.nan],
-                            'fdr': [np.nan],
-                            'precision': [np.nan],
-                            'sensitivity': [0.5],
-                            'specificity': [0.6666667]},
-                'individual': [{'concept': 'class0',
-                                'metrics': {'AUROC': 1.0,
-                                            'FDR': 0.5,
-                                            'FN': 0,
-                                            'FP': 1,
-                                            'TP': 1,
-                                            'f1_score': 0.6666667,
-                                            'precision': 0.5,
-                                            'sensitivity': 1.0}},
-                               {'concept': 'class1',
-                                'metrics': {'AUROC': 0.5,
-                                            'FDR': np.nan,
-                                            'FN': 1,
-                                            'FP': 0,
-                                            'TP': 0,
-                                            'f1_score': np.nan,
-                                            'precision': np.nan,
-                                            'sensitivity': 0.0}},
-                               {'concept': 'class3',
-                                'metrics': {'AUROC': 0.375,
-                                            'FDR': 0.5,
-                                            'FN': 1,
-                                            'FP': 1,
-                                            'TP': 1,
-                                            'f1_score': 0.5,
-                                            'precision': 0.5,
-                                            'sensitivity': 0.5}}]}
+    expected = {
+        'individual': [{
+            'concept': 'class0',
+            'metrics': OrderedDict([
+                ('sensitivity', 1.0),
+                ('precision', 0.5),
+                ('f1_score', 0.6666667),
+                ('TP', 1),
+                ('FP', 1),
+                ('FN', 0),
+                ('% of samples', 25.0)])},
+            {'concept': 'class1',
+             'metrics': OrderedDict([
+                 ('sensitivity', 0.0),
+                 ('precision', np.nan),
+                 ('f1_score', np.nan),
+                 ('TP', 0), ('FP', 0),
+                 ('FN', 1), ('% of samples', 25.0)])},
+            {'concept': 'class3',
+             'metrics': OrderedDict([
+                 ('sensitivity', 0.5),
+                 ('precision', 0.5),
+                 ('f1_score', 0.5),
+                 ('TP', 1),
+                 ('FP', 1),
+                 ('FN', 1),
+                 ('% of samples', 50.0)])}],
+        'average': OrderedDict([
+            ('accuracy', [0.5]),
+            ('precision', 0.375),
+            ('f1_score', 0.4166667),
+            ('number_of_samples', 4),
+            ('number_of_classes', 3),
+            ('confusion_matrix', np.array([[1, 0, 0], [0, 0, 1], [1, 0, 1]]))]
+        )}
 
     np.testing.assert_equal(actual, expected)
 
@@ -74,11 +75,54 @@ def test_metrics_top_k():
     # Assert error when number of samples do not coincide
     y_true = np.asarray([0, 1, 2, 2, 1])
     with pytest.raises(ValueError) as exception:
-        metrics.metrics_top_k(y_probs, y_true, concepts, top_k=-1)
+        metrics.metrics_top_k(y_probs, y_true, concepts, top_k=2)
 
     expected = 'The number predicted samples (4) is different from the ground truth samples (5)'
     actual = str(exception).split('ValueError: ')[1]
     assert actual == expected
+
+
+def test_metrics_top_k_binary():
+    concepts = ['class0', 'class1']
+    y_true = np.asarray([0, 0, 0, 1])  # 4 samples, 2 classes.
+    y_probs = np.asarray([[1, 0], [0.75, 0.25], [0.25, 0.75], [0.25, 0.75]])
+    # 3 Correct, 1 Mistake
+    actual = metrics.metrics_top_k(y_probs, y_true, concepts, top_k=1)
+    expected = {'individual': [
+        {'concept': 'class0',
+         'metrics': OrderedDict([
+             ('sensitivity', np.float32(0.6666667)),
+             ('precision', 1.0),
+             ('f1_score', 0.8),
+             ('FDR', 0.0),
+             ('AUROC', np.float64(0.6666667)),
+             ('specificity', 1.0),
+             ('TP', 2),
+             ('FP', 0),
+             ('FN', 1),
+             ('% of samples', 75.0)])},
+        {'concept': 'class1',
+         'metrics': OrderedDict([
+             ('sensitivity', 1.0),
+             ('precision', 0.5),
+             ('f1_score', 0.6666667),
+             ('FDR', 0.5),
+             ('AUROC', 0.6666667),
+             ('specificity', np.float32(0.6666667)),
+             ('TP', 1),
+             ('FP', 1),
+             ('FN', 0),
+             ('% of samples', 25.0)])}],
+        'average': OrderedDict([
+            ('accuracy', [0.75]),
+            ('precision', 0.875),
+            ('f1_score', 0.7666667),
+            ('number_of_samples', 4),
+            ('number_of_classes', 2),
+            ('confusion_matrix', np.array([[2, 1], [0, 1]]))]
+    )}
+
+    np.testing.assert_equal(actual, expected)
 
 
 def test_uncertainty_distribution():

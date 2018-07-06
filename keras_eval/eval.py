@@ -458,3 +458,9 @@ class Evaluator(object):
             raise ValueError('results parameter is None, please run a evaluation first')
 
         return utils.show_results(self.results, self.concepts, self.id, mode, csv_path, round_decimals)
+
+    def ensemble_models(self, input_shape, mode='average', model_filename=None):
+        ensemble = utils.ensemble_models(self.models, mode=mode)
+        if model_filename is not None:
+            ensemble.save(model_filename)
+        return ensemble

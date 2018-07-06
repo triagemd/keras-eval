@@ -7,6 +7,7 @@ import keras_eval.utils as utils
 from math import log
 from sklearn.metrics import confusion_matrix, roc_curve
 from keras.utils.np_utils import to_categorical
+from collections import OrderedDict
 
 
 def metrics_top_k(y_probs, y_true, concepts, top_k, round_decimals=7):
@@ -41,12 +42,8 @@ def metrics_top_k(y_probs, y_true, concepts, top_k, round_decimals=7):
         raise ValueError('`top_k` value should be between 1 and the total number of concepts (%i)' % len(concepts))
 
     average_accuracy_k = []
-    average_sensitivity = []
     average_precision = []
-    average_specificity = []
     average_f1_score = []
-    average_fdr = []
-    average_auroc = []
 
     top_k = np.arange(1, top_k + 1, 1)
     one_hot_y_true = to_categorical(y_true, num_classes=len(concepts))
@@ -59,59 +56,58 @@ def metrics_top_k(y_probs, y_true, concepts, top_k, round_decimals=7):
 
     # top-K Accuracy
     for k in top_k:
+        # Select k top predictions
         top_k_preds = top_preds[:, 0:k]
-
+        # Compute the top-k matches
         matches_k = (top_k_preds == y_true[:, np.newaxis])
         in_top_k = np.sum(matches_k, axis=1) > 0
         average_accuracy_k.append(np.sum(in_top_k) / float(len(in_top_k)))
 
-    # top-1 metrics
+    # Top-1 metrics
     one_hot_top_1_preds = to_categorical(top_preds[:, 0:1], num_classes=len(concepts))
 
     for idx, concept in enumerate(concepts):
         total_samples_concept = np.sum(y_true == idx)
+        percentage_samples_concept = round(total_samples_concept / len(y_true) * 100, 2)
+
         tn, fp, fn, tp = confusion_matrix(one_hot_y_true[:, idx], one_hot_top_1_preds[:, idx], labels=[0, 1]).astype(
             np.float32).ravel()
 
         sensitivity = round(utils.safe_divide(tp, tp + fn), round_decimals)
-        average_sensitivity.append(sensitivity * total_samples_concept)
 
         precision = round(utils.safe_divide(tp, tp + fp), round_decimals)
-        average_precision.append(precision * total_samples_concept)
+        if not np.isnan(precision):
+            average_precision.append(precision * total_samples_concept)
 
-        specificity = round(utils.safe_divide(tn, tn + fp), round_decimals)
-        average_specificity.append(specificity * total_samples_concept)
+        f1_score = round(2 * utils.safe_divide(precision * sensitivity, precision + sensitivity), round_decimals)
+        if not np.isnan(f1_score):
+            average_f1_score.append(f1_score * total_samples_concept)
 
-        f1_score = round(2 * utils.safe_divide(precision * sensitivity, precision + sensitivity),
-                         round_decimals)
-        average_f1_score.append(f1_score * total_samples_concept)
+        metrics_dict = OrderedDict([('sensitivity', sensitivity), ('precision', precision), ('f1_score', f1_score)])
 
-        fdr = round(utils.safe_divide(fp, tp + fp), round_decimals)
-        average_fdr.append(fdr * total_samples_concept)
+        # Binary classification metrics
+        if len(concepts) == 2:
+            specificity = round(utils.safe_divide(tn, tn + fp), round_decimals)
+            fdr = round(utils.safe_divide(fp, tp + fp), round_decimals)
+            fpr, tpr, _ = roc_curve(y_true, y_probs[:, idx], pos_label=idx)
+            auroc = round(np.mean(tpr), round_decimals)
 
-        fpr, tpr, _ = roc_curve(y_true, y_probs[:, idx], pos_label=idx)
-        auroc = round(np.mean(tpr), round_decimals)
-        average_auroc.append(auroc * total_samples_concept)
+            metrics_dict.update([('FDR', fdr), ('AUROC', auroc), ('specificity', specificity)])
 
-        metrics['individual'].append({
-            'concept': concept, 'metrics': {'TP': int(tp), 'FP': int(fp), 'FN': int(fn),
-                                            'sensitivity': sensitivity, 'precision': precision,
-                                            'f1_score': f1_score, 'FDR': fdr, 'AUROC': auroc}})
+        metrics_dict.update([('TP', int(tp)), ('FP', int(fp)), ('FN', int(fn)), ('% of samples', percentage_samples_concept)])
 
-    metrics['average']['confusion_matrix'] = confusion_matrix(y_true, top_preds[:, 0], labels=np.arange(0, len(concepts)))
-    metrics['average']['accuracy'] = utils.round_list(average_accuracy_k)
-    metrics['average']['sensitivity'] = utils.round_list([utils.safe_divide(sum(average_sensitivity), total_samples)],
-                                                         round_decimals)
-    metrics['average']['precision'] = utils.round_list([utils.safe_divide(sum(average_precision), total_samples)],
-                                                       round_decimals)
-    metrics['average']['specificity'] = utils.round_list([utils.safe_divide(sum(average_specificity), total_samples)],
-                                                         round_decimals)
-    metrics['average']['f1_score'] = utils.round_list([utils.safe_divide(sum(average_f1_score), total_samples)],
-                                                      round_decimals)
-    metrics['average']['fdr'] = utils.round_list([utils.safe_divide(sum(average_fdr), total_samples)], round_decimals)
-    metrics['average']['auroc'] = utils.round_list([utils.safe_divide(sum(average_auroc), total_samples)],
-                                                   round_decimals)
+        metrics['individual'].append({'concept': concept, 'metrics': metrics_dict})
 
+    metrics['average'] = OrderedDict([('accuracy', utils.round_list(average_accuracy_k, round_decimals)),
+                                      ('precision', round(utils.safe_divide(sum(average_precision), total_samples),
+                                                          round_decimals)),
+                                      ('f1_score', round(utils.safe_divide(sum(average_f1_score), total_samples),
+                                                         round_decimals)),
+                                      ('number_of_samples', total_samples),
+                                      ('number_of_classes', len(concepts)),
+                                      ('confusion_matrix', confusion_matrix(y_true, top_preds[:, 0],
+                                                                            labels=np.arange(0, len(concepts))))
+                                      ])
     return metrics
 
 

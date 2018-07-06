@@ -209,11 +209,14 @@ def show_results(results, concepts, id='default_model', mode='average', csv_path
 
         for metric in results['average'].keys():
             if metric is not 'confusion_matrix':
-                if len(results['average'][metric]) == 1:
-                    df[metric] = round(results['average'][metric][0], round_decimals)
+                if not isinstance(results['average'][metric], list):
+                    df[metric] = round(results['average'][metric], round_decimals)
                 else:
-                    for k in range(len(results['average'][metric])):
-                        df[metric + '_top_' + str(k + 1)] = round(results['average'][metric][k], round_decimals)
+                    if len(results['average'][metric]) == 1:
+                        df[metric] = round(results['average'][metric][0], round_decimals)
+                    else:
+                        for k in range(len(results['average'][metric])):
+                            df[metric + '_top_' + str(k + 1)] = round(results['average'][metric][k], round_decimals)
 
     if mode is 'individual':
         df = pd.DataFrame()
@@ -247,19 +250,20 @@ def show_results(results, concepts, id='default_model', mode='average', csv_path
 
 def ensemble_models(models, input_shape, combination_mode='average', ensemble_name='ensemble'):
     combination_mode_options = ['average', 'maximum']
-    # collect outputs of models in a list
+    # Collect outputs of models in a list
     count = 0
     for model in models:
-        model.name = 'model_'+str(count)
+        # Keras needs all the models to be named differently
+        model.name = 'model_' + str(count)
         yModels.append(model(input_shape))
 
-    # averaging outputs
+    # Computing outputs
     if combination_mode in combination_mode_options:
         if combination_mode == 'average':
             out = layers.average(yModels)
         elif combination_mode == 'maximum':
             out = layers.maximum(yModels)
-        # build model from same input and avg output
+        # Build model from same input and outputs
         ensemble = Model(inputs=input_shape, outputs=out, name=ensemble_name)
     else:
         raise ValueError('Incorrect combination mode selected, we only allow for `average` or `maximum`')
