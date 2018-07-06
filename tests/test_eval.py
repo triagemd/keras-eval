@@ -179,4 +179,4 @@ def test_show_results(evaluator_mobilenet):
     assert individual_df['f1_score'][0] == individual_df['f1_score'][1] == 1.0
     assert individual_df['TP'][0] == individual_df['TP'][1] == 2
     assert individual_df['FP'][0] == individual_df['FP'][1] == individual_df['FN'][1] == individual_df['FN'][1] == 0
-    assert individual_df['AUROC'][0] == individual_df['AUROC'][1] == 0.833
+    assert individual_df['AUROC'][0] == individual_df['AUROC'][1] == 1.0

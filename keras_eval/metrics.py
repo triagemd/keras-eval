@@ -90,7 +90,7 @@ def metrics_top_k(y_probs, y_true, concepts, top_k, round_decimals=7):
             specificity = round(utils.safe_divide(tn, tn + fp), round_decimals)
             fdr = round(utils.safe_divide(fp, tp + fp), round_decimals)
             fpr, tpr, _ = roc_curve(y_true, y_probs[:, idx], pos_label=idx)
-            auroc = round(np.mean(tpr), round_decimals)
+            auroc = round(np.trapz(tpr, fpr))
 
             metrics_dict.update([('FDR', fdr), ('AUROC', auroc), ('specificity', specificity)])
 

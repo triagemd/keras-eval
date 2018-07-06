@@ -10,7 +10,6 @@ def test_metrics_top_k_multi_class():
     concepts = ['class0', 'class1', 'class3']
     y_true = np.asarray([0, 1, 2, 2])  # 4 samples, 3 classes.
     y_probs = np.asarray([[1, 0, 0], [0.2, 0.2, 0.6], [0.8, 0.2, 0], [0.35, 0.25, 0.4]])
-
     # 2 Correct, 2 Mistakes
     actual = metrics.metrics_top_k(y_probs, y_true, concepts, top_k=1)
     expected = {
