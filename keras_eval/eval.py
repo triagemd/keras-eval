@@ -459,8 +459,9 @@ class Evaluator(object):
 
         return utils.show_results(self.results, self.concepts, self.id, mode, csv_path, round_decimals)
 
-    def ensemble_models(self, input_shape, mode='average', ensemble_name='ensemble', model_filename=None):
-        ensemble = utils.ensemble_models(self.models, input_shape=input_shape, mode=mode, ensemble_name=ensemble_name)
+    def ensemble_models(self, input_shape, combination_mode='average', ensemble_name='ensemble', model_filename=None):
+        ensemble = utils.ensemble_models(self.models, input_shape=input_shape, combination_mode=combination_mode,
+                                         ensemble_name=ensemble_name)
         if model_filename is not None:
             ensemble.save(model_filename)
         return ensemble
