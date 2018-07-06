@@ -6,6 +6,8 @@ import keras.models
 import tensorflow as tf
 import pandas as pd
 
+from keras.layers import average, maximum
+from keras.models import Model, Input
 from keras.preprocessing import image
 from keras_model_specs import ModelSpec
 from keras_applications import mobilenet
@@ -249,20 +251,22 @@ def show_results(results, concepts, id='default_model', mode='average', csv_path
 
 
 def ensemble_models(models, input_shape, combination_mode='average', ensemble_name='ensemble'):
+    input_shape = Input(input_shape)
     combination_mode_options = ['average', 'maximum']
     # Collect outputs of models in a list
     count = 0
+    models_output = []
     for model in models:
         # Keras needs all the models to be named differently
         model.name = 'model_' + str(count)
-        yModels.append(model(input_shape))
+        models_output.append(model(input_shape))
 
     # Computing outputs
     if combination_mode in combination_mode_options:
         if combination_mode == 'average':
-            out = layers.average(yModels)
+            out = average(models_output)
         elif combination_mode == 'maximum':
-            out = layers.maximum(yModels)
+            out = maximum(models_output)
         # Build model from same input and outputs
         ensemble = Model(inputs=input_shape, outputs=out, name=ensemble_name)
     else:
