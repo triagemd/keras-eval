@@ -243,3 +243,25 @@ def show_results(results, concepts, id='default_model', mode='average', csv_path
         df.to_csv(csv_path, index=False)
 
     return df
+
+
+def ensemble_models(models, input_shape, combination_mode='average', ensemble_name='ensemble'):
+    combination_mode_options = ['average', 'maximum']
+    # collect outputs of models in a list
+    count = 0
+    for model in models:
+        model.name = 'model_'+str(count)
+        yModels.append(model(input_shape))
+
+    # averaging outputs
+    if combination_mode in combination_mode_options:
+        if combination_mode == 'average':
+            out = layers.average(yModels)
+        elif combination_mode == 'maximum':
+            out = layers.maximum(yModels)
+        # build model from same input and avg output
+        ensemble = Model(inputs=input_shape, outputs=out, name=ensemble_name)
+    else:
+        raise ValueError('Incorrect combination mode selected, we only allow for `average` or `maximum`')
+
+    return ensemble
