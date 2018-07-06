@@ -90,7 +90,7 @@ def metrics_top_k(y_probs, y_true, concepts, top_k, round_decimals=7):
         average_fdr.append(fdr * total_samples_concept)
 
         fpr, tpr, _ = roc_curve(y_true, y_probs[:, idx], pos_label=idx)
-        auroc = round(np.mean(tpr), round_decimals)
+        auroc = np.trapz(tpr, fpr)
         average_auroc.append(auroc * total_samples_concept)
 
         metrics['individual'].append({
