@@ -87,15 +87,15 @@ def test_metrics_top_k_binary():
     y_true = np.asarray([0, 0, 0, 1])  # 4 samples, 2 classes.
     y_probs = np.asarray([[1, 0], [0.75, 0.25], [0.25, 0.75], [0.25, 0.75]])
     # 3 Correct, 1 Mistake
-    actual = metrics.metrics_top_k(y_probs, y_true, concepts, top_k=1)
+    actual = metrics.metrics_top_k(y_probs, y_true, concepts, top_k=1, round_decimals=3)
     expected = {'individual': [
         {'concept': 'class0',
          'metrics': OrderedDict([
-             ('sensitivity', np.float32(0.6666667)),
+             ('sensitivity', np.float32(0.667)),
              ('precision', 1.0),
              ('f1_score', 0.8),
              ('FDR', 0.0),
-             ('AUROC', np.float64(0.6666667)),
+             ('AUROC', np.float64(0.667)),
              ('specificity', 1.0),
              ('TP', 2),
              ('FP', 0),
@@ -105,10 +105,10 @@ def test_metrics_top_k_binary():
          'metrics': OrderedDict([
              ('sensitivity', 1.0),
              ('precision', 0.5),
-             ('f1_score', 0.6666667),
+             ('f1_score', 0.667),
              ('FDR', 0.5),
-             ('AUROC', 0.6666667),
-             ('specificity', np.float32(0.6666667)),
+             ('AUROC', 0.667),
+             ('specificity', np.float32(0.667)),
              ('TP', 1),
              ('FP', 1),
              ('FN', 0),
@@ -116,7 +116,7 @@ def test_metrics_top_k_binary():
         'average': OrderedDict([
             ('accuracy', [0.75]),
             ('precision', 0.875),
-            ('f1_score', 0.7666667),
+            ('f1_score', 0.767),
             ('number_of_samples', 4),
             ('number_of_classes', 2),
             ('confusion_matrix', np.array([[2, 1], [0, 1]]))]
