@@ -4,6 +4,7 @@ import os
 import pytest
 
 from keras_eval.eval import Evaluator
+from keras_eval import utils
 
 
 @pytest.fixture('function')
@@ -180,3 +181,16 @@ def test_show_results(evaluator_mobilenet):
     assert individual_df['TP'][0] == individual_df['TP'][1] == 2
     assert individual_df['FP'][0] == individual_df['FP'][1] == individual_df['FN'][1] == individual_df['FN'][1] == 0
     assert individual_df['AUROC'][0] == individual_df['AUROC'][1] == 1.0
+
+
+def test_ensemble_models(evaluator_ensemble_mobilenet):
+    ensemble = evaluator_ensemble_mobilenet.ensemble_models(input_shape=(224, 224, 3), combination_mode='average')
+    model_spec = evaluator_ensemble_mobilenet.model_specs[0]
+    image = utils.load_preprocess_image(os.path.abspath('tests/files/catdog/test/cat/cat-1.jpg'), model_spec)
+
+    # forward pass
+    preds = ensemble.predict(image)
+    # 1 sample
+    assert preds.shape[0] == 1
+    # 2 predictions
+    assert preds.shape[1] == 2

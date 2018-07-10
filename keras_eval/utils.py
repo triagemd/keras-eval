@@ -251,6 +251,19 @@ def show_results(results, concepts, id='default_model', mode='average', csv_path
 
 
 def ensemble_models(models, input_shape, combination_mode='average', ensemble_name='ensemble'):
+    '''
+
+    Args:
+        models:  list of keras models
+        input_shape: tuple containing input shape in tf format (H, W, C)
+        combination_mode: the way probabilities will be joined. We support `average` and `maximum`
+        ensemble_name: the name of the model that will be returned
+
+    Returns: a model containing the ensemble of the `models` passed. Same `input_shape` will be used for all of them
+
+    '''
+    if not len(input_shape) == 3:
+        raise ValueError('Incorrect input shape, it should have 3 dimensions (H, W, C)')
     input_shape = Input(input_shape)
     combination_mode_options = ['average', 'maximum']
     # Collect outputs of models in a list
@@ -260,6 +273,7 @@ def ensemble_models(models, input_shape, combination_mode='average', ensemble_na
         # Keras needs all the models to be named differently
         model.name = 'model_' + str(count)
         models_output.append(model(input_shape))
+        count += 1
 
     # Computing outputs
     if combination_mode in combination_mode_options:
