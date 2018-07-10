@@ -260,6 +260,7 @@ def ensemble_models(models, input_shape, combination_mode='average', ensemble_na
         # Keras needs all the models to be named differently
         model.name = 'model_' + str(count)
         models_output.append(model(input_shape))
+        count += 1
 
     # Computing outputs
     if combination_mode in combination_mode_options:
