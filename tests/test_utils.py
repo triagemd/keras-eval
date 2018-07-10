@@ -58,8 +58,9 @@ def test_load_model():
 def test_load_model_ensemble():
     ensemble_dir = 'tmp/fixtures/models'
     custom_objects = {'relu6': mobilenet.relu6, "tf": tf}
-    models = utils.load_multi_model(ensemble_dir, custom_objects=custom_objects)
+    models, specs = utils.load_multi_model(ensemble_dir, custom_objects=custom_objects)
     assert models
+    assert specs
 
 
 def test_combine_probabilities():
@@ -166,3 +167,31 @@ def test_show_results():
     assert individual_df['TP'][0] == individual_df['TP'][1] == 2
     assert individual_df['FP'][0] == individual_df['FP'][1] == individual_df['FN'][1] == individual_df['FN'][1] == 0
     assert individual_df['AUROC'][0] == individual_df['AUROC'][1] == 0.833
+
+
+def test_ensemble_models(test_image_path, model_spec_mobilenet):
+    ensemble_dir = 'tmp/fixtures/models'
+    custom_objects = {'relu6': mobilenet.relu6, "tf": tf}
+    models, model_specs = utils.load_multi_model(ensemble_dir, custom_objects=custom_objects)
+
+    with pytest.raises(ValueError) as exception:
+        utils.ensemble_models(models, input_shape=(224, 224, 3), combination_mode='asdf')
+    expected = 'Incorrect combination mode selected, we only allow for `average` or `maximum`'
+    actual = str(exception).split('ValueError: ')[1]
+    assert actual == expected
+
+    with pytest.raises(ValueError) as exception:
+        utils.ensemble_models(models, input_shape=(224, 3), combination_mode='asdf')
+    expected = 'Incorrect input shape, it should have 3 dimensions (H, W, C)'
+    actual = str(exception).split('ValueError: ')[1]
+    assert actual == expected
+
+    ensemble = utils.ensemble_models(models, input_shape=(224, 224, 3), combination_mode='average')
+    image = utils.load_preprocess_image(test_image_path, model_spec_mobilenet)
+
+    # forward pass
+    preds = ensemble.predict(image)
+    # 1 sample
+    assert preds.shape[0] == 1
+    # 2 predictions
+    assert preds.shape[1] == 2
