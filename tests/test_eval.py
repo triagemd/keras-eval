@@ -49,8 +49,6 @@ def evaluator_ensemble_mobilenet():
 
 def test_set_concepts(evaluator_mobilenet):
     with pytest.raises(ValueError) as exception:
-        import pdb
-        pdb.set_trace()
         evaluator_mobilenet.set_concepts([{'id': 'abcd', 'label': 'asd'}, {'a': 'b', 'b': 'c'}])
     expected = 'Incorrect format for concepts list. It must contain the fields `id` and `label`'
     actual = str(exception).split('ValueError: ')[1]
