@@ -12,7 +12,7 @@ Requires [keras-model-specs](https://github.com/triagemd/keras-model-specs).
 
 `probs, labels = evaluator.evaluate(data_dir=data_dir, top_k=2, confusion_matrix=True, save_confusion_matrix_path='cm.png')`
 
-![Confusion_matrix](https://github.com/triagemd/keras-eval/tree/master/figs/confusion_matrix.png)
+![Confusion_matrix](https://github.com/triagemd/keras-eval/blob/master/figs/confusion_matrix.png)
 
 `evaluator.show_results('average')`
 
