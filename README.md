@@ -8,6 +8,25 @@ Evaluation abstraction for Keras models. [Example Notebook](https://github.com/t
 
 Requires [keras-model-specs](https://github.com/triagemd/keras-model-specs).
 
+# Example Evaluation
+
+`probs, labels = evaluator.evaluate(data_dir=data_dir, top_k=2, confusion_matrix=True, save_confusion_matrix_path='cm.png')`
+
+![Confusion_matrix](https://github.com/triagemd/keras-eval/tree/master/figs/confusion_matrix.png)
+
+`evaluator.show_results('average')`
+
+model | f1_score | fdr | positives | sensitivity | specificity | auroc | negatives | precision | accuracy
+-- | -- | -- | -- | -- | -- | -- | -- | -- | --
+mobilenet_v1.h5 | 0.934 | 0.064 | 1869 | 0.934 | 0.934 | 0.807 | 131 | 0.936 | 0.934
+
+`evaluator.show_results('individual')`
+
+class | sensitivity | precision | f1_score | specificity | FDR | AUROC | TP | FP | FN | % of samples
+-- | -- | -- | -- | -- | -- | -- | -- | -- | -- | --
+cats | 0.907 | 0.960 | 0.933 | 0.962 | 0.040 | 1.0 | 907 | 38 | 93 | 50.0
+dogs | 0.962 | 0.912 | 0.936 | 0.907 | 0.088 | 1.0 | 962 | 93 | 38 | 50.0
+
 # Use the code
 
 Clone the repository
@@ -16,7 +35,7 @@ Clone the repository
 
 To install project dependencies, inside the root folder run
 
-`script/up` 
+`script/up`
 
 ## Evaluator Class
 
@@ -123,7 +142,7 @@ evaluator.add_model_ensemble(model_path)
 concepts = [{'label':'Dog', 'id': 'dogs'},
            {'label':'Cat', 'id': 'cats'}]
 
-evaluator.concepts(concepts)
+evaluator.set_concepts(concepts)
 ```
 
 ## Extra
