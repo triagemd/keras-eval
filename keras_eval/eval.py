@@ -90,6 +90,9 @@ class Evaluator(object):
             raise ValueError('Error: invalid option for `combination_mode` ' + str(mode))
 
     def set_concepts(self, concepts):
+        for concept_dict in concepts:
+            if 'label' not in concept_dict.keys() and 'id' not in concept_dict.keys():
+                raise ValueError('Incorrect format for concepts list. It must contain the fields `id` and `label`')
         self.concepts = concepts
 
     def _get_complete_image_paths(self, filenames):
