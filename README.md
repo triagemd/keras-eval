@@ -6,9 +6,22 @@
 
 Evaluation abstraction for Keras models. [Example Notebook](https://github.com/triagemd/keras-eval/blob/master/example.ipynb)
 
+Requires [keras-model-specs](https://github.com/triagemd/keras-model-specs).
+
+# Use the code
+
+Clone the repository
+
+`git clone https://github.com/triagemd/keras-eval.git`
+
+To install project dependencies, inside the root folder run
+
+`script/up` 
+
 ## Evaluator Class
 
 Easy predictions and evaluations for a single model or an ensemble of many models.
+
 The format to load models is the following:
 
 **For a single model**
@@ -39,7 +52,7 @@ from keras_eval.eval import Evaluator
 
 evaluator = Evaluator(
                 data_dir=None,
-                class_dictionaries=None,
+                concepts=None,
                 ensemble_models_dir=None,
                 model_path=model_path,
                 loss_function='categorical_crossentropy',
@@ -104,11 +117,20 @@ model_path = '/your_model_ensemble_path/'
 evaluator.add_model_ensemble(model_path)
 ```
 
-**set_class_dictionaries**
+**set_concepts**
 
 ```
-dict_classes = [{'abbrev':'Dog', 'class_name': 'dogs'},
-           {'abbrev':'Cat', 'class_name': 'cats'}]
+concepts = [{'label':'Dog', 'id': 'dogs'},
+           {'label':'Cat', 'id': 'cats'}]
 
-evaluator.set_class_dictionaries(dict_classes)
+evaluator.concepts(concepts)
 ```
+
+## Extra
+
+For more information check the [Example Notebook](https://github.com/triagemd/keras-eval/blob/master/example.ipynb) and the source code. 
+
+## Contact
+
+This library is mantained by [@triagemd](https://github.com/triagemd).
+To report any problem or issue, please use the [Issues](https://github.com/triagemd/keras-eval/issues) section. 
