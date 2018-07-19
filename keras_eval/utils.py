@@ -88,6 +88,7 @@ def load_model(model_path, specs_path=None, custom_objects=None):
         model_spec = ModelSpec(model_spec_json)
     return model, model_spec
 
+
 def get_default_concepts(data_dir):
     '''
     Creates default concepts dictionary from data_dir folder names
