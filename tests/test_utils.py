@@ -10,7 +10,7 @@ from keras_applications import mobilenet
 
 @pytest.fixture('session')
 def test_dataset_path():
-    return os.path.abspath(os.path.join('tests', 'files', 'test', 'catdog'))
+    return os.path.abspath(os.path.join('tests', 'files', 'catdog', 'test'))
 
 
 @pytest.fixture('session')
@@ -119,19 +119,17 @@ def test_load_preprocess_images(test_folder_image_path, model_spec_mobilenet):
     assert len(images_paths) == 2
 
 
-def test_create_concepts_default():
-    concepts_by_default = utils.create_concepts_default(2)
-    assert concepts_by_default == [{'label': 'Class_0', 'id': 'C_0'},
-                                   {'label': 'Class_1', 'id': 'C_1'}]
+def test_default_concepts(test_dataset_path):
+    concepts_by_default = utils.get_default_concepts(test_dataset_path)
+    assert concepts_by_default == [{'label': 'cat', 'id': 'cat'},
+                                   {'label': 'dog', 'id': 'dog'}]
 
 
-def test_get_class_dictionaries_items():
-    concepts_by_default = utils.create_concepts_default(2)
-    output = utils.get_concept_items(concepts_by_default, 'label')
-    assert output == ['Class_0', 'Class_1']
-
-    output = utils.get_concept_items(concepts_by_default, 'id')
-    assert output == ['C_0', 'C_1']
+def test_get_class_dictionaries_items(test_dataset_path):
+    concepts_by_default = utils.get_default_concepts(test_dataset_path)
+    label_output = utils.get_concept_items(concepts_by_default, 'label')
+    id_output = utils.get_concept_items(concepts_by_default, 'id')
+    assert label_output == id_output == ['cat', 'dog']
 
 
 def test_show_results():
