@@ -92,7 +92,7 @@ def metrics_top_k(y_probs, y_true, concepts, top_k, round_decimals=7):
             fpr, tpr, _ = roc_curve(y_true, y_probs[:, idx], pos_label=idx)
             auroc = round(np.trapz(tpr, fpr))
 
-            metrics_dict.update([('FDR', fdr), ('AUROC', auroc), ('specificity', specificity)])
+            metrics_dict.update([('specificity', specificity), ('FDR', fdr), ('AUROC', auroc)])
 
         metrics_dict.update([('TP', int(tp)), ('FP', int(fp)), ('FN', int(fn)), ('% of samples', percentage_samples_concept)])
 
