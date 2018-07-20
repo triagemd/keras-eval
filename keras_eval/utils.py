@@ -1,6 +1,6 @@
 import os
 import json
-import scipy
+import scipy.stats
 import numpy as np
 import keras.models
 import tensorflow as tf
@@ -89,11 +89,23 @@ def load_model(model_path, specs_path=None, custom_objects=None):
     return model, model_spec
 
 
-def create_concepts_default(num_classes):
-    concepts_by_default = []
-    for i in range(0, num_classes):
-        concepts_by_default.append({'id': 'C_' + str(i), 'label': 'Class_' + str(i)})
-    return concepts_by_default
+def get_default_concepts(data_dir):
+    '''
+    Creates default concepts dictionary from data_dir folder names
+    Args:
+        data_dir: string indicating the path where the concept folders are
+
+    Returns:
+        concepts: dictionary with 'label' and 'id' equal to each folder name
+    '''
+
+    if not os.path.exists(data_dir):
+        raise ValueError('data_dir path does not exist')
+
+    concepts = []
+    for directory in sorted(os.listdir(data_dir)):
+        concepts.append({'label': directory, 'id': directory})
+    return concepts
 
 
 def get_concept_items(concepts, key):

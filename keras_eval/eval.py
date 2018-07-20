@@ -132,7 +132,7 @@ class Evaluator(object):
 
             # Create dictionary containing class names
             if self.concepts is None:
-                self.concepts = utils.create_concepts_default(self.num_classes)
+                self.concepts = utils.get_default_concepts(self.data_dir)
 
             # Obtain labels to show on the metrics results
             self.concept_labels = utils.get_concept_items(self.concepts, key='label')
