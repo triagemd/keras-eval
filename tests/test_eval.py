@@ -62,6 +62,26 @@ def evaluator_ensemble_mobilenet():
     )
 
 
+def test_set_concepts(evaluator_mobilenet):
+    with pytest.raises(ValueError) as exception:
+        evaluator_mobilenet.set_concepts([{'id': 'abcd', 'label': 'asd'}, {'a': 'b', 'b': 'c'}])
+    expected = 'Incorrect format for concepts list. It must contain the fields `id` and `label`'
+    actual = str(exception).split('ValueError: ')[1]
+    assert actual == expected
+
+    evaluator_mobilenet.set_concepts([{'id': '1', 'label': '1'}, {'id': '2', 'label': '2'}])
+
+
+def test_set_combination_mode(evaluator_mobilenet):
+    with pytest.raises(ValueError) as exception:
+        evaluator_mobilenet.set_combination_mode('asdf')
+    expected = 'Error: invalid option for `combination_mode` asdf'
+    actual = str(exception).split('ValueError: ')[1]
+    assert actual == expected
+
+    evaluator_mobilenet.set_combination_mode('maximum')
+
+
 def check_evaluate_on_catdog_dataset(evaluator, test_dataset_path):
     probabilities, labels = evaluator.evaluate(test_dataset_path)
 

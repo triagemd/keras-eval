@@ -6,9 +6,41 @@
 
 Evaluation abstraction for Keras models. [Example Notebook](https://github.com/triagemd/keras-eval/blob/master/example.ipynb)
 
+Requires [keras-model-specs](https://github.com/triagemd/keras-model-specs).
+
+# Example Evaluation
+
+`probs, labels = evaluator.evaluate(data_dir=data_dir, top_k=2, confusion_matrix=True, save_confusion_matrix_path='cm.png')`
+
+![Confusion_matrix](https://github.com/triagemd/keras-eval/blob/master/figs/confusion_matrix.png)
+
+`evaluator.show_results('average')`
+
+model | f1_score | fdr | positives | sensitivity | specificity | auroc | negatives | precision | accuracy
+-- | -- | -- | -- | -- | -- | -- | -- | -- | --
+mobilenet_v1.h5 | 0.934 | 0.064 | 1869 | 0.934 | 0.934 | 0.807 | 131 | 0.936 | 0.934
+
+`evaluator.show_results('individual')`
+
+class | sensitivity | precision | f1_score | specificity | FDR | AUROC | TP | FP | FN | % of samples
+-- | -- | -- | -- | -- | -- | -- | -- | -- | -- | --
+cats | 0.907 | 0.960 | 0.933 | 0.962 | 0.040 | 1.0 | 907 | 38 | 93 | 50.0
+dogs | 0.962 | 0.912 | 0.936 | 0.907 | 0.088 | 1.0 | 962 | 93 | 38 | 50.0
+
+# Use the code
+
+Clone the repository
+
+`git clone https://github.com/triagemd/keras-eval.git`
+
+To install project dependencies, inside the root folder run
+
+`script/up`
+
 ## Evaluator Class
 
 Easy predictions and evaluations for a single model or an ensemble of many models.
+
 The format to load models is the following:
 
 **For a single model**
@@ -39,7 +71,7 @@ from keras_eval.eval import Evaluator
 
 evaluator = Evaluator(
                 data_dir=None,
-                class_dictionaries=None,
+                concepts=None,
                 ensemble_models_dir=None,
                 model_path=model_path,
                 loss_function='categorical_crossentropy',
@@ -104,11 +136,20 @@ model_path = '/your_model_ensemble_path/'
 evaluator.add_model_ensemble(model_path)
 ```
 
-**set_class_dictionaries**
+**set_concepts**
 
 ```
-dict_classes = [{'abbrev':'Dog', 'class_name': 'dogs'},
-           {'abbrev':'Cat', 'class_name': 'cats'}]
+concepts = [{'label':'Dog', 'id': 'dogs'},
+           {'label':'Cat', 'id': 'cats'}]
 
-evaluator.set_class_dictionaries(dict_classes)
+evaluator.set_concepts(concepts)
 ```
+
+## Extra
+
+For more information check the [Example Notebook](https://github.com/triagemd/keras-eval/blob/master/example.ipynb) and the source code. 
+
+## Contact
+
+This library is mantained by [@triagemd](https://github.com/triagemd).
+To report any problem or issue, please use the [Issues](https://github.com/triagemd/keras-eval/issues) section. 
