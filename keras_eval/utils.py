@@ -31,7 +31,7 @@ def create_default_custom_objects():
     Returns: Default custom objects for Keras models supported in keras_applications
 
     '''
-    return {'relu6': mobilenet.relu6, "tf": tf, 'Scale': custom_layers.Scale}
+    return {'relu6': mobilenet.layers.ReLU(6, name='relu6'), "tf": tf, 'Scale': custom_layers.Scale}
 
 
 def load_multi_model(models_dir, custom_objects=None):
