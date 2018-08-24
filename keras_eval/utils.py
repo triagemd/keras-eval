@@ -104,7 +104,8 @@ def get_default_concepts(data_dir):
 
     concepts = []
     for directory in sorted(os.listdir(data_dir)):
-        concepts.append({'label': directory, 'id': directory})
+        if os.path.isdir(os.path.join(data_dir, directory)):
+            concepts.append({'label': directory, 'id': directory})
     return concepts
 
 
