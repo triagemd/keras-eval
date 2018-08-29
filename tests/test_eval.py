@@ -135,9 +135,9 @@ def check_evaluate_on_catdog_dataset(evaluator, test_dataset_path):
 
 
 def check_evaluate_on_combining_classes(evaluator_mobilenet_class_combine, test_animals_dataset_path, test_combine_class_dict_file):
-    probabilities, labels = evaluator.evaluate(test_animals_dataset_path, combine_training_classes=True,
+    probabilities, labels = evaluator_mobilenet_class_combine.evaluate(test_animals_dataset_path, combine_training_classes=True,
                                                combine_classes_dict_dir=test_combine_class_dict_file,
-                                               training_dictionary_path=training_dictionary_path)
+                                               training_dictionary_path=training_dict_file)
 
     assert probabilities[0].shape == (15, 3)
 
