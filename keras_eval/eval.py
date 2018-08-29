@@ -1,5 +1,6 @@
 from __future__ import print_function
 import os
+import json
 import copy
 import numpy as np
 import keras_eval.utils as utils
@@ -53,6 +54,8 @@ class Evaluator(object):
         self.model_specs = []
         self.probabilities = None
         self.labels = None
+        self.training_concepts = None
+        self.training_concepts_id_dict = {}
 
         if self.model_path is not None:
             self.add_model(model_path=self.model_path)
@@ -102,7 +105,8 @@ class Evaluator(object):
         return image_paths
 
     def evaluate(self, data_dir=None, top_k=1, filter_indices=None, confusion_matrix=False,
-                 save_confusion_matrix_path=None):
+                 save_confusion_matrix_path=None, combine_training_classes=False, combine_classes_dict_dir=None,
+                 training_dictionary_path=None):
         '''
         Evaluate a set of images. Each sub-folder under 'data_dir/' will be considered as a different class.
         E.g. 'data_dir/class_1/dog.jpg' , 'data_dir/class_2/cat.jpg
@@ -113,11 +117,7 @@ class Evaluator(object):
             filter_indices: If given take only the predictions corresponding to that indices to compute metrics
             confusion_matrix: True/False whether to show the confusion matrix
             save_confusion_matrix_path: If path specified save confusion matrix there
-            combination_mode: Ways of combining the model's probabilities to obtain the final prediction.
-                'maximum': predictions are obtained by choosing the maximum probabity from each class
-                'geometric': predictions are obtained by a geometric mean of all the probabilities
-                'arithmetic': predictions are obtained by a arithmetic mean of all the probabilities
-                'harmonic': predictions are obtained by a harmonic mean of all the probabilities
+
 
         Returns: Probabilities computed and ground truth labels associated.
 
@@ -136,6 +136,34 @@ class Evaluator(object):
 
             # Obtain labels to show on the metrics results
             self.concept_labels = utils.get_concept_items(self.concepts, key='label')
+
+            if combine_training_classes:
+                if training_dictionary_path is not None:
+                    with open(training_dictionary_path, 'r') as training_dictionary_file:
+                        training_class_dict = json.load(training_dictionary_file)
+
+                    for clas in training_class_dict:
+                        self.training_concepts_id_dict[clas['class_name']] = clas['class_index']
+
+                    if os.path.exists(combine_classes_dict_dir):
+                        with open(combine_classes_dict_dir, 'r') as combine_class_dict_file:
+                            combine_class_dict = json.load(combine_class_dict_file)
+                        combined_probs = [[[0.0, ] * len(combine_class_dict)] * len(self.probabilities[0])]
+                        combined_probs = np.array(combined_probs)
+                        i = 0
+                        for clas in combine_class_dict:
+                            for sub_clas in clas['sub_class']:
+                                col_num = self.training_concepts_id_dict[sub_clas]
+                                combined_probs[0][:, i] += self.probabilities[0][:, col_num]
+
+                            i += 1
+
+                        self.probabilities = combined_probs
+
+                    else:
+                        raise ValueError('The dictionary does not exist in the current path:%s', combine_classes_dict_dir)
+                else:
+                    raise ValueError('The training dictionary has not be provided')
 
             # Compute metrics
             self.results = self.get_metrics(probabilities=self.probabilities, labels=self.labels,
@@ -168,11 +196,6 @@ class Evaluator(object):
         Args:
             probabilities: Probabilities from softmax layer
             labels: Ground truth labels
-            combination_mode: Ways of combining the model's probabilities to obtain the final prediction.
-                'maximum': predictions are obtained by choosing the maximum probability from each class
-                'geometric': predictions are obtained by a geometric mean of all the probabilities
-                'arithmetic': predictions are obtained by a arithmetic mean of all the probabilities
-                'harmonic': predictions are obtained by a harmonic mean of all the probabilities
             K: A tuple of the top-k predictions to consider. E.g. K = (1,2,3,4,5) is top-5 preds
             concept_labels: List containing the concept_labels
             filter_indices: If given take only the predictions corresponding to that indices to compute metrics

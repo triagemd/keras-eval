@@ -13,6 +13,21 @@ def test_dataset_path():
 
 
 @pytest.fixture('session')
+def test_animals_dataset_path():
+    return os.path.abspath(os.path.join('tests', 'files', 'animals', 'test'))
+
+
+@pytest.fixture('session')
+def test_combine_class_dict_file():
+    return os.path.abspath(os.path.join('tests', 'files', 'animals', 'combine_class_dic.json'))
+
+
+@pytest.fixture('session')
+def training_dict_file():
+    return os.path.abspath(os.path.join('tests', 'files', 'animals', 'dictionary.json'))
+
+
+@pytest.fixture('session')
 def test_cat_folder():
     return os.path.abspath(os.path.join('tests', 'files', 'catdog', 'test', 'cat'))
 
@@ -37,6 +52,24 @@ def evaluator_mobilenet():
     return Evaluator(
         batch_size=1,
         model_path='tmp/fixtures/models/mobilenet_1/mobilenet_v1.h5'
+    )
+
+
+@pytest.fixture('function')
+def evaluator_mobilenet_class_combine():
+    specs = {'klass': 'keras.applications.mobilenet.MobileNet',
+             'name': 'mobilenet_v1',
+             'preprocess_args': ["123.99345370133717", "116.22568321228027", "99.73750913143158"],
+             'preprocess_func': 'mean_subtraction',
+             'target_size': [299, 299, 3]
+             }
+
+    with open(os.path.abspath('tmp/fixtures/models/mobilenet_3/model_spec.json'), 'w') as outfile:
+        json.dump(specs, outfile)
+
+    return Evaluator(
+        batch_size=1,
+        model_path='tmp/fixtures/models/mobilenet_3/animals_combine_classes.hdf5'
     )
 
 
@@ -99,6 +132,16 @@ def check_evaluate_on_catdog_dataset(evaluator, test_dataset_path):
 
     # class abbreviations
     assert evaluator.concept_labels == ['cat', 'dog']
+
+
+def check_evaluate_on_combining_classes(evaluator_mobilenet_class_combine, test_animals_dataset_path, test_combine_class_dict_file):
+    probabilities, labels = evaluator.evaluate(test_animals_dataset_path, combine_training_classes=True,
+                                               combine_classes_dict_dir=test_combine_class_dict_file,
+                                               training_dictionary_path=training_dictionary_path)
+
+    assert probabilities[0].shape == (15, 3)
+
+    np.testing.assert_almost_equal(sum(sum(p[1] for p in probabilities)))
 
 
 def check_predict_on_cat_folder(evaluator, test_cat_folder):

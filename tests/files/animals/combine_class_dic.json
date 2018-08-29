@@ -1,0 +1,8 @@
+[
+{"class_name":"00000_domestic",
+"sub_class":["cat", "dog"]},
+{"class_name":"00001_water",
+"sub_class":["goose","turtle"]},
+{"class_name":"00002_wild",
+"sub_class":["elephant"]}
+]

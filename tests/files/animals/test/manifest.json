@@ -1,0 +1,213 @@
+[
+  {
+    "id": 56652,
+    "filename": "00002_wild/ilsvrc2012_val_00008127_jpeg-56652.jpg",
+    "width": 300,
+    "height": 300,
+    "tags": [
+      "name:elephant"
+    ],
+    "dictionary": {
+      "class_index": 2,
+      "class_name": "wild"
+    }
+  },
+  {
+    "id": 56651,
+    "filename": "00002_wild/ilsvrc2012_val_00007884_jpeg-56651.jpg",
+    "width": 300,
+    "height": 416,
+    "tags": [
+      "name:elephant"
+    ],
+    "dictionary": {
+      "class_index": 2,
+      "class_name": "wild"
+    }
+  },
+  {
+    "id": 56564,
+    "filename": "00001_water/ilsvrc2012_val_00001044_jpeg-56564.jpg",
+    "width": 454,
+    "height": 500,
+    "tags": [
+      "lab:possible-duplicate",
+      "name:goose"
+    ],
+    "dictionary": {
+      "class_index": 1,
+      "class_name": "water"
+    }
+  },
+  {
+    "id": 56558,
+    "filename": "00001_water/ilsvrc2012_val_00003775_jpeg-56558.jpg",
+    "width": 500,
+    "height": 401,
+    "tags": [
+      "lab:possible-duplicate",
+      "name:goose"
+    ],
+    "dictionary": {
+      "class_index": 1,
+      "class_name": "water"
+    }
+  },
+  {
+    "id": 56545,
+    "filename": "00001_water/ilsvrc2012_val_00001662_jpeg-56545.jpg",
+    "width": 500,
+    "height": 375,
+    "tags": [
+      "lab:possible-duplicate",
+      "name:turtle"
+    ],
+    "dictionary": {
+      "class_index": 1,
+      "class_name": "water"
+    }
+  },
+  {
+    "id": 56540,
+    "filename": "00001_water/ilsvrc2012_val_00003160_jpeg-56540.jpg",
+    "width": 500,
+    "height": 395,
+    "tags": [
+      "lab:possible-duplicate",
+      "name:turtle"
+    ],
+    "dictionary": {
+      "class_index": 1,
+      "class_name": "water"
+    }
+  },
+  {
+    "id": 56703,
+    "filename": "00000_domestic/ilsvrc2012_val_00020062_jpeg-56703.jpg",
+    "width": 300,
+    "height": 225,
+    "tags": [
+      "name:cat"
+    ],
+    "dictionary": {
+      "class_index": 0,
+      "class_name": "domestic"
+    }
+  },
+  {
+    "id": 56688,
+    "filename": "00000_domestic/ilsvrc2012_val_00025309_jpeg-56688.jpg",
+    "width": 300,
+    "height": 201,
+    "tags": [
+      "name:dog"
+    ],
+    "dictionary": {
+      "class_index": 0,
+      "class_name": "domestic"
+    }
+  },
+  {
+    "id": 56683,
+    "filename": "00000_domestic/ilsvrc2012_val_00046446_jpeg-56683.jpg",
+    "width": 300,
+    "height": 240,
+    "tags": [
+      "name:dog"
+    ],
+    "dictionary": {
+      "class_index": 0,
+      "class_name": "domestic"
+    }
+  },
+  {
+    "id": 56611,
+    "filename": "00000_domestic/ilsvrc2012_val_00018762_jpeg-56611.jpg",
+    "width": 389,
+    "height": 349,
+    "tags": [
+      "name:dog"
+    ],
+    "dictionary": {
+      "class_index": 0,
+      "class_name": "domestic"
+    }
+  },
+  {
+    "id": 1017816,
+    "filename": "00000_domestic/ilsvrc2012_val_00002072_jpeg_3_jpg-1017816.jpg",
+    "width": 300,
+    "height": 225,
+    "tags": [
+      "google-vision:cat",
+      "google-vision:whiskers",
+      "name:cat"
+    ],
+    "dictionary": {
+      "class_index": 0,
+      "class_name": "domestic"
+    }
+  },
+  {
+    "id": 1017817,
+    "filename": "00000_domestic/ilsvrc2012_val_00008778_jpeg_9_jpg-1017817.jpg",
+    "width": 300,
+    "height": 400,
+    "tags": [
+      "google-vision:cat",
+      "google-vision:cat-like-mammal",
+      "google-vision:small-to-medium-sized-cats",
+      "name:cat"
+    ],
+    "dictionary": {
+      "class_index": 0,
+      "class_name": "domestic"
+    }
+  },
+  {
+    "id": 56628,
+    "filename": "00000_domestic/ilsvrc2012_val_00020062_jpeg-56628.jpg",
+    "width": 500,
+    "height": 375,
+    "tags": [
+      "lab:possible-duplicate",
+      "name:cat"
+    ],
+    "dictionary": {
+      "class_index": 0,
+      "class_name": "domestic"
+    }
+  },
+  {
+    "id": 56608,
+    "filename": "00000_domestic/ilsvrc2012_val_00040450_jpeg-56608.jpg",
+    "width": 500,
+    "height": 375,
+    "tags": [
+      "animal:dog",
+      "lab:possible-duplicate",
+      "name:dog",
+      "review-status:derm"
+    ],
+    "dictionary": {
+      "class_index": 0,
+      "class_name": "domestic"
+    }
+  },
+  {
+    "id": 56577,
+    "filename": "00000_domestic/ilsvrc2012_val_00025723_jpeg-56577.jpg",
+    "width": 361,
+    "height": 500,
+    "tags": [
+      "animal:cat",
+      "lab:possible-duplicate",
+      "name:cat",
+      "review-status:derm"
+    ],
+    "dictionary": {
+      "class_index": 0,
+      "class_name": "domestic"
+    }
+  }
+]
