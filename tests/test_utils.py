@@ -130,7 +130,7 @@ def test_compare_concept_dictionaries():
     dict2 = [{'concept_labels': ['dog', 'cat']}, {'concept_labels': ['elephant']}]
     with pytest.raises(ValueError) as exception:
         utils.compare_concept_dictionaries(dict1, dict2)
-    expected = "('There are concepts that you want to evaluate on which the model has not been trained on:', {'elephant'})"
+    expected = "('There are concepts that you want to evaluate on which the model has not been trained on:', ['elephant'])"
     actual = str(exception).split('ValueError: ')[1]
     assert actual == expected
 

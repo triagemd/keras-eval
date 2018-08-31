@@ -133,10 +133,16 @@ def compare_concept_dictionaries(model_dict, combination_concept_dict):
     model_concept_set = set(model_concept_lst)
     combination_concept_set = set(combination_concept_lst)
 
-    if len(model_concept_set - combination_concept_set) > 0:
-        raise ValueError('There are concepts that the model was trained on which are not a part of the evaluation:', model_concept_set - combination_concept_set)
-    elif len(combination_concept_set - model_concept_set) > 0:
-        raise ValueError('There are concepts that you want to evaluate on which the model has not been trained on:', combination_concept_set - model_concept_set)
+    errors_1 = list(model_concept_set - combination_concept_set)
+    errors_2 = list(combination_concept_set - model_concept_set)
+
+    if len(errors_1) > 0:
+        raise ValueError('There are concepts that the model was trained on which are not a part of the evaluation:',
+                         errors_1)
+
+    elif len(errors_2) > 0:
+        raise ValueError('There are concepts that you want to evaluate on which the model has not been trained on:',
+                         errors_2)
     else:
         return True
 
