@@ -46,31 +46,12 @@ def evaluator_mobilenet():
              'target_size': [224, 224, 3]
              }
 
-    with open(os.path.abspath('tmp/fixtures/models/mobilenet_1/model_spec.json'), 'w') as outfile:
+    with open(os.path.abspath('tmp/fixtures/models/test_1/mobilenet_1/model_spec.json'), 'w') as outfile:
         json.dump(specs, outfile)
 
     return Evaluator(
         batch_size=1,
-        model_path='tmp/fixtures/models/mobilenet_1/mobilenet_v1.h5'
-    )
-
-
-@pytest.fixture('function')
-def evaluator_mobilenet_class_combine():
-    specs = {'klass': 'keras.applications.mobilenet.MobileNet',
-             'name': 'mobilenet_v1',
-             'preprocess_args': ["123.99345370133717", "116.22568321228027", "99.73750913143158"],
-             'preprocess_func': 'mean_subtraction',
-             'target_size': [299, 299, 3]
-             }
-
-    with open(os.path.abspath('tmp/fixtures/models/mobilenet_3/model_spec.json'), 'w') as outfile:
-        json.dump(specs, outfile)
-
-    return Evaluator(
-        batch_size=1,
-        model_path='tmp/fixtures/models/mobilenet_3/animals_combine_classes.hdf5',
-        model_dictionary_path='/tests/files/animals/dictionary.json'
+        model_path='tmp/fixtures/models/test_1/mobilenet_1/mobilenet_v1.h5'
     )
 
 
@@ -83,16 +64,35 @@ def evaluator_ensemble_mobilenet():
              'target_size': [224, 224, 3]
              }
 
-    with open(os.path.abspath('tmp/fixtures/models/mobilenet_1/model_spec.json'), 'w') as outfile:
+    with open(os.path.abspath('tmp/fixtures/models/test_1/mobilenet_1/model_spec.json'), 'w') as outfile:
         json.dump(specs, outfile)
 
-    with open(os.path.abspath('tmp/fixtures/models/mobilenet_2/model_spec.json'), 'w') as outfile:
+    with open(os.path.abspath('tmp/fixtures/models/test_1/mobilenet_2/model_spec.json'), 'w') as outfile:
         json.dump(specs, outfile)
 
     return Evaluator(
-        ensemble_models_dir='tmp/fixtures/models/',
+        ensemble_models_dir='tmp/fixtures/models/test_1/',
         combination_mode='arithmetic',
         batch_size=1
+    )
+
+
+@pytest.fixture('function')
+def evaluator_mobilenet_class_combine():
+    specs = {'klass': 'keras.applications.mobilenet.MobileNet',
+             'name': 'mobilenet_v1',
+             'preprocess_args': [123.99345370133717, 116.22568321228027, 99.73750913143158],
+             'preprocess_func': 'mean_subtraction',
+             'target_size': [299, 299, 3]
+             }
+
+    with open(os.path.abspath('tmp/fixtures/models/test_2/mobilenet_3/model_spec.json'), 'w') as outfile:
+        json.dump(specs, outfile)
+
+    return Evaluator(
+        batch_size=1,
+        model_path='tmp/fixtures/models/test_2/mobilenet_3/animals_combine_classes.hdf5',
+        model_dictionary_path='/tests/files/animals/dictionary.json'
     )
 
 

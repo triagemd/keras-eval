@@ -43,8 +43,8 @@ def test_round_list():
 
 def test_load_model():
     custom_objects = {'relu6': mobilenet.layers.ReLU(6, name='relu6'), "tf": tf}
-    model_path = 'tmp/fixtures/models/mobilenet_1/mobilenet_v1.h5'
-    model_spec_path = 'tmp/fixtures/models/mobilenet_2/model_spec.json'
+    model_path = 'tmp/fixtures/models/test_1/mobilenet_1/mobilenet_v1.h5'
+    model_spec_path = 'tmp/fixtures/models/test_1/mobilenet_2/model_spec.json'
 
     # Default model_spec
     model = utils.load_model(model_path, custom_objects=custom_objects)
@@ -56,7 +56,7 @@ def test_load_model():
 
 
 def test_load_model_ensemble():
-    ensemble_dir = 'tmp/fixtures/models'
+    ensemble_dir = 'tmp/fixtures/models/test_1/'
     custom_objects = {'relu6': mobilenet.layers.ReLU(6, name='relu6'), "tf": tf}
     models, specs = utils.load_multi_model(ensemble_dir, custom_objects=custom_objects)
     assert models
@@ -187,7 +187,7 @@ def test_show_results():
 
 
 def test_ensemble_models(test_image_path, model_spec_mobilenet):
-    ensemble_dir = 'tmp/fixtures/models'
+    ensemble_dir = 'tmp/fixtures/models/test_1/'
     custom_objects = {'relu6': mobilenet.layers.ReLU(6, name='relu6'), "tf": tf}
     models, model_specs = utils.load_multi_model(ensemble_dir, custom_objects=custom_objects)
 
