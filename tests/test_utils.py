@@ -125,6 +125,25 @@ def test_default_concepts(test_dataset_path):
                                    {'label': 'dog', 'id': 'dog'}]
 
 
+def test_compare_concept_dictionaries():
+    dict1 = [{'class_name': 'dog'}, {'class_name': 'cat'}]
+    dict2 = [{'concept_labels': ['dog', 'cat']}, {'concept_labels': ['elephant']}]
+    with pytest.raises(ValueError) as exception:
+        utils.compare_concept_dictionaries(dict1, dict2)
+    expected = "('There are concepts that you want to evaluate on which the model has not been trained on:', {'elephant'})"
+    actual = str(exception).split('ValueError: ')[1]
+    assert actual == expected
+
+
+def test_check_concept_unique():
+    dict = [{'concept_labels': ['dog', 'cat']}, {'concept_labels': ['elephant', 'cat']}]
+    with pytest.raises(ValueError) as exception:
+        utils.check_concept_unique(dict)
+    expected = "('Concept has been repeated:', 'cat')"
+    actual = str(exception).split('ValueError: ')[1]
+    assert actual == expected
+
+
 def test_get_class_dictionaries_items(test_dataset_path):
     concepts_by_default = utils.get_default_concepts(test_dataset_path)
     label_output = utils.get_concept_items(concepts_by_default, 'label')

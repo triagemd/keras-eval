@@ -18,7 +18,7 @@ def test_animals_dataset_path():
 
 
 @pytest.fixture('session')
-def test_combine_class_dict_file():
+def test_combination_concepts_dict_file():
     return os.path.abspath(os.path.join('tests', 'files', 'animals', 'combine_class_dic.json'))
 
 
@@ -69,7 +69,8 @@ def evaluator_mobilenet_class_combine():
 
     return Evaluator(
         batch_size=1,
-        model_path='tmp/fixtures/models/mobilenet_3/animals_combine_classes.hdf5'
+        model_path='tmp/fixtures/models/mobilenet_3/animals_combine_classes.hdf5',
+        model_dictionary_path='/tests/files/animals/dictionary.json'
     )
 
 
@@ -105,6 +106,13 @@ def test_set_concepts(evaluator_mobilenet):
     evaluator_mobilenet.set_concepts([{'id': '1', 'label': '1'}, {'id': '2', 'label': '2'}])
 
 
+def test_read_dictionary(evaluator_mobilenet, training_dict_file):
+    dict = evaluator_mobilenet.read_dictionary(training_dict_file)
+    expected = 5
+    actual = len(dict)
+    assert actual == expected
+
+
 def test_set_combination_mode(evaluator_mobilenet):
     with pytest.raises(ValueError) as exception:
         evaluator_mobilenet.set_combination_mode('asdf')
@@ -135,9 +143,9 @@ def check_evaluate_on_catdog_dataset(evaluator, test_dataset_path):
 
 
 def check_evaluate_on_combining_classes(evaluator_mobilenet_class_combine, test_animals_dataset_path, test_combine_class_dict_file):
-    probabilities, labels = evaluator_mobilenet_class_combine.evaluate(test_animals_dataset_path, combine_training_classes=True,
+    probabilities, labels = evaluator_mobilenet_class_combine.evaluate(test_animals_dataset_path,
                                                                        combine_classes_dict_dir=test_combine_class_dict_file,
-                                                                       training_dictionary_path=training_dict_file)
+                                                                       )
 
     assert probabilities[0].shape == (15, 3)
 

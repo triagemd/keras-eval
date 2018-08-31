@@ -1,8 +1,13 @@
 [
-{"class_name":"00000_domestic",
-"sub_class":["cat", "dog"]},
-{"class_name":"00001_water",
-"sub_class":["goose","turtle"]},
-{"class_name":"00002_wild",
-"sub_class":["elephant"]}
+{"id": 0,
+"label":"00000_domestic",
+"concept_labels":["cat", "dog"]
+},
+{
+"id": 1,
+"label":"00001_water",
+"concept_labels":["goose", "turtle"]},
+{"id": 2,
+"label":"00002_wild",
+"concept_labels":["elephant"]}
 ]

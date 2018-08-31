@@ -113,6 +113,54 @@ def get_concept_items(concepts, key):
     return [concept[key] for concept in concepts]
 
 
+def compare_concept_dictionaries(model_dict, combination_concept_dict):
+    '''
+        Compares trained concepts with evaluation concepts
+        Args:
+            model_dict: Dictionary that contains trained concepts
+            combination_concept_dict: Dictionary that contains evaluation concepts
+
+        Returns:
+            True, if both concepts are same else, raises error
+    '''
+    model_concept_lst = []
+    combination_concept_lst = []
+    for concept in model_dict:
+        model_concept_lst.append(concept['class_name'])
+    for combination_concept_dict_item in combination_concept_dict:
+        combination_concept_lst.extend(combination_concept_dict_item['concept_labels'])
+
+    model_concept_set = set(model_concept_lst)
+    combination_concept_set = set(combination_concept_lst)
+
+    if len(model_concept_set - combination_concept_set) > 0:
+        raise ValueError('There are concepts that the model was trained on which are not a part of the evaluation:', model_concept_set - combination_concept_set)
+    elif len(combination_concept_set - model_concept_set) > 0:
+        raise ValueError('There are concepts that you want to evaluate on which the model has not been trained on:', combination_concept_set - model_concept_set)
+    else:
+        return True
+
+
+def check_concept_unique(combination_concept_dict):
+    '''
+        Checks if evaluation concepts are unique
+        Args:
+            combination_concept_dict: Dictionary that contains evaluation concepts
+
+        Returns:
+            True, if there are no repeat concepts, else raises error
+    '''
+    concept_dict = {}
+    for combination_concept_dict_item in combination_concept_dict:
+        for concept_label in combination_concept_dict_item['concept_labels']:
+            if concept_label in concept_dict:
+                raise ValueError("Concept has been repeated:", concept_label)
+            else:
+                concept_dict[concept_label] = 1
+
+    return True
+
+
 def create_image_generator(data_dir, batch_size, model_spec):
     '''
     Creates a Keras image generator
