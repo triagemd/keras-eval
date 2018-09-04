@@ -9,6 +9,7 @@ before_install:
 
 script:
   - script/test
+
 jobs:
   include:
     - stage: distribute

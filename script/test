@@ -4,7 +4,7 @@ ARGS="${@:-tests/}"
 set -e
 
 # Run tests and lint checks.
-PYTHONPATH="." pytest --cov=./ $ARGS
+PYTHONPATH="." pytest -v --durations=0 --cov=./ $ARGS
 flake8 --max-line-length 50000 keras_eval tests
 
 # Upload coverage for CI.
