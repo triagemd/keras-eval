@@ -18,16 +18,6 @@ def test_animals_dataset_path():
 
 
 @pytest.fixture('session')
-def test_combination_concepts_dict_file():
-    return os.path.abspath(os.path.join('tests', 'files', 'animals', 'combine_class_dic.json'))
-
-
-@pytest.fixture('session')
-def training_dict_file():
-    return os.path.abspath(os.path.join('tests', 'files', 'animals', 'dictionary.json'))
-
-
-@pytest.fixture('session')
 def test_cat_folder():
     return os.path.abspath(os.path.join('tests', 'files', 'catdog', 'test', 'cat'))
 
@@ -104,13 +94,6 @@ def test_set_concepts(evaluator_mobilenet):
     assert actual == expected
 
     evaluator_mobilenet.set_concepts([{'id': '1', 'label': '1'}, {'id': '2', 'label': '2'}])
-
-
-def test_read_dictionary(evaluator_mobilenet, training_dict_file):
-    dict = evaluator_mobilenet.read_dictionary(training_dict_file)
-    expected = 5
-    actual = len(dict)
-    assert actual == expected
 
 
 def test_set_combination_mode(evaluator_mobilenet):

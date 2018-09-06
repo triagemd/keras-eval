@@ -113,6 +113,15 @@ def get_concept_items(concepts, key):
     return [concept[key] for concept in concepts]
 
 
+def read_dictionary(dictionary_path):
+    if os.path.exists(dictionary_path):
+        with open(dictionary_path, 'r') as dictionary_file:
+            dict = json.load(dictionary_file)
+    else:
+        raise ValueError('Error: invalid dictionary path' + str(dictionary_path))
+    return dict
+
+
 def create_training_json(train_dir, output_json_file):
     '''
             Checks if evaluation concepts are unique

@@ -19,6 +19,11 @@ def test_folder_image_path():
 
 
 @pytest.fixture('session')
+def training_dict_file():
+    return os.path.abspath(os.path.join('tests', 'files', 'animals', 'dictionary.json'))
+
+
+@pytest.fixture('session')
 def test_image_path():
     return os.path.abspath(os.path.join('tests', 'files', 'catdog', 'test', 'cat', 'cat-1.jpg'))
 
@@ -39,6 +44,13 @@ def test_round_list():
     assert utils.round_list(input_list, decimals=2) == [0.67, 0.33]
     assert utils.round_list(input_list, decimals=4) == [0.6667, 0.3333]
     assert utils.round_list(input_list, decimals=6) == [0.666667, 0.333333]
+
+
+def test_read_dictionary(training_dict_file):
+    dict = utils.read_dictionary(training_dict_file)
+    expected = 5
+    actual = len(dict)
+    assert actual == expected
 
 
 def test_load_model():

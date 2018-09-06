@@ -1,6 +1,5 @@
 from __future__ import print_function
 import os
-import json
 import copy
 import numpy as np
 import keras_eval.utils as utils
@@ -41,7 +40,7 @@ class Evaluator(object):
             elif key == 'combination_mode':
                 self.set_combination_mode(value)
             elif key == 'concept_dictionary_path' and options.get('concept_dictionary_path') is not None:
-                self.concept_dictionary = self.read_dictionary(value)
+                self.concept_dictionary = utils.read_dictionary(value)
             else:
                 setattr(self, key, value)
             if key == 'id' and options.get('model_path') is not None:
@@ -87,14 +86,6 @@ class Evaluator(object):
     def remove_model(self, model_index):
         self.models.pop(model_index)
         self.model_specs.pop(model_index)
-
-    def read_dictionary(self, dictionary_path):
-        if os.path.exists(dictionary_path):
-            with open(dictionary_path, 'r') as dictionary_file:
-                self.dict = json.load(dictionary_file)
-        else:
-            raise ValueError('Error: invalid dictionary path' + str(dictionary_path))
-        return self.dict
 
     def set_combination_mode(self, mode):
         modes = ['arithmetic', 'geometric', 'maximum', 'harmonic', None]
