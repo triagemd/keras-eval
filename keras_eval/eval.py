@@ -139,7 +139,7 @@ class Evaluator(object):
             self.concept_labels = utils.get_concept_items(self.concepts, key='label')
 
             if hasattr(self, 'concept_dictionary'):
-                self.evaluate_combination_concepts()
+                self.compute_inference_probabilities(self.concept_dictionary, self.probabilities)
 
             # Compute metrics
             self.results = self.get_metrics(probabilities=self.probabilities, labels=self.labels,
@@ -149,31 +149,31 @@ class Evaluator(object):
 
         return self.probabilities, self.labels
 
-    def evaluate_combination_concepts(self):
+    def compute_inference_probabilities(self, concept_dictionary, probabilities):
         '''
         Sets probabilities if model concepts are to be combined in test
+
+        Args:
+            concept_dictionary: It is the dictionary which contains all the granular concepts and the mapping with the groups.
+            probabilities: These are computed granular probabilities
+
         '''
 
-        if utils.compare_group_test_concepts(self.concept_labels, self.concept_dictionary) and utils.check_concept_unique(self.concept_dictionary):
-            for clas in self.concept_dictionary:
+        if utils.compare_group_test_concepts(self.concept_labels, concept_dictionary) and utils.check_concept_unique(concept_dictionary):
+            for concept in concept_dictionary:
 
-                if clas['group'] in self.group_id_dict.keys():
-                    self.group_id_dict[clas['group']].append(clas['class_index'])
+                if concept['group'] in self.group_id_dict.keys():
+                    self.group_id_dict[concept['group']].append(concept['class_index'])
                 else:
-                    self.group_id_dict[clas['group']] = [clas['class_index']]
+                    self.group_id_dict[concept['group']] = [concept['class_index']]
 
-            self.combined_probs = [[[0.0, ] * len(self.concept_labels)] * len(self.probabilities[0])]
+            self.combined_probs = [[[0.0, ] * len(self.concept_labels)] * len(probabilities[0])]
             self.combined_probs = np.array(self.combined_probs)
-            id = 0
-            for concept_label in self.concept_labels:
-                col_nums = self.group_id_dict[concept_label]
-                for col_num in col_nums:
-                    self.combined_probs[0][:, id] += self.probabilities[0][:, col_num]
-                id += 1
+            for idx, concept_label in enumerate(self.concept_labels):
+                column_numbers = self.group_id_dict[concept_label]
+                for column_number in column_numbers:
+                    self.combined_probs[0][:, idx] += probabilities[0][:, column_number]
             self.probabilities = self.combined_probs
-
-        else:
-            raise ValueError('There are issues with the .json file provided')
 
     def plot_confusion_matrix(self, confusion_matrix, concept_labels=None, save_path=None):
         '''

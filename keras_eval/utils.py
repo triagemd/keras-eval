@@ -124,29 +124,29 @@ def read_dictionary(dictionary_path):
 
 def create_training_json(train_dir, output_json_file):
     '''
-            Checks if evaluation concepts are unique
-            Args:
-                train_dir: The location where you have the training directory
-                output_json_file: The output file name and path e.g.: ./dictionary.json
+    Checks if evaluation concepts are unique
+    Args:
+        train_dir: The location where you have the training directory
+        output_json_file: The output file name and path e.g.: ./dictionary.json
 
-            Returns:
-                True, if there are no repeat concepts, else raises error
+    Returns:
+        True, if there are no repeat concepts, else raises error
     '''
-    dict = []
+    concept_dict = []
     train_concepts = get_default_concepts(train_dir)
-    for i in range(len(train_concepts)):
-        dict.append({"class_index": i, "class_name": train_concepts[i]["label"], "group": train_concepts[i]["label"]})
+    for idx in range(len(train_concepts)):
+        concept_dict.append({"class_index": idx, "class_name": train_concepts[idx]["label"], "group": train_concepts[idx]["label"]})
     with open(output_json_file, 'w') as file_obj:
-        json.dump(dict, file_obj)
+        json.dump(concept_dict, file_obj)
 
 
 def check_concept_unique(concept_dict):
     '''
-        Checks if evaluation concepts are unique
-        Args:
-            concept_dict: Dictionary that contains class_id, train_concepts and groups
-        Returns:
-            True, if there are no repeat concepts, else raises error
+    Checks if evaluation concepts are unique
+    Args:
+        concept_dict: Dictionary that contains class_id, train_concepts and groups
+    Returns:
+        True, if there are no repeat concepts, else raises error
     '''
     concept_class_name_dict = {}
     for concept_dict_item in concept_dict:
@@ -160,12 +160,12 @@ def check_concept_unique(concept_dict):
 
 def compare_group_test_concepts(test_concepts_list, concept_dict):
     '''
-        Checks if concept dictionary has the groups as the test concepts
-        Args:
-            test_concepts_list: List of lables of test concepts
-            concept_dict: Dictionary that contains class_id, train_concepts and groups
-        Returns:
-            True, if there are no repeat concepts, else raises error
+    Checks if concept dictionary has the groups as the test concepts
+    Args:
+        test_concepts_list: List of lables of test concepts
+        concept_dict: Dictionary that contains class_id, train_concepts and groups
+    Returns:
+        True, if there are no repeat concepts, else raises error
     '''
     concept_group_lst = get_concept_items(concept_dict, key="group")
     if set(concept_group_lst) == set(test_concepts_list):

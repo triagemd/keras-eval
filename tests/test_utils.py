@@ -47,16 +47,16 @@ def test_round_list():
 
 
 def test_read_dictionary(training_dict_file):
-    dict = utils.read_dictionary(training_dict_file)
+    dictionary = utils.read_dictionary(training_dict_file)
     expected = 5
-    actual = len(dict)
+    actual = len(dictionary)
     assert actual == expected
 
 
 def test_load_model():
     custom_objects = {'relu6': mobilenet.layers.ReLU(6, name='relu6'), "tf": tf}
-    model_path = 'tmp/fixtures/models/test_1/mobilenet_1/mobilenet_v1.h5'
-    model_spec_path = 'tmp/fixtures/models/test_1/mobilenet_2/model_spec.json'
+    model_path = 'tmp/fixtures/models/ensemble/mobilenet_1/mobilenet_v1.h5'
+    model_spec_path = 'tmp/fixtures/models/ensemble/mobilenet_2/model_spec.json'
 
     # Default model_spec
     model = utils.load_model(model_path, custom_objects=custom_objects)
@@ -68,7 +68,7 @@ def test_load_model():
 
 
 def test_load_model_ensemble():
-    ensemble_dir = 'tmp/fixtures/models/test_1/'
+    ensemble_dir = 'tmp/fixtures/models/ensemble/'
     custom_objects = {'relu6': mobilenet.layers.ReLU(6, name='relu6'), "tf": tf}
     models, specs = utils.load_multi_model(ensemble_dir, custom_objects=custom_objects)
     assert models
@@ -147,9 +147,9 @@ def test_create_training_json(test_dataset_path):
 
 def test_compare_concept_dictionaries():
     concept_lst = ['dog', 'elephant']
-    dict = [{'group': 'dog'}, {'group': 'cat'}, {'group': 'elephant'}]
+    concept_dict = [{'group': 'dog'}, {'group': 'cat'}, {'group': 'elephant'}]
     with pytest.raises(ValueError) as exception:
-        utils.compare_group_test_concepts(concept_lst, dict)
+        utils.compare_group_test_concepts(concept_lst, concept_dict)
     expected = 'The concept dictionary groups do not match the class labels'
     actual = str(exception).split('ValueError: ')[1]
     assert actual == expected
@@ -207,7 +207,7 @@ def test_show_results():
 
 
 def test_ensemble_models(test_image_path, model_spec_mobilenet):
-    ensemble_dir = 'tmp/fixtures/models/test_1/'
+    ensemble_dir = 'tmp/fixtures/models/ensemble/'
     custom_objects = {'relu6': mobilenet.layers.ReLU(6, name='relu6'), "tf": tf}
     models, model_specs = utils.load_multi_model(ensemble_dir, custom_objects=custom_objects)
 

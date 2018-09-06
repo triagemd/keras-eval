@@ -36,12 +36,12 @@ def evaluator_mobilenet():
              'target_size': [224, 224, 3]
              }
 
-    with open(os.path.abspath('tmp/fixtures/models/test_1/mobilenet_1/model_spec.json'), 'w') as outfile:
+    with open(os.path.abspath('tmp/fixtures/models/ensemble/mobilenet_1/model_spec.json'), 'w') as outfile:
         json.dump(specs, outfile)
 
     return Evaluator(
         batch_size=1,
-        model_path='tmp/fixtures/models/test_1/mobilenet_1/mobilenet_v1.h5'
+        model_path='tmp/fixtures/models/ensemble/mobilenet_1/mobilenet_v1.h5'
     )
 
 
@@ -54,14 +54,14 @@ def evaluator_ensemble_mobilenet():
              'target_size': [224, 224, 3]
              }
 
-    with open(os.path.abspath('tmp/fixtures/models/test_1/mobilenet_1/model_spec.json'), 'w') as outfile:
+    with open(os.path.abspath('tmp/fixtures/models/ensemble/mobilenet_1/model_spec.json'), 'w') as outfile:
         json.dump(specs, outfile)
 
-    with open(os.path.abspath('tmp/fixtures/models/test_1/mobilenet_2/model_spec.json'), 'w') as outfile:
+    with open(os.path.abspath('tmp/fixtures/models/ensemble/mobilenet_2/model_spec.json'), 'w') as outfile:
         json.dump(specs, outfile)
 
     return Evaluator(
-        ensemble_models_dir='tmp/fixtures/models/test_1/',
+        ensemble_models_dir='tmp/fixtures/models/ensemble/',
         combination_mode='arithmetic',
         batch_size=1
     )
@@ -76,12 +76,12 @@ def evaluator_mobilenet_class_combine():
              'target_size': [299, 299, 3]
              }
 
-    with open(os.path.abspath('tmp/fixtures/models/test_2/mobilenet_3/model_spec.json'), 'w') as outfile:
+    with open(os.path.abspath('tmp/fixtures/models/single/model_spec.json'), 'w') as outfile:
         json.dump(specs, outfile)
 
     return Evaluator(
         batch_size=1,
-        model_path='tmp/fixtures/models/test_2/mobilenet_3/animals_combine_classes.hdf5',
+        model_path='tmp/fixtures/models/single/animals_combine_classes.hdf5',
         concept_dictionary_path='tests/files/animals/dictionary.json'
     )
 
@@ -145,7 +145,7 @@ def check_predict_single_image(evaluator, test_cat_folder):
     assert len(evaluator.image_paths) == 1
 
 
-def test_check_evaluate_on_combining_classes(evaluator_mobilenet_class_combine, test_animals_dataset_path):
+def test_check_compute_inference_probabilities(evaluator_mobilenet_class_combine, test_animals_dataset_path):
     probabilities, labels = evaluator_mobilenet_class_combine.evaluate(test_animals_dataset_path)
 
     assert probabilities[0].shape == (15, 3)
