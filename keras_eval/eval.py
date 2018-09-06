@@ -21,7 +21,7 @@ class Evaluator(object):
         'report_dir': {'type': str, 'default': None},
         'combination_mode': {'type': str, 'default': None},
         'id': {'type': str, 'default': None},
-        'model_dictionary_path': {'type': str, 'default': None},
+        'concept_dictionary_path': {'type': str, 'default': None},
         'loss_function': {'type': str, 'default': 'categorical_crossentropy'},
         'metrics': {'type': list, 'default': ['accuracy']},
         'batch_size': {'type': int, 'default': 1},
@@ -40,8 +40,8 @@ class Evaluator(object):
                 self.update_custom_objects(value)
             elif key == 'combination_mode':
                 self.set_combination_mode(value)
-            elif key == 'model_dictionary_path' and options.get('model_dictionary_path') is not None:
-                self.model_dictionary = self.read_dictionary(value)
+            elif key == 'concept_dictionary_path' and options.get('concept_dictionary_path') is not None:
+                self.concept_dictionary = self.read_dictionary(value)
             else:
                 setattr(self, key, value)
             if key == 'id' and options.get('model_path') is not None:
@@ -57,7 +57,8 @@ class Evaluator(object):
         self.model_specs = []
         self.probabilities = None
         self.labels = None
-        self.model_dictionary_id_dict = {}
+        self.group_id_dict = {}
+        self.combined_probs = []
 
         if self.model_path is not None:
             self.add_model(model_path=self.model_path)
@@ -115,7 +116,7 @@ class Evaluator(object):
         return image_paths
 
     def evaluate(self, data_dir=None, top_k=1, filter_indices=None, confusion_matrix=False,
-                 save_confusion_matrix_path=None, combination_concepts_dict_dir=None):
+                 save_confusion_matrix_path=None):
         '''
         Evaluate a set of images. Each sub-folder under 'data_dir/' will be considered as a different class.
         E.g. 'data_dir/class_1/dog.jpg' , 'data_dir/class_2/cat.jpg
@@ -126,7 +127,6 @@ class Evaluator(object):
             filter_indices: If given take only the predictions corresponding to that indices to compute metrics
             confusion_matrix: True/False whether to show the confusion matrix
             save_confusion_matrix_path: If path specified save confusion matrix there
-             combination_concepts_dict_dir: Path of the location of the dictionary with mapping between training and test concepts
 
 
         Returns: Probabilities computed and ground truth labels associated.
@@ -147,8 +147,8 @@ class Evaluator(object):
             # Obtain labels to show on the metrics results
             self.concept_labels = utils.get_concept_items(self.concepts, key='label')
 
-            if combination_concepts_dict_dir is not None:
-                self.evaluate_combination_concepts(combination_concepts_dict_dir)
+            if hasattr(self, 'concept_dictionary'):
+                self.evaluate_combination_concepts()
 
             # Compute metrics
             self.results = self.get_metrics(probabilities=self.probabilities, labels=self.labels,
@@ -158,36 +158,31 @@ class Evaluator(object):
 
         return self.probabilities, self.labels
 
-    def evaluate_combination_concepts(self, combination_concepts_dict_dir):
+    def evaluate_combination_concepts(self):
         '''
         Sets probabilities if model concepts are to be combined in test
-
-                Args:
-                    combination_concepts_dict_dir: Path of the location of the dictionary with mapping between training and test concepts
-
         '''
 
-        if hasattr(self, 'model_dictionary'):
+        if utils.compare_group_test_concepts(self.concept_labels, self.concept_dictionary) and utils.check_concept_unique(self.concept_dictionary):
+            for clas in self.concept_dictionary:
 
-            for clas in self.model_dictionary:
-                self.model_dictionary_id_dict[clas['class_name']] = clas['class_index']
+                if clas['group'] in self.group_id_dict.keys():
+                    self.group_id_dict[clas['group']].append(clas['class_index'])
+                else:
+                    self.group_id_dict[clas['group']] = [clas['class_index']]
 
-            combination_concepts_dict = self.read_dictionary(combination_concepts_dict_dir)
-
-            if utils.compare_concept_dictionaries(self.model_dictionary, combination_concepts_dict) and utils.check_concept_unique(combination_concepts_dict):
-
-                combined_probs = [[[0.0, ] * len(combination_concepts_dict)] * len(self.probabilities[0])]
-                combined_probs = np.array(combined_probs)
-                for combination_concept_dict_item in combination_concepts_dict:
-                    id = combination_concept_dict_item['id']
-                    for concept_label in combination_concept_dict_item['concept_labels']:
-                        col_num = self.model_dictionary_id_dict[concept_label]
-                        combined_probs[0][:, id] += self.probabilities[0][:, col_num]
-
-                self.probabilities = combined_probs
+            self.combined_probs = [[[0.0, ] * len(self.concept_labels)] * len(self.probabilities[0])]
+            self.combined_probs = np.array(self.combined_probs)
+            id = 0
+            for concept_label in self.concept_labels:
+                col_nums = self.group_id_dict[concept_label]
+                for col_num in col_nums:
+                    self.combined_probs[0][:, id] += self.probabilities[0][:, col_num]
+                id += 1
+            self.probabilities = self.combined_probs
 
         else:
-            raise ValueError('The model dictionary has not be provided')
+            raise ValueError('There are issues with the .json file provided')
 
     def plot_confusion_matrix(self, confusion_matrix, concept_labels=None, save_path=None):
         '''

@@ -125,18 +125,26 @@ def test_default_concepts(test_dataset_path):
                                    {'label': 'dog', 'id': 'dog'}]
 
 
+def test_create_training_json(test_dataset_path):
+    dict_path = './tests/files/dict.json'
+    utils.create_training_json(test_dataset_path, dict_path)
+    actual = os.path.isfile(dict_path)
+    expected = True
+    assert actual == expected
+
+
 def test_compare_concept_dictionaries():
-    dict1 = [{'class_name': 'dog'}, {'class_name': 'cat'}]
-    dict2 = [{'concept_labels': ['dog', 'cat']}, {'concept_labels': ['elephant']}]
+    concept_lst = ['dog', 'elephant']
+    dict = [{'group': 'dog'}, {'group': 'cat'}, {'group': 'elephant'}]
     with pytest.raises(ValueError) as exception:
-        utils.compare_concept_dictionaries(dict1, dict2)
-    expected = "('There are concepts that you want to evaluate on which the model has not been trained on:', ['elephant'])"
+        utils.compare_group_test_concepts(concept_lst, dict)
+    expected = 'The concept dictionary groups do not match the class labels'
     actual = str(exception).split('ValueError: ')[1]
     assert actual == expected
 
 
 def test_check_concept_unique():
-    dict = [{'concept_labels': ['dog', 'cat']}, {'concept_labels': ['elephant', 'cat']}]
+    dict = [{'class_name': 'cat'}, {'class_name': 'dog'}, {'class_name': 'cat'}]
     with pytest.raises(ValueError) as exception:
         utils.check_concept_unique(dict)
     expected = "('Concept has been repeated:', 'cat')"

@@ -1,4 +1,5 @@
 language: python
+sudo: required
 
 python:
   - 2.7
@@ -9,6 +10,7 @@ before_install:
 
 script:
   - script/test
+
 jobs:
   include:
     - stage: distribute

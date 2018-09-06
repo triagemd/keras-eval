@@ -113,58 +113,56 @@ def get_concept_items(concepts, key):
     return [concept[key] for concept in concepts]
 
 
-def compare_concept_dictionaries(model_dict, combination_concept_dict):
+def create_training_json(train_dir, output_json_file):
     '''
-        Compares trained concepts with evaluation concepts
-        Args:
-            model_dict: Dictionary that contains trained concepts
-            combination_concept_dict: Dictionary that contains evaluation concepts
+            Checks if evaluation concepts are unique
+            Args:
+                train_dir: The location where you have the training directory
+                output_json_file: The output file name and path e.g.: ./dictionary.json
 
-        Returns:
-            True, if both concepts are same else, raises error
+            Returns:
+                True, if there are no repeat concepts, else raises error
     '''
-    model_concept_lst = []
-    combination_concept_lst = []
-    for concept in model_dict:
-        model_concept_lst.append(concept['class_name'])
-    for combination_concept_dict_item in combination_concept_dict:
-        combination_concept_lst.extend(combination_concept_dict_item['concept_labels'])
-
-    model_concept_set = set(model_concept_lst)
-    combination_concept_set = set(combination_concept_lst)
-
-    errors_1 = list(model_concept_set - combination_concept_set)
-    errors_2 = list(combination_concept_set - model_concept_set)
-
-    if len(errors_1) > 0:
-        raise ValueError('There are concepts that the model was trained on which are not a part of the evaluation:',
-                         errors_1)
-
-    elif len(errors_2) > 0:
-        raise ValueError('There are concepts that you want to evaluate on which the model has not been trained on:',
-                         errors_2)
-    else:
-        return True
+    dict = []
+    train_concepts = get_default_concepts(train_dir)
+    for i in range(len(train_concepts)):
+        dict.append({"class_index": i, "class_name": train_concepts[i]["label"], "group": train_concepts[i]["label"]})
+    with open(output_json_file, 'w') as file_obj:
+        json.dump(dict, file_obj)
 
 
-def check_concept_unique(combination_concept_dict):
+def check_concept_unique(concept_dict):
     '''
         Checks if evaluation concepts are unique
         Args:
-            combination_concept_dict: Dictionary that contains evaluation concepts
-
+            concept_dict: Dictionary that contains class_id, train_concepts and groups
         Returns:
             True, if there are no repeat concepts, else raises error
     '''
-    concept_dict = {}
-    for combination_concept_dict_item in combination_concept_dict:
-        for concept_label in combination_concept_dict_item['concept_labels']:
-            if concept_label in concept_dict:
-                raise ValueError("Concept has been repeated:", concept_label)
-            else:
-                concept_dict[concept_label] = 1
+    concept_class_name_dict = {}
+    for concept_dict_item in concept_dict:
+        if concept_dict_item['class_name'] in concept_class_name_dict:
+            raise ValueError("Concept has been repeated:", concept_dict_item['class_name'])
+        else:
+            concept_class_name_dict[concept_dict_item['class_name']] = 1
 
     return True
+
+
+def compare_group_test_concepts(test_concepts_list, concept_dict):
+    '''
+        Checks if concept dictionary has the groups as the test concepts
+        Args:
+            test_concepts_list: List of lables of test concepts
+            concept_dict: Dictionary that contains class_id, train_concepts and groups
+        Returns:
+            True, if there are no repeat concepts, else raises error
+    '''
+    concept_group_lst = get_concept_items(concept_dict, key="group")
+    if set(concept_group_lst) == set(test_concepts_list):
+        return True
+    else:
+        raise ValueError("The concept dictionary groups do not match the class labels")
 
 
 def create_image_generator(data_dir, batch_size, model_spec):

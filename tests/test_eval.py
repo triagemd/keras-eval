@@ -92,7 +92,7 @@ def evaluator_mobilenet_class_combine():
     return Evaluator(
         batch_size=1,
         model_path='tmp/fixtures/models/test_2/mobilenet_3/animals_combine_classes.hdf5',
-        model_dictionary_path='/tests/files/animals/dictionary.json'
+        concept_dictionary_path='tests/files/animals/dictionary.json'
     )
 
 
@@ -142,16 +142,6 @@ def check_evaluate_on_catdog_dataset(evaluator, test_dataset_path):
     assert evaluator.concept_labels == ['cat', 'dog']
 
 
-def check_evaluate_on_combining_classes(evaluator_mobilenet_class_combine, test_animals_dataset_path, test_combine_class_dict_file):
-    probabilities, labels = evaluator_mobilenet_class_combine.evaluate(test_animals_dataset_path,
-                                                                       combine_classes_dict_dir=test_combine_class_dict_file,
-                                                                       )
-
-    assert probabilities[0].shape == (15, 3)
-
-    np.testing.assert_almost_equal(sum(sum(p[1] for p in probabilities)))
-
-
 def check_predict_on_cat_folder(evaluator, test_cat_folder):
     probabilities = evaluator.predict(test_cat_folder)
 
@@ -170,6 +160,14 @@ def check_predict_single_image(evaluator, test_cat_folder):
 
     # 1 image predicted
     assert len(evaluator.image_paths) == 1
+
+
+def test_check_evaluate_on_combining_classes(evaluator_mobilenet_class_combine, test_animals_dataset_path):
+    probabilities, labels = evaluator_mobilenet_class_combine.evaluate(test_animals_dataset_path)
+
+    assert probabilities[0].shape == (15, 3)
+
+    np.testing.assert_almost_equal(sum(sum(p[1] for p in probabilities)), 1.0)
 
 
 def test_get_image_paths_by_prediction(evaluator_mobilenet, test_dataset_path, test_cat_folder, test_dog_folder):
