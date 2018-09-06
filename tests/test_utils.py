@@ -156,9 +156,9 @@ def test_compare_concept_dictionaries():
 
 
 def test_check_concept_unique():
-    dict = [{'class_name': 'cat'}, {'class_name': 'dog'}, {'class_name': 'cat'}]
+    concept_dict = [{'class_name': 'cat'}, {'class_name': 'dog'}, {'class_name': 'cat'}]
     with pytest.raises(ValueError) as exception:
-        utils.check_concept_unique(dict)
+        utils.check_concept_unique(concept_dict)
     expected = "('Concept has been repeated:', 'cat')"
     actual = str(exception).split('ValueError: ')[1]
     assert actual == expected
