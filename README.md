@@ -27,6 +27,8 @@ class | sensitivity | precision | f1_score | specificity | FDR | AUROC | TP | FP
 cats | 0.907 | 0.960 | 0.933 | 0.962 | 0.040 | 1.0 | 907 | 38 | 93 | 50.0
 dogs | 0.962 | 0.912 | 0.936 | 0.907 | 0.088 | 1.0 | 962 | 93 | 38 | 50.0
 
+
+
 # Use the code
 
 Clone the repository
@@ -105,6 +107,7 @@ We would want the users to give us the mapping between the training and testing 
 
 ]
 ```
+
 So in the example above the group gives us the mapping between a single concept during training and the concepts which we would want to evaluate on in test. 
 
 You can specify all the following options.
@@ -173,6 +176,7 @@ model_path = '/your_model_path/model.h5
 custom_objects = None
 evaluator.add_model(model_path, custom_objects)
 ```
+
 
 **add_model_ensemble**
 
