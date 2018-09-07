@@ -151,7 +151,7 @@ class Evaluator(object):
 
     def compute_inference_probabilities(self, concept_dictionary, probabilities):
         '''
-        Sets probabilities if model concepts are to be combined in test
+        Combines probabilities based on key "group" in concept_dictionary and saves the values in self.probabilities
 
         Args:
             concept_dictionary: It is the dictionary which contains all the granular concepts and the mapping with the groups.

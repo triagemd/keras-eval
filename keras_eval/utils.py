@@ -116,10 +116,10 @@ def get_concept_items(concepts, key):
 def read_dictionary(dictionary_path):
     if os.path.exists(dictionary_path):
         with open(dictionary_path, 'r') as dictionary_file:
-            dict = json.load(dictionary_file)
+            dictionary = json.load(dictionary_file)
     else:
         raise ValueError('Error: invalid dictionary path' + str(dictionary_path))
-    return dict
+    return dictionary
 
 
 def create_training_json(train_dir, output_json_file):
@@ -162,7 +162,7 @@ def compare_group_test_concepts(test_concepts_list, concept_dict):
     '''
     Checks if concept dictionary has the groups as the test concepts
     Args:
-        test_concepts_list: List of lables of test concepts
+        test_concepts_list: List of labels corresponding to the test concepts
         concept_dict: Dictionary that contains class_id, train_concepts and groups
     Returns:
         True, if there are no repeat concepts, else raises error
