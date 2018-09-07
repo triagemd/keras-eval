@@ -27,6 +27,8 @@ class | sensitivity | precision | f1_score | specificity | FDR | AUROC | TP | FP
 cats | 0.907 | 0.960 | 0.933 | 0.962 | 0.040 | 1.0 | 907 | 38 | 93 | 50.0
 dogs | 0.962 | 0.912 | 0.936 | 0.907 | 0.088 | 1.0 | 962 | 93 | 38 | 50.0
 
+
+
 # Use the code
 
 Clone the repository
@@ -61,6 +63,82 @@ ensemble_models_dir = '/model_folder'
 # e.g. '/model_folder/resnet_50/model.h5', '/model_folder/resnet_50/model_spec.json', '/model_folder/densenet201/model.h5', '/model_folder/densenet201/model_spec.json'
 
 ```
+**To evlauate on coarse classes after training on granular classes**
+Given a model trained on M and test set based on N classes (M > N), allow the evaluation on sets of classes by providing a *concept dictionary*.
+
+E.g. 
+Training scenario:
+```
+[class_0]
+[class_1]
+[class_2]
+[class_3]
+```
+Normal Test scenario:
+```
+[class_0]
+[class_1]
+[class_2]
+[class_3]
+```
+Here are the results for this scenario:
+![Confusion_matrix](https://github.com/triagemd/keras-eval/blob/combine_probs/figs/confusion_matrix_granular.png)
+Below are the average results for this scenario:
+
+model | accuracy | precision | f1_score | number_of_samples | number_of_classes
+-- | -- | -- | -- | -- | -- 
+0	animals_combine_classes.hdf5 | 0.733 | 0.876 | 0.744 | 15 | 5
+
+Special Test scenario:
+```
+[test_set_0] class_0 or class_1
+[test_set_1] class_2 or class_3
+```
+
+So the way we combine probabilities is as below:
+```
+probability(test_set_0) =  probability(class_0) + probability(class_1)
+probability(test_set_1) = probability(class_2) + probability(class_3)
+```
+We would want the users to give us the mapping between the training and testing dictionary as a `.json` file. Given below is the format we expect:
+```
+[
+  {
+    "class_index": 0,
+    "class_name": "00000_cat",
+    "group": "00000_domestic"
+  },
+  {
+    "class_index": 1,
+    "class_name": "00001_dog",
+    "group": "00000_domestic"
+  },
+  {
+    "class_index": 2,
+    "class_name": "00002_goose",
+    "group": "00001_water"
+  },
+  {
+    "class_index": 3,
+    "class_name": "00003_turtle",
+    "group": "00001_water"
+  },
+  {
+    "class_index": 4,
+    "class_name": "00004_elephant",
+    "group": "00002_wild"
+  }
+]
+```
+Here are the results for this scenario:
+![Confusion_matrix](https://github.com/triagemd/keras-eval/blob/combine_probs/figs/confusion_matrix_coarse.png)
+Below are the average results for this scenario:
+
+model | accuracy | precision | f1_score | number_of_samples	| number_of_classes
+-- | -- | -- | -- | -- | -- 
+0	animals_combine_classes.hdf5 | 0.733 | 0.841	| 0.729	| 15	| 3
+
+So in the example above the group gives us the mapping between a single concept during training and the concepts which we would want to evaluate on in test. 
 
 You can specify all the following options.
 
@@ -128,6 +206,7 @@ model_path = '/your_model_path/model.h5
 custom_objects = None
 evaluator.add_model(model_path, custom_objects)
 ```
+
 
 **add_model_ensemble**
 
