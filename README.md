@@ -74,8 +74,21 @@ Training scenario:
 [class_2]
 [class_3]
 ```
+Normal Test scenario:
+```
+[class_0]
+[class_1]
+[class_2]
+[class_3]
+```
+Here are the results for this scenario:
+![Confusion_matrix](https://github.com/triagemd/keras-eval/blob/master/figs/confusion_matrix_granular.png)
+Below are the average results for this scenario:
+model	| accuracy	| precision	| f1_score	| number_of_samples	| number_of_classes
+-- | -- | -- | -- | -- | -- 
+0	animals_combine_classes.hdf5	0.733	0.876	0.744	15	5
 
-Testing scenario:
+Special Test scenario:
 ```
 [test_set_0] class_0 or class_1
 [test_set_1] class_2 or class_3
@@ -91,22 +104,37 @@ We would want the users to give us the mapping between the training and testing 
 [
   {
     "class_index": 0,
-    "class_name": "dog",
-     "group":"land_animals" 
+    "class_name": "00000_cat",
+    "group": "00000_domestic"
   },
   {
     "class_index": 1,
-    "class_name": "cat",
-    "group":"land_animals"
+    "class_name": "00001_dog",
+    "group": "00000_domestic"
   },
   {
     "class_index": 2,
-    "class_name": "gold_fish",
-    "group":"sea_creatures"
+    "class_name": "00002_goose",
+    "group": "00001_water"
+  },
+  {
+    "class_index": 3,
+    "class_name": "00003_turtle",
+    "group": "00001_water"
+  },
+  {
+    "class_index": 4,
+    "class_name": "00004_elephant",
+    "group": "00002_wild"
   }
-
 ]
 ```
+Here are the results for this scenario:
+![Confusion_matrix](https://github.com/triagemd/keras-eval/blob/master/figs/confusion_matrix_coarse.png)
+Below are the average results for this scenario:
+model	| accuracy	| precision	| f1_score	| number_of_samples	| number_of_classes
+-- | -- | -- | -- | -- | -- 
+0	animals_combine_classes.hdf5	0.733	0.841	0.729	15	3
 
 So in the example above the group gives us the mapping between a single concept during training and the concepts which we would want to evaluate on in test. 
 
