@@ -82,11 +82,12 @@ Normal Test scenario:
 [class_3]
 ```
 Here are the results for this scenario:
-![Confusion_matrix](https://github.com/triagemd/keras-eval/blob/master/figs/confusion_matrix_granular.png)
+![Confusion_matrix](https://github.com/triagemd/keras-eval/blob/combine_probs/figs/confusion_matrix_granular.png)
 Below are the average results for this scenario:
-model	| accuracy	| precision	| f1_score	| number_of_samples	| number_of_classes
+
+model | accuracy | precision | f1_score | number_of_samples | number_of_classes
 -- | -- | -- | -- | -- | -- 
-0	animals_combine_classes.hdf5	0.733	0.876	0.744	15	5
+0	animals_combine_classes.hdf5 | 0.733 | 0.876 | 0.744 | 15 | 5
 
 Special Test scenario:
 ```
@@ -130,11 +131,11 @@ We would want the users to give us the mapping between the training and testing 
 ]
 ```
 Here are the results for this scenario:
-![Confusion_matrix](https://github.com/triagemd/keras-eval/blob/master/figs/confusion_matrix_coarse.png)
+![Confusion_matrix](https://github.com/triagemd/keras-eval/blob/combine_probs/figs/confusion_matrix_coarse.png)
 Below are the average results for this scenario:
 model	| accuracy	| precision	| f1_score	| number_of_samples	| number_of_classes
 -- | -- | -- | -- | -- | -- 
-0	animals_combine_classes.hdf5	0.733	0.841	0.729	15	3
+0	animals_combine_classes.hdf5 | 0.733 | 0.841	| 0.729	| 15	| 3
 
 So in the example above the group gives us the mapping between a single concept during training and the concepts which we would want to evaluate on in test. 
 
