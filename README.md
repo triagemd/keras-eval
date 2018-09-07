@@ -133,6 +133,7 @@ We would want the users to give us the mapping between the training and testing 
 Here are the results for this scenario:
 ![Confusion_matrix](https://github.com/triagemd/keras-eval/blob/combine_probs/figs/confusion_matrix_coarse.png)
 Below are the average results for this scenario:
+
 model | accuracy | precision | f1_score | number_of_samples	| number_of_classes
 -- | -- | -- | -- | -- | -- 
 0	animals_combine_classes.hdf5 | 0.733 | 0.841	| 0.729	| 15	| 3
