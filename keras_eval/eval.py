@@ -20,6 +20,7 @@ class Evaluator(object):
         'report_dir': {'type': str, 'default': None},
         'combination_mode': {'type': str, 'default': None},
         'id': {'type': str, 'default': None},
+        'concept_dictionary_path': {'type': str, 'default': None},
         'loss_function': {'type': str, 'default': 'categorical_crossentropy'},
         'metrics': {'type': list, 'default': ['accuracy']},
         'batch_size': {'type': int, 'default': 1},
@@ -38,6 +39,8 @@ class Evaluator(object):
                 self.update_custom_objects(value)
             elif key == 'combination_mode':
                 self.set_combination_mode(value)
+            elif key == 'concept_dictionary_path' and options.get('concept_dictionary_path') is not None:
+                self.concept_dictionary = utils.read_dictionary(value)
             else:
                 setattr(self, key, value)
             if key == 'id' and options.get('model_path') is not None:
@@ -53,6 +56,8 @@ class Evaluator(object):
         self.model_specs = []
         self.probabilities = None
         self.labels = None
+        self.group_id_dict = {}
+        self.combined_probs = []
 
         if self.model_path is not None:
             self.add_model(model_path=self.model_path)
@@ -113,11 +118,7 @@ class Evaluator(object):
             filter_indices: If given take only the predictions corresponding to that indices to compute metrics
             confusion_matrix: True/False whether to show the confusion matrix
             save_confusion_matrix_path: If path specified save confusion matrix there
-            combination_mode: Ways of combining the model's probabilities to obtain the final prediction.
-                'maximum': predictions are obtained by choosing the maximum probabity from each class
-                'geometric': predictions are obtained by a geometric mean of all the probabilities
-                'arithmetic': predictions are obtained by a arithmetic mean of all the probabilities
-                'harmonic': predictions are obtained by a harmonic mean of all the probabilities
+
 
         Returns: Probabilities computed and ground truth labels associated.
 
@@ -137,6 +138,9 @@ class Evaluator(object):
             # Obtain labels to show on the metrics results
             self.concept_labels = utils.get_concept_items(self.concepts, key='label')
 
+            if hasattr(self, 'concept_dictionary'):
+                self.compute_inference_probabilities(self.concept_dictionary, self.probabilities)
+
             # Compute metrics
             self.results = self.get_metrics(probabilities=self.probabilities, labels=self.labels,
                                             concept_labels=self.concept_labels, top_k=top_k, filter_indices=filter_indices,
@@ -144,6 +148,32 @@ class Evaluator(object):
                                             save_confusion_matrix_path=save_confusion_matrix_path)
 
         return self.probabilities, self.labels
+
+    def compute_inference_probabilities(self, concept_dictionary, probabilities):
+        '''
+        Combines probabilities based on key "group" in concept_dictionary and saves the values in self.probabilities
+
+        Args:
+            concept_dictionary: It is the dictionary which contains all the granular concepts and the mapping with the groups.
+            probabilities: These are computed granular probabilities
+
+        '''
+
+        if utils.compare_group_test_concepts(self.concept_labels, concept_dictionary) and utils.check_concept_unique(concept_dictionary):
+            for concept in concept_dictionary:
+
+                if concept['group'] in self.group_id_dict.keys():
+                    self.group_id_dict[concept['group']].append(concept['class_index'])
+                else:
+                    self.group_id_dict[concept['group']] = [concept['class_index']]
+
+            self.combined_probs = [[[0.0, ] * len(self.concept_labels)] * len(probabilities[0])]
+            self.combined_probs = np.array(self.combined_probs)
+            for idx, concept_label in enumerate(self.concept_labels):
+                column_numbers = self.group_id_dict[concept_label]
+                for column_number in column_numbers:
+                    self.combined_probs[0][:, idx] += probabilities[0][:, column_number]
+            self.probabilities = self.combined_probs
 
     def plot_confusion_matrix(self, confusion_matrix, concept_labels=None, save_path=None):
         '''
@@ -168,11 +198,6 @@ class Evaluator(object):
         Args:
             probabilities: Probabilities from softmax layer
             labels: Ground truth labels
-            combination_mode: Ways of combining the model's probabilities to obtain the final prediction.
-                'maximum': predictions are obtained by choosing the maximum probability from each class
-                'geometric': predictions are obtained by a geometric mean of all the probabilities
-                'arithmetic': predictions are obtained by a arithmetic mean of all the probabilities
-                'harmonic': predictions are obtained by a harmonic mean of all the probabilities
             K: A tuple of the top-k predictions to consider. E.g. K = (1,2,3,4,5) is top-5 preds
             concept_labels: List containing the concept_labels
             filter_indices: If given take only the predictions corresponding to that indices to compute metrics

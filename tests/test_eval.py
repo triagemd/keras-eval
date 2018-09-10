@@ -13,6 +13,11 @@ def test_dataset_path():
 
 
 @pytest.fixture('session')
+def test_animals_dataset_path():
+    return os.path.abspath(os.path.join('tests', 'files', 'animals', 'test'))
+
+
+@pytest.fixture('session')
 def test_cat_folder():
     return os.path.abspath(os.path.join('tests', 'files', 'catdog', 'test', 'cat'))
 
@@ -31,12 +36,12 @@ def evaluator_mobilenet():
              'target_size': [224, 224, 3]
              }
 
-    with open(os.path.abspath('tmp/fixtures/models/mobilenet_1/model_spec.json'), 'w') as outfile:
+    with open(os.path.abspath('tmp/fixtures/models/ensemble/mobilenet_1/model_spec.json'), 'w') as outfile:
         json.dump(specs, outfile)
 
     return Evaluator(
         batch_size=1,
-        model_path='tmp/fixtures/models/mobilenet_1/mobilenet_v1.h5'
+        model_path='tmp/fixtures/models/ensemble/mobilenet_1/mobilenet_v1.h5'
     )
 
 
@@ -49,16 +54,35 @@ def evaluator_ensemble_mobilenet():
              'target_size': [224, 224, 3]
              }
 
-    with open(os.path.abspath('tmp/fixtures/models/mobilenet_1/model_spec.json'), 'w') as outfile:
+    with open(os.path.abspath('tmp/fixtures/models/ensemble/mobilenet_1/model_spec.json'), 'w') as outfile:
         json.dump(specs, outfile)
 
-    with open(os.path.abspath('tmp/fixtures/models/mobilenet_2/model_spec.json'), 'w') as outfile:
+    with open(os.path.abspath('tmp/fixtures/models/ensemble/mobilenet_2/model_spec.json'), 'w') as outfile:
         json.dump(specs, outfile)
 
     return Evaluator(
-        ensemble_models_dir='tmp/fixtures/models/',
+        ensemble_models_dir='tmp/fixtures/models/ensemble/',
         combination_mode='arithmetic',
         batch_size=1
+    )
+
+
+@pytest.fixture('function')
+def evaluator_mobilenet_class_combine():
+    specs = {'klass': 'keras.applications.mobilenet.MobileNet',
+             'name': 'mobilenet_v1',
+             'preprocess_args': [123.99345370133717, 116.22568321228027, 99.73750913143158],
+             'preprocess_func': 'mean_subtraction',
+             'target_size': [299, 299, 3]
+             }
+
+    with open(os.path.abspath('tmp/fixtures/models/single/model_spec.json'), 'w') as outfile:
+        json.dump(specs, outfile)
+
+    return Evaluator(
+        batch_size=1,
+        model_path='tmp/fixtures/models/single/animals_combine_classes.hdf5',
+        concept_dictionary_path='tests/files/animals/dictionary.json'
     )
 
 
@@ -119,6 +143,14 @@ def check_predict_single_image(evaluator, test_cat_folder):
 
     # 1 image predicted
     assert len(evaluator.image_paths) == 1
+
+
+def test_check_compute_inference_probabilities(evaluator_mobilenet_class_combine, test_animals_dataset_path):
+    probabilities, labels = evaluator_mobilenet_class_combine.evaluate(test_animals_dataset_path)
+
+    assert probabilities[0].shape == (15, 3)
+
+    np.testing.assert_almost_equal(sum(sum(p[1] for p in probabilities)), 1.0)
 
 
 def test_get_image_paths_by_prediction(evaluator_mobilenet, test_dataset_path, test_cat_folder, test_dog_folder):

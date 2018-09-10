@@ -113,6 +113,67 @@ def get_concept_items(concepts, key):
     return [concept[key] for concept in concepts]
 
 
+def read_dictionary(dictionary_path):
+    if os.path.exists(dictionary_path):
+        with open(dictionary_path, 'r') as dictionary_file:
+            dictionary = json.load(dictionary_file)
+    else:
+        raise ValueError('Error: invalid dictionary path' + str(dictionary_path))
+    return dictionary
+
+
+def create_training_json(train_dir, output_json_file):
+    '''
+    Checks if evaluation concepts are unique
+    Args:
+        train_dir: The location where you have the training directory
+        output_json_file: The output file name and path e.g.: ./dictionary.json
+
+    Returns:
+        True, if there are no repeat concepts, else raises error
+    '''
+    concept_dict = []
+    train_concepts = get_default_concepts(train_dir)
+    for idx in range(len(train_concepts)):
+        concept_dict.append({"class_index": idx, "class_name": train_concepts[idx]["label"], "group": train_concepts[idx]["label"]})
+    with open(output_json_file, 'w') as file_obj:
+        json.dump(concept_dict, file_obj)
+
+
+def check_concept_unique(concept_dict):
+    '''
+    Checks if evaluation concepts are unique
+    Args:
+        concept_dict: Dictionary that contains class_id, train_concepts and groups
+    Returns:
+        True, if there are no repeat concepts, else raises error
+    '''
+    concept_class_name_dict = {}
+    for concept_dict_item in concept_dict:
+        if concept_dict_item['class_name'] in concept_class_name_dict:
+            raise ValueError("Concept has been repeated:", concept_dict_item['class_name'])
+        else:
+            concept_class_name_dict[concept_dict_item['class_name']] = 1
+
+    return True
+
+
+def compare_group_test_concepts(test_concepts_list, concept_dict):
+    '''
+    Checks if concept dictionary has the groups as the test concepts
+    Args:
+        test_concepts_list: List of labels corresponding to the test concepts
+        concept_dict: Dictionary that contains class_id, train_concepts and groups
+    Returns:
+        True, if there are no repeat concepts, else raises error
+    '''
+    concept_group_lst = get_concept_items(concept_dict, key="group")
+    if set(concept_group_lst) == set(test_concepts_list):
+        return True
+    else:
+        raise ValueError("The concept dictionary groups do not match the class labels")
+
+
 def create_image_generator(data_dir, batch_size, model_spec):
     '''
     Creates a Keras image generator

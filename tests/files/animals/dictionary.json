@@ -1,0 +1,27 @@
+[
+  {
+    "class_index": 0,
+    "class_name": "00000_cat",
+    "group": "00000_domestic"
+  },
+  {
+    "class_index": 1,
+    "class_name": "00001_dog",
+    "group": "00000_domestic"
+  },
+  {
+    "class_index": 2,
+    "class_name": "00002_goose",
+    "group": "00001_water"
+  },
+  {
+    "class_index": 3,
+    "class_name": "00003_turtle",
+    "group": "00001_water"
+  },
+  {
+    "class_index": 4,
+    "class_name": "00004_elephant",
+    "group": "00002_wild"
+  }
+]

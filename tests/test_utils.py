@@ -19,6 +19,11 @@ def test_folder_image_path():
 
 
 @pytest.fixture('session')
+def training_dict_file():
+    return os.path.abspath(os.path.join('tests', 'files', 'animals', 'dictionary.json'))
+
+
+@pytest.fixture('session')
 def test_image_path():
     return os.path.abspath(os.path.join('tests', 'files', 'catdog', 'test', 'cat', 'cat-1.jpg'))
 
@@ -41,10 +46,17 @@ def test_round_list():
     assert utils.round_list(input_list, decimals=6) == [0.666667, 0.333333]
 
 
+def test_read_dictionary(training_dict_file):
+    dictionary = utils.read_dictionary(training_dict_file)
+    expected = 5
+    actual = len(dictionary)
+    assert actual == expected
+
+
 def test_load_model():
     custom_objects = {'relu6': mobilenet.layers.ReLU(6, name='relu6'), "tf": tf}
-    model_path = 'tmp/fixtures/models/mobilenet_1/mobilenet_v1.h5'
-    model_spec_path = 'tmp/fixtures/models/mobilenet_2/model_spec.json'
+    model_path = 'tmp/fixtures/models/ensemble/mobilenet_1/mobilenet_v1.h5'
+    model_spec_path = 'tmp/fixtures/models/ensemble/mobilenet_2/model_spec.json'
 
     # Default model_spec
     model = utils.load_model(model_path, custom_objects=custom_objects)
@@ -56,7 +68,7 @@ def test_load_model():
 
 
 def test_load_model_ensemble():
-    ensemble_dir = 'tmp/fixtures/models'
+    ensemble_dir = 'tmp/fixtures/models/ensemble/'
     custom_objects = {'relu6': mobilenet.layers.ReLU(6, name='relu6'), "tf": tf}
     models, specs = utils.load_multi_model(ensemble_dir, custom_objects=custom_objects)
     assert models
@@ -125,6 +137,33 @@ def test_default_concepts(test_dataset_path):
                                    {'label': 'dog', 'id': 'dog'}]
 
 
+def test_create_training_json(test_dataset_path):
+    dict_path = './tests/files/dict.json'
+    utils.create_training_json(test_dataset_path, dict_path)
+    actual = os.path.isfile(dict_path)
+    expected = True
+    assert actual == expected
+
+
+def test_compare_concept_dictionaries():
+    concept_lst = ['dog', 'elephant']
+    concept_dict = [{'group': 'dog'}, {'group': 'cat'}, {'group': 'elephant'}]
+    with pytest.raises(ValueError) as exception:
+        utils.compare_group_test_concepts(concept_lst, concept_dict)
+    expected = 'The concept dictionary groups do not match the class labels'
+    actual = str(exception).split('ValueError: ')[1]
+    assert actual == expected
+
+
+def test_check_concept_unique():
+    concept_dict = [{'class_name': 'cat'}, {'class_name': 'dog'}, {'class_name': 'cat'}]
+    with pytest.raises(ValueError) as exception:
+        utils.check_concept_unique(concept_dict)
+    expected = "('Concept has been repeated:', 'cat')"
+    actual = str(exception).split('ValueError: ')[1]
+    assert actual == expected
+
+
 def test_get_class_dictionaries_items(test_dataset_path):
     concepts_by_default = utils.get_default_concepts(test_dataset_path)
     label_output = utils.get_concept_items(concepts_by_default, 'label')
@@ -168,7 +207,7 @@ def test_show_results():
 
 
 def test_ensemble_models(test_image_path, model_spec_mobilenet):
-    ensemble_dir = 'tmp/fixtures/models'
+    ensemble_dir = 'tmp/fixtures/models/ensemble/'
     custom_objects = {'relu6': mobilenet.layers.ReLU(6, name='relu6'), "tf": tf}
     models, model_specs = utils.load_multi_model(ensemble_dir, custom_objects=custom_objects)
 
