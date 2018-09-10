@@ -63,8 +63,9 @@ ensemble_models_dir = '/model_folder'
 # e.g. '/model_folder/resnet_50/model.h5', '/model_folder/resnet_50/model_spec.json', '/model_folder/densenet201/model.h5', '/model_folder/densenet201/model_spec.json'
 
 ```
-**To evlauate on coarse classes after training on granular classes**
-Given a model trained on M and test set based on N classes (M > N), allow the evaluation on sets of classes by providing a *concept dictionary*.
+**To evaluate on coarse classes after training on granular classes**
+
+Given a model trained on M classes and test set based on N classes (M > N), allow the evaluation on sets of classes by providing a *concept dictionary*.
 
 E.g. 
 Training scenario:
@@ -74,7 +75,7 @@ Training scenario:
 [class_2]
 [class_3]
 ```
-Normal Test scenario:
+Regular Test scenario:
 ```
 [class_0]
 [class_1]
