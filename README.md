@@ -66,6 +66,7 @@ ensemble_models_dir = '/model_folder'
 **To evaluate on coarse classes after training on granular classes**
 
 Given a model trained on M classes and test set based on N classes (M > N), allow the evaluation on sets of classes by providing a *concept dictionary*.
+**Case 1: Regular evaluation**
 
 E.g. 
 Training scenario:
@@ -75,22 +76,23 @@ Training scenario:
 [class_2]
 [class_3]
 ```
-Regular Test scenario:
+Regular evaluation scenario:
 ```
 [class_0]
 [class_1]
 [class_2]
 [class_3]
 ```
-Here are the results for this scenario:
+Results for regular evaluation:
 ![Confusion_matrix](https://github.com/triagemd/keras-eval/blob/combine_probs/figs/confusion_matrix_granular.png)
-Below are the average results for this scenario:
 
 model | accuracy | precision | f1_score | number_of_samples | number_of_classes
 -- | -- | -- | -- | -- | -- 
-0	animals_combine_classes.hdf5 | 0.733 | 0.876 | 0.744 | 15 | 5
+animals_combine_classes.hdf5 | 0.733 | 0.876 | 0.744 | 15 | 5
 
-Special Test scenario:
+**Case 2: Class consolidated evaluation**
+Evaluate on classes grouped on sets of training classes.
+Class consolidated evaluation scenario:
 ```
 [test_set_0] class_0 or class_1
 [test_set_1] class_2 or class_3
@@ -131,13 +133,12 @@ We would want the users to give us the mapping between the training and testing 
   }
 ]
 ```
-Here are the results for this scenario:
+Results for class consolidated evaluation:
 ![Confusion_matrix](https://github.com/triagemd/keras-eval/blob/combine_probs/figs/confusion_matrix_coarse.png)
-Below are the average results for this scenario:
 
 model | accuracy | precision | f1_score | number_of_samples	| number_of_classes
 -- | -- | -- | -- | -- | -- 
-0	animals_combine_classes.hdf5 | 0.733 | 0.841	| 0.729	| 15	| 3
+animals_combine_classes.hdf5 | 0.733 | 0.841	| 0.729	| 15	| 3
 
 So in the example above the group gives us the mapping between a single concept during training and the concepts which we would want to evaluate on in test. 
 
