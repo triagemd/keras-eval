@@ -104,7 +104,7 @@ The probability changes during class consildation as seen below:
 probability(test_set_0) =  probability(class_0) + probability(class_1)
 probability(test_set_1) = probability(class_2) + probability(class_3)
 ```
-For this purpose, the mapping between the training and testing dictionary must be provided as a .json file with the following format:
+For this purpose, the mapping between the training and testing dictionary must be provided as a `.json` file with the following format:
 ```
 [
   {
