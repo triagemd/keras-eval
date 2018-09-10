@@ -85,7 +85,7 @@ Regular evaluation scenario:
 [class_3]
 ```
 Results for regular evaluation:
-![Confusion_matrix](https://github.com/triagemd/keras-eval/blob/combine_probs/figs/confusion_matrix_granular.png)
+![Confusion_matrix](https://github.com/triagemd/keras-eval/blob/master/figs/confusion_matrix_granular.png)
 
 model | accuracy | precision | f1_score | number_of_samples | number_of_classes
 -- | -- | -- | -- | -- | -- 
@@ -99,7 +99,7 @@ Class consolidated evaluation scenario:
 [test_set_1] class_2 or class_3
 ```
 
-The probability changes during class consildation as seen below:
+The probability changes during class consolidation as seen below:
 ```
 probability(test_set_0) =  probability(class_0) + probability(class_1)
 probability(test_set_1) = probability(class_2) + probability(class_3)
@@ -135,7 +135,7 @@ For this purpose, the mapping between the training and testing dictionary must b
 ]
 ```
 Results for class consolidated evaluation:
-![Confusion_matrix](https://github.com/triagemd/keras-eval/blob/combine_probs/figs/confusion_matrix_coarse.png)
+![Confusion_matrix](https://github.com/triagemd/keras-eval/blob/master/figs/confusion_matrix_coarse.png)
 
 model | accuracy | precision | f1_score | number_of_samples	| number_of_classes
 -- | -- | -- | -- | -- | -- 
