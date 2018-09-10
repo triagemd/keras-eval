@@ -151,6 +151,7 @@ from keras_eval.eval import Evaluator
 evaluator = Evaluator(
                 data_dir=None,
                 concepts=None,
+                concept_dictionary_path=None,
                 ensemble_models_dir=None,
                 model_path=model_path,
                 loss_function='categorical_crossentropy',
