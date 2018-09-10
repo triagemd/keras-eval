@@ -99,7 +99,7 @@ Class consolidated evaluation scenario:
 [test_set_1] class_2 or class_3
 ```
 
-The probability changes during class consildation as seen below:
+The probability changes during class consolidation as seen below:
 ```
 probability(test_set_0) =  probability(class_0) + probability(class_1)
 probability(test_set_1) = probability(class_2) + probability(class_3)
