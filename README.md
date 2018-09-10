@@ -66,6 +66,7 @@ ensemble_models_dir = '/model_folder'
 **To evaluate on coarse classes after training on granular classes**
 
 Given a model trained on M classes and test set based on N classes (M > N), allow the evaluation on sets of classes by providing a *concept dictionary*.
+
 **Case 1: Regular evaluation**
 
 E.g. 
@@ -98,12 +99,12 @@ Class consolidated evaluation scenario:
 [test_set_1] class_2 or class_3
 ```
 
-So the way we combine probabilities is as below:
+The probability changes during class consildation as seen below:
 ```
 probability(test_set_0) =  probability(class_0) + probability(class_1)
 probability(test_set_1) = probability(class_2) + probability(class_3)
 ```
-We would want the users to give us the mapping between the training and testing dictionary as a `.json` file. Given below is the format we expect:
+For this purpose, the mapping between the training and testing dictionary must be provided as a .json file with the following format:
 ```
 [
   {
@@ -138,9 +139,7 @@ Results for class consolidated evaluation:
 
 model | accuracy | precision | f1_score | number_of_samples	| number_of_classes
 -- | -- | -- | -- | -- | -- 
-animals_combine_classes.hdf5 | 0.733 | 0.841	| 0.729	| 15	| 3
-
-So in the example above the group gives us the mapping between a single concept during training and the concepts which we would want to evaluate on in test. 
+animals_combine_classes.hdf5 | 0.733 | 0.841	| 0.729	| 15	| 3 
 
 You can specify all the following options.
 
