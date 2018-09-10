@@ -85,7 +85,7 @@ Regular evaluation scenario:
 [class_3]
 ```
 Results for regular evaluation:
-![Confusion_matrix](https://github.com/triagemd/keras-eval/blob/combine_probs/figs/confusion_matrix_granular.png)
+![Confusion_matrix](https://github.com/triagemd/keras-eval/blob/master/figs/confusion_matrix_granular.png)
 
 model | accuracy | precision | f1_score | number_of_samples | number_of_classes
 -- | -- | -- | -- | -- | -- 
@@ -135,7 +135,7 @@ For this purpose, the mapping between the training and testing dictionary must b
 ]
 ```
 Results for class consolidated evaluation:
-![Confusion_matrix](https://github.com/triagemd/keras-eval/blob/combine_probs/figs/confusion_matrix_coarse.png)
+![Confusion_matrix](https://github.com/triagemd/keras-eval/blob/master/figs/confusion_matrix_coarse.png)
 
 model | accuracy | precision | f1_score | number_of_samples	| number_of_classes
 -- | -- | -- | -- | -- | -- 
