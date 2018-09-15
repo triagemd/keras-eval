@@ -137,7 +137,7 @@ def create_training_json(train_dir, output_json_file):
     for idx in range(len(train_concepts)):
         concept_dict.append({"class_index": idx, "class_name": train_concepts[idx]["label"], "group": train_concepts[idx]["label"]})
     with open(output_json_file, 'w') as file_obj:
-        json.dump(concept_dict, file_obj)
+        json.dump(concept_dict, file_obj, indent=4, sort_keys=True)
 
 
 def check_concept_unique(concept_dict):
