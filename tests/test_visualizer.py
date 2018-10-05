@@ -1,6 +1,7 @@
 import pytest
-from keras_eval.visualizer import plot_confusion_matrix, plot_concept_metrics, plot_threshold
 import numpy as np
+
+from keras_eval.visualizer import plot_confusion_matrix, plot_concept_metrics, plot_threshold
 
 
 def test_plot_confusion_matrix():
