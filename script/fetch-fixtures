@@ -4,12 +4,12 @@ set -e
 mkdir -p tmp/fixtures/models/ensemble/mobilenet_1/ tmp/fixtures/models/ensemble/mobilenet_2/
 
 cd tmp/fixtures/models/ensemble/mobilenet_1/
-  MODEL_URL="https://storage.googleapis.com/keras-eval-fixtures-c04aef45-46f3-42ae-910d-8dba8c4be026/mobilenet_v1.h5"
-if [ ! -f mobilenet_v1.h5 ]; then
+  MODEL_URL="https://storage.googleapis.com/triage-lab/models/animals/catdog-mobilenet.hdf5"
+if [ ! -f catdog-mobilenet.hdf5 ]; then
     wget $MODEL_URL
 fi
 cd ../mobilenet_2/
-if [ ! -f mobilenet_v1.h5 ]; then
+if [ ! -f catdog-mobilenet.hdf5 ]; then
     wget $MODEL_URL
 fi
 )
@@ -17,7 +17,7 @@ fi
 mkdir -p tmp/fixtures/models/single/
 
 cd tmp/fixtures/models/single/
-if [ ! -f animals_combine_classes.hdf5 ]; then
-    MODEL_URL="https://storage.googleapis.com/triage-lab/models/animals/animals_combine_classes.hdf5" 
+if [ ! -f animals-mobilenet.hdf5 ]; then
+    MODEL_URL="https://storage.googleapis.com/triage-lab/models/animals/animals-mobilenet.hdf5"
     wget $MODEL_URL
 fi
