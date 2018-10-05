@@ -371,7 +371,7 @@ class Evaluator(object):
 
     def get_image_paths_by_prediction(self, probabilities, labels, concept_labels=None, image_paths=None):
         '''
-
+        Return the list of images given its predictions.
         Args:
             probabilities: Probabilities given by the model [n_samples,n_classes]
             labels: Ground truth labels (categorical)
@@ -384,7 +384,6 @@ class Evaluator(object):
                 'harmonic': predictions are obtained by a harmonic mean of all the probabilities
 
         Returns: A dictionary containing a list of images per confusion matrix square (relation ClassA_ClassB)
-
         '''
         self.combined_probabilities = utils.combine_probabilities(probabilities, self.combination_mode)
 
