@@ -1,89 +1,8 @@
-import json
-import numpy as np
 import os
 import pytest
+import numpy as np
 
-from keras_eval.eval import Evaluator
 from keras_eval import utils
-
-
-@pytest.fixture('session')
-def test_dataset_path():
-    return os.path.abspath(os.path.join('tests', 'files', 'catdog', 'test'))
-
-
-@pytest.fixture('session')
-def test_animals_dataset_path():
-    return os.path.abspath(os.path.join('tests', 'files', 'animals', 'test'))
-
-
-@pytest.fixture('session')
-def test_cat_folder():
-    return os.path.abspath(os.path.join('tests', 'files', 'catdog', 'test', 'cat'))
-
-
-@pytest.fixture('session')
-def test_dog_folder():
-    return os.path.abspath(os.path.join('tests', 'files', 'catdog', 'test', 'dog'))
-
-
-@pytest.fixture('function')
-def evaluator_mobilenet():
-    specs = {'klass': 'keras.applications.mobilenet.MobileNet',
-             'name': 'mobilenet_v1',
-             'preprocess_args': None,
-             'preprocess_func': 'between_plus_minus_1',
-             'target_size': [224, 224, 3]
-             }
-
-    with open(os.path.abspath('tmp/fixtures/models/ensemble/mobilenet_1/model_spec.json'), 'w') as outfile:
-        json.dump(specs, outfile)
-
-    return Evaluator(
-        batch_size=1,
-        model_path='tmp/fixtures/models/ensemble/mobilenet_1/mobilenet_v1.h5'
-    )
-
-
-@pytest.fixture('function')
-def evaluator_ensemble_mobilenet():
-    specs = {'klass': 'keras.applications.mobilenet.MobileNet',
-             'name': 'mobilenet_v1',
-             'preprocess_args': None,
-             'preprocess_func': 'between_plus_minus_1',
-             'target_size': [224, 224, 3]
-             }
-
-    with open(os.path.abspath('tmp/fixtures/models/ensemble/mobilenet_1/model_spec.json'), 'w') as outfile:
-        json.dump(specs, outfile)
-
-    with open(os.path.abspath('tmp/fixtures/models/ensemble/mobilenet_2/model_spec.json'), 'w') as outfile:
-        json.dump(specs, outfile)
-
-    return Evaluator(
-        ensemble_models_dir='tmp/fixtures/models/ensemble/',
-        combination_mode='arithmetic',
-        batch_size=1
-    )
-
-
-@pytest.fixture('function')
-def evaluator_mobilenet_class_combine():
-    specs = {'klass': 'keras.applications.mobilenet.MobileNet',
-             'name': 'mobilenet_v1',
-             'preprocess_args': [123.99345370133717, 116.22568321228027, 99.73750913143158],
-             'preprocess_func': 'mean_subtraction',
-             'target_size': [299, 299, 3]
-             }
-
-    with open(os.path.abspath('tmp/fixtures/models/single/model_spec.json'), 'w') as outfile:
-        json.dump(specs, outfile)
-
-    return Evaluator(
-        batch_size=1,
-        model_path='tmp/fixtures/models/single/animals_combine_classes.hdf5',
-        concept_dictionary_path='tests/files/animals/dictionary.json'
-    )
 
 
 def test_set_concepts(evaluator_mobilenet):
@@ -106,8 +25,8 @@ def test_set_combination_mode(evaluator_mobilenet):
     evaluator_mobilenet.set_combination_mode('maximum')
 
 
-def check_evaluate_on_catdog_dataset(evaluator, test_dataset_path):
-    probabilities, labels = evaluator.evaluate(test_dataset_path)
+def check_evaluate_on_catdog_dataset(evaluator, test_catdog_dataset_path):
+    probabilities, labels = evaluator.evaluate(test_catdog_dataset_path)
 
     # n_models x n_samples x n_classes
     assert len(probabilities.shape) == 3
@@ -135,8 +54,8 @@ def check_predict_on_cat_folder(evaluator, test_cat_folder):
     assert len(evaluator.image_paths) == 2
 
 
-def check_predict_single_image(evaluator, test_cat_folder):
-    probabilities = evaluator.predict(os.path.join(test_cat_folder, 'cat-1.jpg'))
+def check_predict_single_image(evaluator, test_image_path):
+    probabilities = evaluator.predict(test_image_path)
 
     # n_models x n_samples x n_classes
     assert len(probabilities.shape) == 3
@@ -153,60 +72,62 @@ def test_check_compute_inference_probabilities(evaluator_mobilenet_class_combine
     np.testing.assert_almost_equal(sum(sum(p[1] for p in probabilities)), 1.0)
 
 
-def test_get_image_paths_by_prediction(evaluator_mobilenet, test_dataset_path, test_cat_folder, test_dog_folder):
-    probabilities, labels = evaluator_mobilenet.evaluate(test_dataset_path)
+def test_get_image_paths_by_prediction(evaluator_mobilenet, test_catdog_dataset_path, test_cat_folder, test_dog_folder):
+    probabilities, labels = evaluator_mobilenet.evaluate(test_catdog_dataset_path)
     image_paths_dictionary = evaluator_mobilenet.get_image_paths_by_prediction(probabilities, labels)
+    print(image_paths_dictionary)
 
     assert image_paths_dictionary['cat_cat'] == [os.path.join(test_cat_folder, 'cat-1.jpg'),
                                                  os.path.join(test_cat_folder, 'cat-4.jpg')]
     assert image_paths_dictionary['cat_dog'] == []
-    assert image_paths_dictionary['dog_cat'] == []
-    assert image_paths_dictionary['dog_dog'] == [os.path.join(test_dog_folder, 'dog-2.jpg'),
-                                                 os.path.join(test_dog_folder, 'dog-4.jpg')]
+    assert image_paths_dictionary['dog_cat'] == [os.path.join(test_dog_folder, 'dog-2.jpg')]
+    assert image_paths_dictionary['dog_dog'] == [os.path.join(test_dog_folder, 'dog-4.jpg')]
 
 
-def test_evaluator_single_mobilenet_v1_on_catdog_dataset(evaluator_mobilenet, test_dataset_path, test_cat_folder):
-    check_evaluate_on_catdog_dataset(evaluator_mobilenet, test_dataset_path)
+def test_evaluator_single_mobilenet_v1_on_catdog_dataset(evaluator_mobilenet, test_catdog_dataset_path,
+                                                         test_cat_folder, test_image_path):
+    check_evaluate_on_catdog_dataset(evaluator_mobilenet, test_catdog_dataset_path)
 
     check_predict_on_cat_folder(evaluator_mobilenet, test_cat_folder)
 
-    check_predict_single_image(evaluator_mobilenet, test_cat_folder)
+    check_predict_single_image(evaluator_mobilenet, test_image_path)
 
 
-def test_evaluator_ensemble_mobilenet_v1_on_catdog_dataset(evaluator_ensemble_mobilenet, test_dataset_path, test_cat_folder):
-    check_evaluate_on_catdog_dataset(evaluator_ensemble_mobilenet, test_dataset_path)
+def test_evaluator_ensemble_mobilenet_v1_on_catdog_dataset(evaluator_ensemble_mobilenet, test_catdog_dataset_path,
+                                                           test_cat_folder, test_image_path):
+    check_evaluate_on_catdog_dataset(evaluator_ensemble_mobilenet, test_catdog_dataset_path)
 
     check_predict_on_cat_folder(evaluator_ensemble_mobilenet, test_cat_folder)
 
-    check_predict_single_image(evaluator_ensemble_mobilenet, test_cat_folder)
+    check_predict_single_image(evaluator_ensemble_mobilenet, test_image_path)
 
 
-def test_compute_confidence_prediction_distribution(evaluator_mobilenet, test_dataset_path):
+def test_compute_confidence_prediction_distribution(evaluator_mobilenet, test_catdog_dataset_path):
     with pytest.raises(ValueError) as exception:
         evaluator_mobilenet.compute_confidence_prediction_distribution()
     expected = 'probabilities value is None, please run a evaluation first'
     actual = str(exception).split('ValueError: ')[1]
     assert actual == expected
 
-    evaluator_mobilenet.evaluate(test_dataset_path)
+    evaluator_mobilenet.evaluate(test_catdog_dataset_path)
 
     output = evaluator_mobilenet.compute_confidence_prediction_distribution()
 
-    np.testing.assert_array_almost_equal(output, np.array([0.95398325, 0.0460167], dtype=np.float32))
+    np.testing.assert_array_almost_equal(output, np.array([0.82156974, 0.1784302], dtype=np.float32))
 
 
-def test_compute_uncertainty_distribution(evaluator_mobilenet, test_dataset_path):
+def test_compute_uncertainty_distribution(evaluator_mobilenet, test_catdog_dataset_path):
     with pytest.raises(ValueError) as exception:
         evaluator_mobilenet.compute_uncertainty_distribution()
     expected = 'probabilities value is None, please run a evaluation first'
     actual = str(exception).split('ValueError: ')[1]
     assert actual == expected
 
-    evaluator_mobilenet.evaluate(test_dataset_path)
+    evaluator_mobilenet.evaluate(test_catdog_dataset_path)
 
     output = evaluator_mobilenet.compute_uncertainty_distribution()
 
-    np.testing.assert_array_almost_equal(output, np.array([0.3436, 0.002734, 0.001692, 0.52829], dtype=np.float32))
+    np.testing.assert_array_almost_equal(output, np.array([0.8283282, 0.13131963, 0.36905038, 0.9456398], dtype=np.float32))
 
 
 def test_plot_top_k_accuracy(evaluator_mobilenet):
@@ -225,7 +146,7 @@ def test_plot_top_k_sensitivity_by_concept(evaluator_mobilenet):
     assert actual == expected
 
 
-def test_show_results(evaluator_mobilenet, test_dataset_path):
+def test_show_results(evaluator_mobilenet, test_catdog_dataset_path):
     # Assert error without results
     with pytest.raises(ValueError) as exception:
         evaluator_mobilenet.show_results('average')
@@ -233,20 +154,26 @@ def test_show_results(evaluator_mobilenet, test_dataset_path):
     actual = str(exception).split('ValueError: ')[1]
     assert actual == expected
 
-    evaluator_mobilenet.evaluate(test_dataset_path)
+    evaluator_mobilenet.evaluate(test_catdog_dataset_path)
 
     average_df = evaluator_mobilenet.show_results(mode='average')
-    assert average_df['model'][0] == 'mobilenet_v1.h5'
-    assert average_df['accuracy'][0] == average_df['precision'][0] == average_df['f1_score'][0] == 1.0
+    assert average_df['model'][0] == 'catdog-mobilenet.hdf5'
+    assert average_df['accuracy'][0] == 0.75
+    assert average_df['precision'][0] == 0.833
+    assert average_df['f1_score'][0] == 0.733
 
     individual_df = evaluator_mobilenet.show_results(mode='individual')
     assert individual_df['class'][0] == 'cat'
     assert individual_df['class'][1] == 'dog'
-    assert individual_df['sensitivity'][0] == individual_df['sensitivity'][1] == 1.0
-    assert individual_df['precision'][0] == individual_df['precision'][1] == 1.0
-    assert individual_df['f1_score'][0] == individual_df['f1_score'][1] == 1.0
-    assert individual_df['TP'][0] == individual_df['TP'][1] == 2
-    assert individual_df['FP'][0] == individual_df['FP'][1] == individual_df['FN'][1] == individual_df['FN'][1] == 0
+    assert individual_df['sensitivity'][0] == 1.0
+    assert individual_df['sensitivity'][1] == 0.5
+    np.testing.assert_almost_equal(individual_df['precision'][0], 0.6669999)
+    assert individual_df['precision'][1] == 1.0
+    assert individual_df['f1_score'][0] == 0.8
+    assert individual_df['f1_score'][1] == 0.667
+    assert individual_df['TP'][0] == 2
+    assert individual_df['TP'][1] == individual_df['FP'][0] == individual_df['FN'][1] == 1
+    assert individual_df['FP'][1] == individual_df['FN'][0] == 0
     assert individual_df['AUROC'][0] == individual_df['AUROC'][1] == 1.0
 
 

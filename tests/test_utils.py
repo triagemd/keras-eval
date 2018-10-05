@@ -1,37 +1,7 @@
 import os
 import pytest
 import numpy as np
-import tensorflow as tf
 import keras_eval.utils as utils
-
-from keras_model_specs import ModelSpec
-from keras_applications import mobilenet
-
-
-@pytest.fixture('session')
-def test_dataset_path():
-    return os.path.abspath(os.path.join('tests', 'files', 'catdog', 'test'))
-
-
-@pytest.fixture('session')
-def test_folder_image_path():
-    return os.path.abspath(os.path.join('tests', 'files', 'catdog', 'test', 'cat'))
-
-
-@pytest.fixture('session')
-def training_dict_file():
-    return os.path.abspath(os.path.join('tests', 'files', 'animals', 'dictionary.json'))
-
-
-@pytest.fixture('session')
-def test_image_path():
-    return os.path.abspath(os.path.join('tests', 'files', 'catdog', 'test', 'cat', 'cat-1.jpg'))
-
-
-@pytest.fixture('session')
-def model_spec_mobilenet():
-    dataset_mean = [142.69182214, 119.05833338, 106.89884415]
-    return ModelSpec.get('mobilenet_v1', preprocess_func='mean_subtraction', preprocess_args=dataset_mean)
 
 
 def test_safe_divide():
@@ -53,24 +23,19 @@ def test_read_dictionary(training_dict_file):
     assert actual == expected
 
 
-def test_load_model():
-    custom_objects = {'relu6': mobilenet.layers.ReLU(6, name='relu6'), "tf": tf}
-    model_path = 'tmp/fixtures/models/ensemble/mobilenet_1/mobilenet_v1.h5'
-    model_spec_path = 'tmp/fixtures/models/ensemble/mobilenet_2/model_spec.json'
+def test_load_model(test_catdog_mobilenet_model, test_mobilenet_2_model_spec):
 
     # Default model_spec
-    model = utils.load_model(model_path, custom_objects=custom_objects)
+    model = utils.load_model(test_catdog_mobilenet_model)
     assert model
 
     # Custom model_spec
-    model = utils.load_model(model_path, specs_path=model_spec_path, custom_objects=custom_objects)
+    model = utils.load_model(test_catdog_mobilenet_model, specs_path=test_mobilenet_2_model_spec)
     assert model
 
 
-def test_load_model_ensemble():
-    ensemble_dir = 'tmp/fixtures/models/ensemble/'
-    custom_objects = {'relu6': mobilenet.layers.ReLU(6, name='relu6'), "tf": tf}
-    models, specs = utils.load_multi_model(ensemble_dir, custom_objects=custom_objects)
+def test_load_model_ensemble(test_ensemble_models_path):
+    models, specs = utils.load_multi_model(test_ensemble_models_path)
     assert models
     assert specs
 
@@ -125,21 +90,21 @@ def test_load_preprocess_image(test_image_path, model_spec_mobilenet):
     assert image.shape == (1, 224, 224, 3)
 
 
-def test_load_preprocess_images(test_folder_image_path, model_spec_mobilenet):
-    images, images_paths = utils.load_preprocess_images(test_folder_image_path, model_spec_mobilenet)
+def test_load_preprocess_images(test_cat_folder, model_spec_mobilenet):
+    images, images_paths = utils.load_preprocess_images(test_cat_folder, model_spec_mobilenet)
     assert np.array(images).shape == (2, 224, 224, 3)
     assert len(images_paths) == 2
 
 
-def test_default_concepts(test_dataset_path):
-    concepts_by_default = utils.get_default_concepts(test_dataset_path)
+def test_default_concepts(test_catdog_dataset_path):
+    concepts_by_default = utils.get_default_concepts(test_catdog_dataset_path)
     assert concepts_by_default == [{'label': 'cat', 'id': 'cat'},
                                    {'label': 'dog', 'id': 'dog'}]
 
 
-def test_create_training_json(test_dataset_path):
+def test_create_training_json(test_catdog_dataset_path):
     dict_path = './tests/files/dict.json'
-    utils.create_training_json(test_dataset_path, dict_path)
+    utils.create_training_json(test_catdog_dataset_path, dict_path)
     actual = os.path.isfile(dict_path)
     expected = True
     assert actual == expected
@@ -164,8 +129,8 @@ def test_check_concept_unique():
     assert actual == expected
 
 
-def test_get_class_dictionaries_items(test_dataset_path):
-    concepts_by_default = utils.get_default_concepts(test_dataset_path)
+def test_get_class_dictionaries_items(test_catdog_dataset_path):
+    concepts_by_default = utils.get_default_concepts(test_catdog_dataset_path)
     label_output = utils.get_concept_items(concepts_by_default, 'label')
     id_output = utils.get_concept_items(concepts_by_default, 'id')
     assert label_output == id_output == ['cat', 'dog']
@@ -206,10 +171,8 @@ def test_show_results():
     assert individual_df['AUROC'][0] == individual_df['AUROC'][1] == 0.833
 
 
-def test_ensemble_models(test_image_path, model_spec_mobilenet):
-    ensemble_dir = 'tmp/fixtures/models/ensemble/'
-    custom_objects = {'relu6': mobilenet.layers.ReLU(6, name='relu6'), "tf": tf}
-    models, model_specs = utils.load_multi_model(ensemble_dir, custom_objects=custom_objects)
+def test_ensemble_models(test_image_path, model_spec_mobilenet, test_ensemble_models_path):
+    models, model_specs = utils.load_multi_model(test_ensemble_models_path)
 
     with pytest.raises(ValueError) as exception:
         utils.ensemble_models(models, input_shape=(224, 224, 3), combination_mode='asdf')
