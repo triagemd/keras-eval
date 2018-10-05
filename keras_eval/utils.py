@@ -10,7 +10,6 @@ from keras.layers import average, maximum
 from keras.models import Model, Input
 from keras.preprocessing import image
 from keras_model_specs import ModelSpec
-from keras_applications import mobilenet
 import keras_model_specs.models.custom_layers as custom_layers
 
 
@@ -31,7 +30,7 @@ def create_default_custom_objects():
     Returns: Default custom objects for Keras models supported in keras_applications
 
     '''
-    return {'relu6': mobilenet.layers.ReLU(6, name='relu6'), "tf": tf, 'Scale': custom_layers.Scale}
+    return {'tf': tf, 'Scale': custom_layers.Scale}
 
 
 def load_multi_model(models_dir, custom_objects=None):
@@ -41,7 +40,6 @@ def load_multi_model(models_dir, custom_objects=None):
     Args:
        models_path: a string indicating the directory were models are stored.
        custom_objects: dict mapping class names (or function names) of custom (non-Keras) objects to class/functions.
-                    e.g. for mobilenet models: {'relu6': mobilenet.relu6, 'DepthwiseConv2D': mobilenet.DepthwiseConv2D}
 
     Returns: List of models, list of model_specs
 
@@ -74,7 +72,6 @@ def load_model(model_path, specs_path=None, custom_objects=None):
         model_dir: Folder containing the model
         specs_path: If specified custom model_specs name, default `model_spec.json`
         custom_objects: dict mapping class names (or function names) of custom (non-Keras) objects to class/functions.
-                    e.g. for mobilenet models: {'relu6': mobilenet.relu6, 'DepthwiseConv2D': mobilenet.DepthwiseConv2D}
 
     Returns: keras model, model_spec object for that model
 
