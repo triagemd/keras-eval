@@ -165,10 +165,15 @@ def compare_group_test_concepts(test_concepts_list, concept_dict):
         True, if there are no repeat concepts, else raises error
     '''
     concept_group_lst = get_concept_items(concept_dict, key="group")
-    if set(concept_group_lst) == set(test_concepts_list):
-        return True
+
+    different_concept_set = set(concept_group_lst).symmetric_difference(set(test_concepts_list))
+    if len(different_concept_set):
+        raise ValueError(
+            "The following concepts are not present in the either the concept dictionary or among the test classes:",
+            different_concept_set)
+
     else:
-        raise ValueError("The concept dictionary groups do not match the class labels")
+        return True
 
 
 def create_image_generator(data_dir, batch_size, model_spec):
