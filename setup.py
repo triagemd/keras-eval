@@ -12,9 +12,9 @@ setup(
     url='https://www.triage.com/',
     packages=find_packages(exclude=['tests', '.cache', '.venv', '.git', 'dist']),
     install_requires=[
-        'setuptools==39.1.0',
-        'tensorflow',
-        'Keras>=2.2.0',
+        'numpy==1.14.5',
+        'tensorflow==1.10',
+        'Keras',
         'h5py',
         'Pillow',
         'scipy',
@@ -24,5 +24,7 @@ setup(
         'matplotlib',
         'sklearn',
         'keras-model-specs>=0.0.28',
+        'ipykernel==5.0.0',
+        'setuptools<=39.1.0'
     ]
 )
