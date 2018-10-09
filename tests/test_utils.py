@@ -116,7 +116,7 @@ def test_compare_concept_dictionaries():
     with pytest.raises(ValueError) as exception:
         utils.compare_group_test_concepts(concept_lst, concept_dict)
     expected = "('The following concepts are not present in the either the concept dictionary or among the " \
-               "test classes:', {'cat'})"
+               "test classes:', ['cat'])"
     actual = str(exception).split('ValueError: ')[1]
     assert actual == expected
 

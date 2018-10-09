@@ -170,7 +170,7 @@ def compare_group_test_concepts(test_concepts_list, concept_dict):
     if len(different_concept_set):
         raise ValueError(
             "The following concepts are not present in the either the concept dictionary or among the test classes:",
-            different_concept_set)
+            list(different_concept_set))
 
     else:
         return True
