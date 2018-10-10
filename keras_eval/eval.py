@@ -10,7 +10,6 @@ from math import log
 
 
 class Evaluator(object):
-
     OPTIONS = {
         'data_dir': {'type': str, 'default': None},
         'concepts': {'type': list, 'default': None},
@@ -33,7 +32,7 @@ class Evaluator(object):
 
         for key, option in self.OPTIONS.items():
             if key not in options and 'default' not in option:
-                raise ValueError('missing required option: %s' % (key, ))
+                raise ValueError('missing required option: %s' % (key,))
             value = options.get(key, copy.copy(option.get('default')))
             if key == 'custom_objects':
                 self.update_custom_objects(value)
@@ -49,7 +48,7 @@ class Evaluator(object):
 
         extra_options = set(options.keys()) - set(self.OPTIONS.keys())
         if len(extra_options) > 0:
-            raise ValueError('unsupported options given: %s' % (', '.join(extra_options), ))
+            raise ValueError('unsupported options given: %s' % (', '.join(extra_options),))
 
         self.results = None
         self.models = []
@@ -72,7 +71,8 @@ class Evaluator(object):
 
     def add_model(self, model_path, specs_path=None, custom_objects=None):
         self.update_custom_objects(custom_objects)
-        model, model_spec = utils.load_model(model_path=model_path, specs_path=specs_path, custom_objects=self.custom_objects)
+        model, model_spec = utils.load_model(model_path=model_path, specs_path=specs_path,
+                                             custom_objects=self.custom_objects)
         self.models.append(model)
         self.model_specs.append(model_spec)
 
@@ -128,22 +128,27 @@ class Evaluator(object):
         if self.data_dir is None:
             raise ValueError('No data directory found, please specify a valid data directory under variable `data_dir`')
         else:
-            # Create Keras image generator and obtain predictions
-            self.probabilities, self.labels = self._compute_probabilities_generator(data_dir=self.data_dir)
-
             # Create dictionary containing class names
             if self.concepts is None:
                 self.concepts = utils.get_default_concepts(self.data_dir)
 
             # Obtain labels to show on the metrics results
             self.concept_labels = utils.get_concept_items(self.concepts, key='label')
-
             if hasattr(self, 'concept_dictionary'):
-                self.compute_inference_probabilities(self.concept_dictionary, self.probabilities)
+                if utils.compare_group_test_concepts(self.concept_labels,
+                                                     self.concept_dictionary) and utils.check_concept_unique(self.concept_dictionary):
+                    # Create Keras image generator and obtain probabilities
+                    self.probabilities, self.labels = self._compute_probabilities_generator(data_dir=self.data_dir)
+                    self.compute_inference_probabilities(self.concept_dictionary, self.probabilities)
+
+            else:
+                # Create Keras image generator and obtain probabilities
+                self.probabilities, self.labels = self._compute_probabilities_generator(data_dir=self.data_dir)
 
             # Compute metrics
             self.results = self.get_metrics(probabilities=self.probabilities, labels=self.labels,
-                                            concept_labels=self.concept_labels, top_k=top_k, filter_indices=filter_indices,
+                                            concept_labels=self.concept_labels, top_k=top_k,
+                                            filter_indices=filter_indices,
                                             confusion_matrix=confusion_matrix,
                                             save_confusion_matrix_path=save_confusion_matrix_path)
 
@@ -159,21 +164,20 @@ class Evaluator(object):
 
         '''
 
-        if utils.compare_group_test_concepts(self.concept_labels, concept_dictionary) and utils.check_concept_unique(concept_dictionary):
-            for concept in concept_dictionary:
+        for concept in concept_dictionary:
 
-                if concept['group'] in self.group_id_dict.keys():
-                    self.group_id_dict[concept['group']].append(concept['class_index'])
-                else:
-                    self.group_id_dict[concept['group']] = [concept['class_index']]
+            if concept['group'] in self.group_id_dict.keys():
+                self.group_id_dict[concept['group']].append(concept['class_index'])
+            else:
+                self.group_id_dict[concept['group']] = [concept['class_index']]
 
-            self.combined_probs = [[[0.0, ] * len(self.concept_labels)] * len(probabilities[0])]
-            self.combined_probs = np.array(self.combined_probs)
-            for idx, concept_label in enumerate(self.concept_labels):
-                column_numbers = self.group_id_dict[concept_label]
-                for column_number in column_numbers:
-                    self.combined_probs[0][:, idx] += probabilities[0][:, column_number]
-            self.probabilities = self.combined_probs
+        self.combined_probs = [[[0.0, ] * len(self.concept_labels)] * len(probabilities[0])]
+        self.combined_probs = np.array(self.combined_probs)
+        for idx, concept_label in enumerate(self.concept_labels):
+            column_numbers = self.group_id_dict[concept_label]
+            for column_number in column_numbers:
+                self.combined_probs[0][:, idx] += probabilities[0][:, column_number]
+        self.probabilities = self.combined_probs
 
     def plot_confusion_matrix(self, confusion_matrix, concept_labels=None, save_path=None):
         '''
@@ -350,14 +354,16 @@ class Evaluator(object):
         # Get Error Indices, Number of Correct Predictions, Number of Error Predictions per Threshold
         if type == 'probability':
             threshold = threshold or np.arange(0, 1.01, 0.01)
-            correct_ind, errors_ind, correct, errors = metrics.get_top1_probability_stats(self.combined_probabilities, labels,
+            correct_ind, errors_ind, correct, errors = metrics.get_top1_probability_stats(self.combined_probabilities,
+                                                                                          labels,
                                                                                           threshold, verbose=0)
             n_total_errors = errors[0]
             n_total_correct = correct[0]
 
         elif type == 'entropy':
             threshold = threshold or np.arange(0, log(probabilities.shape[1], 2) + 0.01, 0.01)
-            correct_ind, errors_ind, correct, errors = metrics.get_top1_entropy_stats(self.combined_probabilities, labels,
+            correct_ind, errors_ind, correct, errors = metrics.get_top1_entropy_stats(self.combined_probabilities,
+                                                                                      labels,
                                                                                       threshold, verbose=0)
             n_total_errors = errors[-1]
             n_total_correct = correct[-1]

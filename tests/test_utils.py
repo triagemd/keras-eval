@@ -115,7 +115,8 @@ def test_compare_concept_dictionaries():
     concept_dict = [{'group': 'dog'}, {'group': 'cat'}, {'group': 'elephant'}]
     with pytest.raises(ValueError) as exception:
         utils.compare_group_test_concepts(concept_lst, concept_dict)
-    expected = 'The concept dictionary groups do not match the class labels'
+    expected = "('The following concepts are not present in either the concept dictionary or among the " \
+               "test classes:', ['cat'])"
     actual = str(exception).split('ValueError: ')[1]
     assert actual == expected
 
