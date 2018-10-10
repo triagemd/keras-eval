@@ -40,11 +40,11 @@ To install project dependencies, inside the root folder run
 `script/up`
 
 To create an IPython kernel do the following in the virtual environment:
-'
+`
 source .venv/bin/activate
 pip install ipython
 ipython kernel install --user --name=keras-eval.venv
-'
+`
 ## Evaluator Class
 
 Easy predictions and evaluations for a single model or an ensemble of many models.
