@@ -13,10 +13,10 @@ setup(
     packages=find_packages(exclude=['tests', '.cache', '.venv', '.git', 'dist']),
     install_requires=[
         'Keras',
+        'numpy==1.14.5',
         'h5py',
         'Pillow',
         'scipy',
-        'numpy',
         'pandas',
         'plotly',
         'matplotlib',
