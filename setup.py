@@ -24,7 +24,6 @@ setup(
         'matplotlib',
         'sklearn',
         'keras-model-specs>=0.0.28',
-        'ipykernel==5.0.0',
         'setuptools<=39.1.0'
     ]
 )
