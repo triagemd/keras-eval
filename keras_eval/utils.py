@@ -164,12 +164,12 @@ def compare_group_test_concepts(test_concepts_list, concept_dict):
     Returns:
         True, if there are no repeat concepts, else raises error
     '''
-    concept_group_lst = get_concept_items(concept_dict, key="group")
+    concept_group_list = get_concept_items(concept_dict, key="group")
 
-    different_concept_set = set(concept_group_lst).symmetric_difference(set(test_concepts_list))
+    different_concept_set = set(concept_group_list).symmetric_difference(set(test_concepts_list))
     if len(different_concept_set):
         raise ValueError(
-            "The following concepts are not present in the either the concept dictionary or among the test classes:",
+            "The following concepts are not present in either the concept dictionary or among the test classes:",
             list(different_concept_set))
 
     else:

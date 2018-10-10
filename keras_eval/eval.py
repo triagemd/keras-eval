@@ -128,6 +128,7 @@ class Evaluator(object):
         if self.data_dir is None:
             raise ValueError('No data directory found, please specify a valid data directory under variable `data_dir`')
         else:
+            # Create dictionary containing class names
             if self.concepts is None:
                 self.concepts = utils.get_default_concepts(self.data_dir)
 
@@ -136,12 +137,12 @@ class Evaluator(object):
             if hasattr(self, 'concept_dictionary'):
                 if utils.compare_group_test_concepts(self.concept_labels,
                                                      self.concept_dictionary) and utils.check_concept_unique(self.concept_dictionary):
-                    # Create Keras image generator and obtain predictions
+                    # Create Keras image generator and obtain probabilities
                     self.probabilities, self.labels = self._compute_probabilities_generator(data_dir=self.data_dir)
                     self.compute_inference_probabilities(self.concept_dictionary, self.probabilities)
 
             else:
-                # Create Keras image generator and obtain predictions
+                # Create Keras image generator and obtain probabilities
                 self.probabilities, self.labels = self._compute_probabilities_generator(data_dir=self.data_dir)
 
             # Compute metrics

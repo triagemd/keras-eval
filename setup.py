@@ -12,8 +12,6 @@ setup(
     url='https://www.triage.com/',
     packages=find_packages(exclude=['tests', '.cache', '.venv', '.git', 'dist']),
     install_requires=[
-        'numpy==1.14.5',
-        'tensorflow==1.10',
         'Keras',
         'h5py',
         'Pillow',
