@@ -43,7 +43,7 @@ To create an IPython kernel do the following in the virtual environment:
 '
 source .venv/bin/activate
 pip install ipython
-ipython kernel install --user --name=keras-eval
+ipython kernel install --user --name=keras-eval.venv
 '
 ## Evaluator Class
 
