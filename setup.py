@@ -13,7 +13,7 @@ setup(
     packages=find_packages(exclude=['tests', '.cache', '.venv', '.git', 'dist']),
     install_requires=[
         'Keras',
-        'numpy==1.14.5',
+	'numpy',
         'h5py',
         'Pillow',
         'scipy',
@@ -22,6 +22,6 @@ setup(
         'matplotlib',
         'sklearn',
         'keras-model-specs>=0.0.28',
-        'setuptools<=39.1.0'
+	'setuptools==39.1.0'
     ]
 )

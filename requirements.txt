@@ -7,7 +7,7 @@ autoflake
 pep8
 autopep8
 
-tensorflow==1.10
+tensorflow
 
 stored
 backports.tempfile
