@@ -41,6 +41,7 @@ To install project dependencies, inside the root folder run
 
 To create an IPython kernal do the following in the virtual environment:
 '
+source .venv/bin/activate
 pip install ipython
 ipython kernel install --user --name=keras-eval
 '
