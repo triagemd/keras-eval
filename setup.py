@@ -12,16 +12,16 @@ setup(
     url='https://www.triage.com/',
     packages=find_packages(exclude=['tests', '.cache', '.venv', '.git', 'dist']),
     install_requires=[
-        'Keras',
+	'Keras',
 	'numpy',
-        'h5py',
-        'Pillow',
-        'scipy',
-        'pandas',
-        'plotly',
-        'matplotlib',
-        'sklearn',
-        'keras-model-specs>=0.0.28',
+	'h5py',
+	'Pillow',
+	'scipy',
+	'pandas',
+	'plotly',
+	'matplotlib',
+	'sklearn',
+	'keras-model-specs>=0.0.28',
 	'setuptools==39.1.0'
     ]
 )
