@@ -23,14 +23,14 @@ def test_read_dictionary(training_dict_file):
     assert actual == expected
 
 
-def test_load_model(test_catdog_mobilenet_model, test_mobilenet_2_model_spec):
+def test_load_model(test_catdog_mobilenet_model, test_mobilenet_1_model_spec):
 
     # Default model_spec
     model = utils.load_model(test_catdog_mobilenet_model)
     assert model
 
     # Custom model_spec
-    model = utils.load_model(test_catdog_mobilenet_model, specs_path=test_mobilenet_2_model_spec)
+    model = utils.load_model(test_catdog_mobilenet_model, specs_path=test_mobilenet_1_model_spec)
     assert model
 
 
