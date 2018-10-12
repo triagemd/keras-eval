@@ -4,20 +4,31 @@ set -e
 mkdir -p tmp/fixtures/models/ensemble/mobilenet_1/ tmp/fixtures/models/ensemble/mobilenet_2/
 
 cd tmp/fixtures/models/ensemble/mobilenet_1/
-  MODEL_URL="https://storage.googleapis.com/triage-lab/models/animals/catdog-mobilenet.hdf5"
+  MODEL_URL="https://storage.googleapis.com/triage-lab/models/animals/catdog-mobilenet/catdog-mobilenet.hdf5"
+  MODEL_SPEC_URL="https://storage.googleapis.com/triage-lab/models/animals/catdog-mobilenet/model_spec.json"
 if [ ! -f catdog-mobilenet.hdf5 ]; then
     wget $MODEL_URL
+fi
+if [ ! -f model_spec.json ]; then
+    wget $MODEL_SPEC_URL
 fi
 cd ../mobilenet_2/
 if [ ! -f catdog-mobilenet.hdf5 ]; then
     wget $MODEL_URL
+fi
+if [ ! -f model_spec.json ]; then
+    wget $MODEL_SPEC_URL
 fi
 )
 
 mkdir -p tmp/fixtures/models/single/
 
 cd tmp/fixtures/models/single/
+    MODEL_URL="https://storage.googleapis.com/triage-lab/models/animals/animals-mobilenet/animals-mobilenet.hdf5"
+    MODEL_SPEC_URL="https://storage.googleapis.com/triage-lab/models/animals/animals-mobilenet/model_spec.json"
 if [ ! -f animals-mobilenet.hdf5 ]; then
-    MODEL_URL="https://storage.googleapis.com/triage-lab/models/animals/animals-mobilenet.hdf5"
     wget $MODEL_URL
+fi
+if [ ! -f model_spec.json ]; then
+    wget $MODEL_SPEC_URL
 fi
