@@ -117,7 +117,7 @@ def plot_images(image_paths, n_imgs, title='', image_res=(20, 20), save_name=Non
     else:
         n_rows_total = int(np.ceil(n_imgs / 5))
 
-        f, axes = plt.subplots(nrows=n_rows_total, ncols=5, figsize=(20, 20))
+        f, axes = plt.subplots(nrows=n_rows_total, ncols=5, figsize=image_res)
         plt.title(title)
         for i, image_path in enumerate(image_paths):
 
