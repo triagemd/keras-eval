@@ -172,6 +172,35 @@ def test_show_results():
     assert individual_df['AUROC'][0] == individual_df['AUROC'][1] == 0.833
 
 
+def test_show_results_differential(evaluator_results):
+    results_1, results2 = evaluator_results()
+
+    concepts = [{'id': 'Cat', 'label': 'cats'}, {'id': 'Dog', 'label': 'dogs'}]
+
+    # Assert error when incorrect mode
+    with pytest.raises(ValueError) as exception:
+        utils.show_results_differential(results_1, results_2, concepts, mode='asdf')
+    expected = 'results mode must be either "average" or "individual"'
+    actual = str(exception).split('ValueError: ')[1]
+    assert actual == expected
+
+    average_df = utils.show_results_differential(results_1, results_2, concepts)
+    import pdb
+    pdb.set_trace()
+    assert average_df['model'][0] == 'default_model'
+    assert average_df['accuracy'][0] == average_df['precision'][0] == average_df['f1_score'][0] == 1.0
+
+    individual_df = utils.show_results_differential(results_1, results_2, concepts, mode='individual')
+    assert individual_df['class'][0] == 'C_0'
+    assert individual_df['class'][1] == 'C_1'
+    assert individual_df['sensitivity'][0] == individual_df['sensitivity'][1] == 1.0
+    assert individual_df['precision'][0] == individual_df['precision'][1] == 1.0
+    assert individual_df['f1_score'][0] == individual_df['f1_score'][1] == 1.0
+    assert individual_df['TP'][0] == individual_df['TP'][1] == 2
+    assert individual_df['FP'][0] == individual_df['FP'][1] == individual_df['FN'][1] == individual_df['FN'][1] == 0
+    assert individual_df['AUROC'][0] == individual_df['AUROC'][1] == 0.833
+
+
 def test_ensemble_models(test_image_path, model_spec_mobilenet, test_ensemble_models_path):
     models, model_specs = utils.load_multi_model(test_ensemble_models_path)
 

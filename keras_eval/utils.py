@@ -363,3 +363,67 @@ def ensemble_models(models, input_shape, combination_mode='average', ensemble_na
         raise ValueError('Incorrect combination mode selected, we only allow for `average` or `maximum`')
 
     return ensemble
+
+
+def show_results_differential(results_1, results_2, concepts, id='default_model', mode='average', csv_path=None,
+                              round_decimals=3):
+
+    if mode not in ['average', 'individual']:
+        raise ValueError('results mode must be either "average" or "individual"')
+
+    if mode is 'average':
+        if len(results_1['average']) != len(results_2['average']):
+            raise ValueError('Results lenght do not match')
+
+        df = pd.DataFrame({'model': id}, index=range(1))
+
+        for metric in results_1['average'].keys():
+            if metric not in ['number_of_samples', 'number_of_classes', 'confusion_matrix']:
+
+                if not isinstance(results_1['average'][metric], list):
+                    df[metric] = round(results_1['average'][metric], round_decimals) - \
+                                 round(results_2['average'][metric], round_decimals)
+                else:
+                    if len(results_1['average'][metric]) == 1:
+                        df[metric] = round(results_1['average'][metric][0], round_decimals) - \
+                                     round(results_2['average'][metric][0], round_decimals)
+                    else:
+                        for k in range(len(results_1['average'][metric])):
+                            df[metric + '_top_' + str(k + 1)] = \
+                                round(results_1['average'][metric][k], round_decimals) - \
+                                round(results_2['average'][metric][k], round_decimals)
+
+    if mode is 'individual':
+        if len(results_1['individual']) != len(results_2['individual']):
+            raise ValueError('Results length do not match')
+        df = pd.DataFrame()
+        metrics = results_1['individual'][0]['metrics'].keys()
+        df['class'] = get_concept_items(concepts, key='id')
+
+        for metric in metrics:
+            if metric not in ['% of samples']:
+                if not isinstance(results_1['individual'][0]['metrics'][metric], list):
+                    concept_list = []
+                    for idx, concept in enumerate(df['class']):
+                        concept_list.append(round(results_1['individual'][idx]['metrics'][metric], round_decimals) -
+                                            round(results_2['individual'][idx]['metrics'][metric], round_decimals))
+                    df[metric] = concept_list
+                elif len(results['individual'][0]['metrics'][metric]) == 1:
+                    concept_list = []
+                    for idx, concept in enumerate(df['class']):
+                        concept_list = round(results_1['individual'][idx]['metrics'][metric][0], round_decimals) - \
+                                       round(results_2['individual'][idx]['metrics'][metric][0], round_decimals)
+                    df[metric] = concept_list
+                else:
+                    for k in range(len(results_1['individual'][0]['metrics'][metric])):
+                        concept_list = []
+                        for idx, concept in enumerate(df['class']):
+                            concept_list.append(
+                                round(results_1['individual'][idx]['metrics'][metric][k], round_decimals) -
+                                round(results_2['individual'][idx]['metrics'][metric][k], round_decimals))
+                        df[metric + '_top_' + str(k + 1)] = concept_list
+
+    if csv_path:
+        df.to_csv(csv_path, index=False)
+
+    return df
