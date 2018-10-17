@@ -5,7 +5,7 @@ from setuptools import setup, find_packages
 
 setup(
     name='keras-eval',
-    version='0.0.39',
+    version='0.0.40',
     description='An evaluation abstraction for Keras models.',
     author='Triage Technologies Inc.',
     author_email='ai@triage.com',
@@ -21,7 +21,7 @@ setup(
         'plotly',
         'matplotlib',
         'sklearn',
-        'keras-model-specs>=0.0.28',
+        'keras-model-specs>=0.0.30',
         'setuptools==39.1.0'
     ]
 )

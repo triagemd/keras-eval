@@ -154,7 +154,7 @@ def test_show_results():
     # Assert error when incorrect mode
     with pytest.raises(ValueError) as exception:
         utils.show_results(results, mode='asdf')
-    expected = 'results mode must be either "average" or "individual"'
+    expected = 'Results mode must be either "average" or "individual"'
     actual = str(exception).split('ValueError: ')[1]
     assert actual == expected
 
@@ -237,6 +237,46 @@ def test_results_differential():
     }
 
     np.testing.assert_equal(actual, expected)
+
+    results_2 = {
+        'average': OrderedDict([
+            ('accuracy', [0.3, 1.0]), ('precision', 0.8),
+            ('f1_score', 0.55), ('number_of_samples', 2000),
+            ('number_of_classes', 2), ('confusion_matrix', np.array([[150, 50], [100, 50]]))]),
+        'individual': [{'concept': 'cats',
+                        'metrics': OrderedDict([
+                            ('sensitivity', 0.50), ('precision', 0.80),
+                            ('f1_score', 0.68), ('specificity', 0.25),
+                            ('FDR', 0.45), ('AUROC', 1.0), ('TP', 4),
+                            ('FP', 1), ('FN', 4), ('% of samples', 50.0)])
+                        },
+                       ]}
+
+    # Assert error when incorrect lengths
+    with pytest.raises(ValueError) as exception:
+        actual = utils.results_differential(results_1, results_2)
+    expected = 'Results length do not match for "individual" values'
+    actual = str(exception).split('ValueError: ')[1]
+    assert actual == expected
+
+    results_2 = {
+        'average': OrderedDict([
+            ('number_of_classes', 2), ('confusion_matrix', np.array([[150, 50], [100, 50]]))]),
+        'individual': [{'concept': 'cats',
+                        'metrics': OrderedDict([
+                            ('sensitivity', 0.50), ('precision', 0.80),
+                            ('f1_score', 0.68), ('specificity', 0.25),
+                            ('FDR', 0.45), ('AUROC', 1.0), ('TP', 4),
+                            ('FP', 1), ('FN', 4), ('% of samples', 50.0)])
+                        },
+                       ]}
+
+    # Assert error when incorrect lengths
+    with pytest.raises(ValueError) as exception:
+        actual = utils.results_differential(results_1, results_2)
+    expected = 'Results length do not match for "average" values'
+    actual = str(exception).split('ValueError: ')[1]
+    assert actual == expected
 
 
 def test_ensemble_models(test_image_path, model_spec_mobilenet, test_ensemble_models_path):

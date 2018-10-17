@@ -320,7 +320,7 @@ def combine_probabilities(probabilities, combination_mode='arithmetic'):
 def show_results(results, id='default_model', mode='average', csv_path=None, round_decimals=3):
 
     if mode not in ['average', 'individual']:
-        raise ValueError('results mode must be either "average" or "individual"')
+        raise ValueError('Results mode must be either "average" or "individual"')
 
     if mode is 'average':
         df = pd.DataFrame({'model': id}, index=range(1))
