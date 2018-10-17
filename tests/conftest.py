@@ -92,37 +92,3 @@ def evaluator_mobilenet_class_combine(test_animals_model_path, test_animals_dict
         model_path=test_animals_model_path,
         concept_dictionary_path=test_animals_dictionary_path
     )
-
-
-@pytest.fixture('function')
-def evaluator_results():
-    results_1 = {'average': OrderedDict([('accuracy', [0.5, 1.0]), ('precision', 0.65), ('f1_score', 0.55),
-                                    ('number_of_samples', 2000), ('number_of_classes', 2), ('confusion_matrix',
-                                                                                            array([[907,  93],
-                                                                                                   [741, 259]]))]),
-            'individual': [{'concept': 'cats', 'metrics': OrderedDict([('sensitivity', 0.90), ('precision', 0.55),
-                                                                       ('f1_score', 0.68), ('specificity', 0.25),
-                                                                       ('FDR', 0.45), ('AUROC', 1.0), ('TP', 907),
-                                                                       ('FP', 741), ('FN', 93), ('% of samples', 50.0)])
-                            },
-                           {'concept': 'dogs',
-                            'metrics': OrderedDict([('sensitivity', 0.25), ('precision', 0.75),
-                                                    ('f1_score', 0.4), ('specificity', 0.90), ('FDR', 0.25),
-                                                    ('AUROC', 1.0), ('TP', 259), ('FP', 93), ('FN', 741),
-                                                    ('% of samples', 50.0)])}]}
-    results_2 = {'average': OrderedDict([('accuracy', [0.3, 1.0]), ('precision', 0.8), ('f1_score', 0.55),
-                                         ('number_of_samples', 2000), ('number_of_classes', 2), ('confusion_matrix',
-                                                                                                 array([[907, 93],
-                                                                                                        [741, 259]]))]),
-                 'individual': [{'concept': 'cats', 'metrics': OrderedDict([('sensitivity', 0.70), ('precision', 0.25),
-                                                                            ('f1_score', 0.68), ('specificity', 0.25),
-                                                                            ('FDR', 0.45), ('AUROC', 1.0), ('TP', 907),
-                                                                            ('FP', 741), ('FN', 93),
-                                                                            ('% of samples', 50.0)])
-                                 },
-                                {'concept': 'dogs',
-                                 'metrics': OrderedDict([('sensitivity', 0.85), ('precision', 0.15),
-                                                         ('f1_score', 0.4), ('specificity', 0.90), ('FDR', 0.25),
-                                                         ('AUROC', 1.0), ('TP', 259), ('FP', 93), ('FN', 741),
-                                                         ('% of samples', 50.0)])}]}
-    return results_1, results_2

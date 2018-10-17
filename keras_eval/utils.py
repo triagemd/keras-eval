@@ -6,6 +6,7 @@ import keras.models
 import tensorflow as tf
 import pandas as pd
 
+from copy import deepcopy
 from keras.layers import average, maximum
 from keras.models import Model, Input
 from keras.preprocessing import image
@@ -84,6 +85,45 @@ def load_model(model_path, specs_path=None, custom_objects=None):
         model_spec_json = json.load(f)
         model_spec = ModelSpec(model_spec_json)
     return model, model_spec
+
+
+def ensemble_models(models, input_shape, combination_mode='average', ensemble_name='ensemble'):
+    '''
+
+    Args:
+        models:  list of keras models
+        input_shape: tuple containing input shape in tf format (H, W, C)
+        combination_mode: the way probabilities will be joined. We support `average` and `maximum`
+        ensemble_name: the name of the model that will be returned
+
+    Returns: a model containing the ensemble of the `models` passed. Same `input_shape` will be used for all of them
+
+    '''
+    if not len(input_shape) == 3:
+        raise ValueError('Incorrect input shape, it should have 3 dimensions (H, W, C)')
+    input_shape = Input(input_shape)
+    combination_mode_options = ['average', 'maximum']
+    # Collect outputs of models in a list
+    count = 0
+    models_output = []
+    for model in models:
+        # Keras needs all the models to be named differently
+        model.name = 'model_' + str(count)
+        models_output.append(model(input_shape))
+        count += 1
+
+    # Computing outputs
+    if combination_mode in combination_mode_options:
+        if combination_mode == 'average':
+            out = average(models_output)
+        elif combination_mode == 'maximum':
+            out = maximum(models_output)
+        # Build model from same input and outputs
+        ensemble = Model(inputs=input_shape, outputs=out, name=ensemble_name)
+    else:
+        raise ValueError('Incorrect combination mode selected, we only allow for `average` or `maximum`')
+
+    return ensemble
 
 
 def get_default_concepts(data_dir):
@@ -277,7 +317,7 @@ def combine_probabilities(probabilities, combination_mode='arithmetic'):
                          '[n_models, n_samples, n_classes]')
 
 
-def show_results(results, concepts, id='default_model', mode='average', csv_path=None, round_decimals=3):
+def show_results(results, id='default_model', mode='average', csv_path=None, round_decimals=3):
 
     if mode not in ['average', 'individual']:
         raise ValueError('results mode must be either "average" or "individual"')
@@ -299,7 +339,7 @@ def show_results(results, concepts, id='default_model', mode='average', csv_path
     if mode is 'individual':
         df = pd.DataFrame()
         metrics = results['individual'][0]['metrics'].keys()
-        df['class'] = get_concept_items(concepts, key='id')
+        df['class'] = [res['concept'] for res in results['individual']]
 
         for metric in metrics:
             if not isinstance(results['individual'][0]['metrics'][metric], list):
@@ -326,104 +366,44 @@ def show_results(results, concepts, id='default_model', mode='average', csv_path
     return df
 
 
-def ensemble_models(models, input_shape, combination_mode='average', ensemble_name='ensemble'):
-    '''
+def results_differential(results_1, results_2):
 
-    Args:
-        models:  list of keras models
-        input_shape: tuple containing input shape in tf format (H, W, C)
-        combination_mode: the way probabilities will be joined. We support `average` and `maximum`
-        ensemble_name: the name of the model that will be returned
+    if len(results_1['average']) != len(results_2['average']):
+        raise ValueError('Results lenght do not match for "average" values')
 
-    Returns: a model containing the ensemble of the `models` passed. Same `input_shape` will be used for all of them
+    if len(results_1['individual']) != len(results_2['individual']):
+        raise ValueError('Results length do not match for "individual" values')
 
-    '''
-    if not len(input_shape) == 3:
-        raise ValueError('Incorrect input shape, it should have 3 dimensions (H, W, C)')
-    input_shape = Input(input_shape)
-    combination_mode_options = ['average', 'maximum']
-    # Collect outputs of models in a list
-    count = 0
-    models_output = []
-    for model in models:
-        # Keras needs all the models to be named differently
-        model.name = 'model_' + str(count)
-        models_output.append(model(input_shape))
-        count += 1
+    # new array to store results
+    results_new = deepcopy(results_1)
 
-    # Computing outputs
-    if combination_mode in combination_mode_options:
-        if combination_mode == 'average':
-            out = average(models_output)
-        elif combination_mode == 'maximum':
-            out = maximum(models_output)
-        # Build model from same input and outputs
-        ensemble = Model(inputs=input_shape, outputs=out, name=ensemble_name)
-    else:
-        raise ValueError('Incorrect combination mode selected, we only allow for `average` or `maximum`')
-
-    return ensemble
-
-
-def show_results_differential(results_1, results_2, concepts, id='default_model', mode='average', csv_path=None,
-                              round_decimals=3):
-
-    if mode not in ['average', 'individual']:
-        raise ValueError('results mode must be either "average" or "individual"')
-
-    if mode is 'average':
-        if len(results_1['average']) != len(results_2['average']):
-            raise ValueError('Results lenght do not match')
-
-        df = pd.DataFrame({'model': id}, index=range(1))
-
-        for metric in results_1['average'].keys():
-            if metric not in ['number_of_samples', 'number_of_classes', 'confusion_matrix']:
-
-                if not isinstance(results_1['average'][metric], list):
-                    df[metric] = round(results_1['average'][metric], round_decimals) - \
-                                 round(results_2['average'][metric], round_decimals)
+    for metric in results_new['average'].keys():
+        if metric not in ['number_of_samples', 'number_of_classes']:
+            if not isinstance(results_1['average'][metric], list):
+                results_new['average'][metric] = results_1['average'][metric] - results_2['average'][metric]
+            else:
+                if len(results_1['average'][metric]) == 1:
+                    results_new['average'][metric] = results_1['average'][metric][0] - results_2['average'][metric][0]
                 else:
-                    if len(results_1['average'][metric]) == 1:
-                        df[metric] = round(results_1['average'][metric][0], round_decimals) - \
-                                     round(results_2['average'][metric][0], round_decimals)
-                    else:
-                        for k in range(len(results_1['average'][metric])):
-                            df[metric + '_top_' + str(k + 1)] = \
-                                round(results_1['average'][metric][k], round_decimals) - \
-                                round(results_2['average'][metric][k], round_decimals)
+                    for k in range(len(results_1['average'][metric])):
+                        results_new['average'][metric][k] = \
+                            results_1['average'][metric][k] - results_2['average'][metric][k]
 
-    if mode is 'individual':
-        if len(results_1['individual']) != len(results_2['individual']):
-            raise ValueError('Results length do not match')
-        df = pd.DataFrame()
-        metrics = results_1['individual'][0]['metrics'].keys()
-        df['class'] = get_concept_items(concepts, key='id')
-
-        for metric in metrics:
-            if metric not in ['% of samples']:
-                if not isinstance(results_1['individual'][0]['metrics'][metric], list):
-                    concept_list = []
-                    for idx, concept in enumerate(df['class']):
-                        concept_list.append(round(results_1['individual'][idx]['metrics'][metric], round_decimals) -
-                                            round(results_2['individual'][idx]['metrics'][metric], round_decimals))
-                    df[metric] = concept_list
-                elif len(results['individual'][0]['metrics'][metric]) == 1:
-                    concept_list = []
-                    for idx, concept in enumerate(df['class']):
-                        concept_list = round(results_1['individual'][idx]['metrics'][metric][0], round_decimals) - \
-                                       round(results_2['individual'][idx]['metrics'][metric][0], round_decimals)
-                    df[metric] = concept_list
+    for index, category in enumerate(results_new['individual']):
+        for metric in category['metrics'].keys():
+            if not isinstance(category['metrics'][metric], list):
+                results_new['individual'][index]['metrics'][metric] = \
+                    results_1['individual'][index]['metrics'][metric] - \
+                    results_2['individual'][index]['metrics'][metric]
+            else:
+                if len(results_1['individual'][metric]) == 1:
+                    results_new['individual'][index]['metrics'][metric] = \
+                        results_1['individual'][index]['metrics'][metric][0] - \
+                        results_2['individual'][index]['metrics'][metric][0]
                 else:
-                    for k in range(len(results_1['individual'][0]['metrics'][metric])):
-                        concept_list = []
-                        for idx, concept in enumerate(df['class']):
-                            concept_list.append(
-                                round(results_1['individual'][idx]['metrics'][metric][k], round_decimals) -
-                                round(results_2['individual'][idx]['metrics'][metric][k], round_decimals))
-                        df[metric + '_top_' + str(k + 1)] = concept_list
+                    for k in range(len(results_1['individual'][metric])):
+                        results_new['individual'][index]['metrics'][metric][k] = \
+                            results_1['individual'][index]['metrics'][metric][k] - \
+                            results_2['individual'][index]['metrics'][metric][k]
 
-    if csv_path:
-        df.to_csv(csv_path, index=False)
-
-    return df
+    return results_new
