@@ -369,7 +369,7 @@ def show_results(results, id='default_model', mode='average', csv_path=None, rou
 def results_differential(results_1, results_2):
 
     if len(results_1['average']) != len(results_2['average']):
-        raise ValueError('Results lenght do not match for "average" values')
+        raise ValueError('Results length do not match for "average" values')
 
     if len(results_1['individual']) != len(results_2['individual']):
         raise ValueError('Results length do not match for "individual" values')
