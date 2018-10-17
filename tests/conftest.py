@@ -3,7 +3,6 @@ import pytest
 
 from keras_eval.eval import Evaluator
 from keras_model_specs import ModelSpec
-from collections import OrderedDict
 
 
 @pytest.fixture('session')
