@@ -98,7 +98,9 @@ def metrics_top_k(y_probs, y_true, concepts, top_k, round_decimals=7):
 
         metrics['individual'].append({'concept': concept, 'metrics': metrics_dict})
 
-    metrics['average'] = OrderedDict([('accuracy', utils.round_list(average_accuracy_k, round_decimals)),
+    accuracy = utils.round_list(average_accuracy_k, round_decimals)
+
+    metrics['average'] = OrderedDict([('accuracy', accuracy if len(accuracy) > 1 else accuracy[0]),
                                       ('precision', round(utils.safe_divide(sum(average_precision), total_samples),
                                                           round_decimals)),
                                       ('f1_score', round(utils.safe_divide(sum(average_f1_score), total_samples),
