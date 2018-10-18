@@ -173,7 +173,7 @@ def test_show_results():
     assert individual_df['AUROC'][0] == individual_df['AUROC'][1] == 0.833
 
 
-def test_results_differential():
+def test_compute_differential_results():
     results_1 = {
         'average': OrderedDict([
             ('accuracy', [0.5, 1.0]), ('precision', 0.65),
@@ -212,7 +212,7 @@ def test_results_differential():
                             ('AUROC', 1.0), ('TP', 4), ('FP', 4), ('FN', 1),
                             ('% of samples', 50.0)])}]}
 
-    actual = utils.results_differential(results_1, results_2)
+    actual = utils.compute_differential_results(results_1, results_2)
 
     expected = {
         'individual': [
@@ -254,7 +254,7 @@ def test_results_differential():
 
     # Assert error when incorrect lengths
     with pytest.raises(ValueError) as exception:
-        actual = utils.results_differential(results_1, results_2)
+        actual = utils.compute_differential_results(results_1, results_2)
     expected = 'Results length do not match for "individual" values'
     actual = str(exception).split('ValueError: ')[1]
     assert actual == expected
@@ -273,7 +273,7 @@ def test_results_differential():
 
     # Assert error when incorrect lengths
     with pytest.raises(ValueError) as exception:
-        actual = utils.results_differential(results_1, results_2)
+        actual = utils.compute_differential_results(results_1, results_2)
     expected = 'Results length do not match for "average" values'
     actual = str(exception).split('ValueError: ')[1]
     assert actual == expected
