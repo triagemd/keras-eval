@@ -339,7 +339,7 @@ def show_results(results, id='default_model', mode='average', csv_path=None, rou
     if mode is 'individual':
         df = pd.DataFrame()
         metrics = results['individual'][0]['metrics'].keys()
-        df['class'] = [res['concept'] for res in results['individual']]
+        df['class'] = [result['concept'] for result in results['individual']]
 
         for metric in metrics:
             if not isinstance(results['individual'][0]['metrics'][metric], list):
