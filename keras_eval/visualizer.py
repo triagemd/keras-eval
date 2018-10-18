@@ -17,7 +17,7 @@ def plot_confusion_matrix(cm, concepts, normalize=False, fontsize=18, figsize=(1
         cmap: Colormap of your choice
         save_path: If `save_path` specified save confusion matrix in that location
 
-    Returns:
+    Returns: Nothing. Plots confusion matrix
 
     '''
 
