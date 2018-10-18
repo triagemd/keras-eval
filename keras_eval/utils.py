@@ -39,8 +39,8 @@ def load_multi_model(models_dir, custom_objects=None):
     Loads multiple models stored in `models_path`.
 
     Args:
-       models_path: a string indicating the directory were models are stored.
-       custom_objects: dict mapping class names (or function names) of custom (non-Keras) objects to class/functions.
+       models_path: A string indicating the directory were models are stored.
+       custom_objects: Dict mapping class names (or function names) of custom (non-Keras) objects to class/functions.
 
     Returns: List of models, list of model_specs
 
@@ -72,7 +72,7 @@ def load_model(model_path, specs_path=None, custom_objects=None):
     Args:
         model_dir: Folder containing the model
         specs_path: If specified custom model_specs name, default `model_spec.json`
-        custom_objects: dict mapping class names (or function names) of custom (non-Keras) objects to class/functions.
+        custom_objects: Dict mapping class names (or function names) of custom (non-Keras) objects to class/functions.
 
     Returns: keras model, model_spec object for that model
 
@@ -91,12 +91,12 @@ def ensemble_models(models, input_shape, combination_mode='average', ensemble_na
     '''
 
     Args:
-        models:  list of keras models
-        input_shape: tuple containing input shape in tf format (H, W, C)
-        combination_mode: the way probabilities will be joined. We support `average` and `maximum`
-        ensemble_name: the name of the model that will be returned
+        models: List of keras models
+        input_shape: Tuple containing input shape in tf format (H, W, C)
+        combination_mode: The way probabilities will be joined. We support `average` and `maximum`
+        ensemble_name: The name of the model that will be returned
 
-    Returns: a model containing the ensemble of the `models` passed. Same `input_shape` will be used for all of them
+    Returns: A model containing the ensemble of the `models` passed. Same `input_shape` will be used for all of them
 
     '''
     if not len(input_shape) == 3:
@@ -129,10 +129,10 @@ def get_default_concepts(data_dir):
     '''
     Creates default concepts dictionary from data_dir folder names
     Args:
-        data_dir: string indicating the path where the concept folders are
+        data_dir: String indicating the path where the concept folders are
 
     Returns:
-        concepts: dictionary with 'label' and 'id' equal to each folder name
+        concepts: Dictionary with 'label' and 'id' equal to each folder name
     '''
 
     if not os.path.exists(data_dir):
@@ -241,11 +241,11 @@ def load_preprocess_image(img_path, model_spec):
     Return a preprocessed image (probably to use within a deep neural net).
 
     Args:
-        img_name: a string indicating the name and path of the image.
-        preprocess_func: a preprocessing function to apply to the image.
-        target_size: size to resize the image to.
+        img_name: A string indicating the name and path of the image.
+        preprocess_func: A preprocessing function to apply to the image.
+        target_size: Size to resize the image to.
 
-    Returns: the preprocessed image.
+    Returns: The preprocessed image.
 
     """
     return model_spec.load_image(img_path)
@@ -256,12 +256,12 @@ def load_preprocess_images(folder_path, model_spec):
     Return an array of preprocessed images.
 
     Args:
-        img_paths: a list of paths to images.
-        preprocess_func: a preprocessing function to apply to each image.
-        target_size: size the image should be resized to.
+        img_paths: A list of paths to images.
+        preprocess_func: A preprocessing function to apply to each image.
+        target_size: Size the image should be resized to.
 
     Returns:
-        pre_imgs: an array of preprocessed images.
+        pre_imgs: An array of preprocessed images.
 
     """
     images = []
@@ -280,7 +280,7 @@ def combine_probabilities(probabilities, combination_mode='arithmetic'):
     '''
     Args:
         probabilities: Probabilities given by the ensemble of models
-        combination_mode: combination_mode: 'arithmetic' / 'geometric' / 'harmonic' mean of the predictions or 'maximum'
+        combination_mode: Combination_mode: 'arithmetic' / 'geometric' / 'harmonic' mean of the predictions or 'maximum'
            probability value
 
     Returns: Probabilities combined
@@ -317,6 +317,20 @@ def combine_probabilities(probabilities, combination_mode='arithmetic'):
 
 
 def show_results(results, id='default_model', mode='average', csv_path=None, round_decimals=3):
+    '''
+
+    Converts results to pandas to show a nice visualization of the results. Allow saving them to a csv file.
+
+    Args:
+        results: Results dictionary provided by the evaluation (evaluator.results)
+        id: Name of the results evaluation
+        mode: Mode of results. "average" will show the average metrics while "individual" will show metrics by class
+        csv_path: If specified, results will be saved on that location
+        round_decimals: Position to round the numbers.
+
+    Returns: A pandas dataframe with the results and prints a nice visualization
+
+    '''
 
     if mode not in ['average', 'individual']:
         raise ValueError('Results mode must be either "average" or "individual"')
@@ -366,6 +380,17 @@ def show_results(results, id='default_model', mode='average', csv_path=None, rou
 
 
 def compute_differential_results(results_1, results_2):
+    '''
+
+    Given two results dictionaries this function will compute the difference between both
+
+    Args:
+        results_1: Array of results (1)
+        results_2: Array of results (2)
+
+    Returns: The resulting differential results dictionary
+
+    '''
 
     if len(results_1['average']) != len(results_2['average']):
         raise ValueError('Results length do not match for "average" values')
@@ -376,7 +401,7 @@ def compute_differential_results(results_1, results_2):
     # new array to store results
     differential_results = deepcopy(results_1)
 
-    for metric in results_new['average'].keys():
+    for metric in differential_results['average'].keys():
         if metric not in ['number_of_samples', 'number_of_classes']:
             if not isinstance(results_1['average'][metric], list):
                 differential_results['average'][metric] = results_1['average'][metric] - \
@@ -390,7 +415,7 @@ def compute_differential_results(results_1, results_2):
                         differential_results['average'][metric][k] = \
                             results_1['average'][metric][k] - results_2['average'][metric][k]
 
-    for index, category in enumerate(results_new['individual']):
+    for index, category in enumerate(differential_results['individual']):
         for metric in category['metrics'].keys():
             if not isinstance(category['metrics'][metric], list):
                 differential_results['individual'][index]['metrics'][metric] = \
