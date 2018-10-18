@@ -5,14 +5,14 @@ from setuptools import setup, find_packages
 
 setup(
     name='keras-eval',
-    version='0.0.40',
+    version='0.0.41',
     description='An evaluation abstraction for Keras models.',
     author='Triage Technologies Inc.',
     author_email='ai@triage.com',
     url='https://www.triage.com/',
     packages=find_packages(exclude=['tests', '.cache', '.venv', '.git', 'dist']),
     install_requires=[
-        'Keras>=2.2.4',
+        'Keras',
         'numpy',
         'h5py',
         'Pillow',
@@ -21,7 +21,6 @@ setup(
         'plotly',
         'matplotlib',
         'sklearn',
-        'keras-model-specs>=0.0.30',
-        'setuptools==39.1.0'
-    ]
+        'keras-model-specs>=0.0.30'
+        ]
 )
