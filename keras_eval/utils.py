@@ -104,13 +104,12 @@ def ensemble_models(models, input_shape, combination_mode='average', ensemble_na
     input_shape = Input(input_shape)
     combination_mode_options = ['average', 'maximum']
     # Collect outputs of models in a list
-    count = 0
+
     models_output = []
-    for model in models:
+    for i, model in enumerate(models):
         # Keras needs all the models to be named differently
-        model.name = 'model_' + str(count)
+        model.name = 'model_' + str(i)
         models_output.append(model(input_shape))
-        count += 1
 
     # Computing outputs
     if combination_mode in combination_mode_options:
@@ -366,7 +365,7 @@ def show_results(results, id='default_model', mode='average', csv_path=None, rou
     return df
 
 
-def results_differential(results_1, results_2):
+def compute_differential_results(results_1, results_2):
 
     if len(results_1['average']) != len(results_2['average']):
         raise ValueError('Results length do not match for "average" values')
@@ -375,24 +374,26 @@ def results_differential(results_1, results_2):
         raise ValueError('Results length do not match for "individual" values')
 
     # new array to store results
-    results_new = deepcopy(results_1)
+    differential_results = deepcopy(results_1)
 
     for metric in results_new['average'].keys():
         if metric not in ['number_of_samples', 'number_of_classes']:
             if not isinstance(results_1['average'][metric], list):
-                results_new['average'][metric] = results_1['average'][metric] - results_2['average'][metric]
+                differential_results['average'][metric] = results_1['average'][metric] - \
+                                                          results_2['average'][metric]
             else:
                 if len(results_1['average'][metric]) == 1:
-                    results_new['average'][metric] = results_1['average'][metric][0] - results_2['average'][metric][0]
+                    differential_results['average'][metric] = results_1['average'][metric][0] - \
+                                                              results_2['average'][metric][0]
                 else:
                     for k in range(len(results_1['average'][metric])):
-                        results_new['average'][metric][k] = \
+                        differential_results['average'][metric][k] = \
                             results_1['average'][metric][k] - results_2['average'][metric][k]
 
     for index, category in enumerate(results_new['individual']):
         for metric in category['metrics'].keys():
             if not isinstance(category['metrics'][metric], list):
-                results_new['individual'][index]['metrics'][metric] = \
+                differential_results['individual'][index]['metrics'][metric] = \
                     results_1['individual'][index]['metrics'][metric] - \
                     results_2['individual'][index]['metrics'][metric]
             else:
