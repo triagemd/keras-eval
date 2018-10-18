@@ -406,4 +406,4 @@ def results_differential(results_1, results_2):
                             results_1['individual'][index]['metrics'][metric][k] - \
                             results_2['individual'][index]['metrics'][metric][k]
 
-    return results_new
+    return differential_results
