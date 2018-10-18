@@ -402,7 +402,7 @@ def results_differential(results_1, results_2):
                         results_2['individual'][index]['metrics'][metric][0]
                 else:
                     for k in range(len(results_1['individual'][metric])):
-                        results_new['individual'][index]['metrics'][metric][k] = \
+                        differential_results['individual'][index]['metrics'][metric][k] = \
                             results_1['individual'][index]['metrics'][metric][k] - \
                             results_2['individual'][index]['metrics'][metric][k]
 
