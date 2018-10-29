@@ -123,11 +123,10 @@ def test_compare_concept_dictionaries():
 
 def test_check_input_samples(metrics_top_k_multi_class):
     _, y_true, y_probs = metrics_top_k_multi_class
-
     assert utils.check_input_samples(y_probs, y_true)
 
     y_true = np.asarray([0, 1, 2, 2, 1])  # 5 samples, 3 classes.
-    y_probs = np.asarray([[1, 0, 0], [0.2, 0.2, 0.6], [0.8, 0.2, 0], [0.35, 0.25, 0.4]])  # 4 samples, 3 classes.
+    y_probs = np.asarray([[1, 0, 0], [0.2, 0.2, 0.6], [0.8, 0.2, 0], [0.35, 0.25, 0.4]]) # 4 samples, 3 classes.
     with pytest.raises(ValueError) as exception:
         utils.check_input_samples(y_probs, y_true)
     expected = 'The number predicted samples (4) is different from the ground truth samples (5)'
