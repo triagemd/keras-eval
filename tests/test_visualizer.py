@@ -25,8 +25,8 @@ def test_plot_confusion_matrix():
 
 
 def test_plot_ROC_curve(metrics_top_k_binary_class, metrics_top_k_multi_class):
-    _, y_true_binary, y_probs_binary = metrics_top_k_binary_class
-    plot_ROC_curve(y_probs_binary[:, 1], y_true_binary)
+    #_, y_true_binary, y_probs_binary = metrics_top_k_binary_class
+    #plot_ROC_curve(y_probs_binary[:, 1], y_true_binary)
 
     _, y_true_multi, y_probs_multi = metrics_top_k_multi_class
     with pytest.raises(ValueError) as exception:
@@ -35,14 +35,14 @@ def test_plot_ROC_curve(metrics_top_k_binary_class, metrics_top_k_multi_class):
     actual = str(exception).split('ValueError: ')[1]
     assert actual == expected
 
-    y_true_multi_one_hot = to_categorical(y_true_multi)
-    y_true_multi_positive_class = y_true_multi_one_hot[:, 1]
-    plot_ROC_curve(y_probs_multi[:, 1], y_true_multi_positive_class)
+    #y_true_multi_one_hot = to_categorical(y_true_multi)
+    #y_true_multi_positive_class = y_true_multi_one_hot[:, 1]
+    #plot_ROC_curve(y_probs_multi[:, 1], y_true_multi_positive_class)
 
 
 def test_plot_precision_recall_curve(metrics_top_k_binary_class, metrics_top_k_multi_class):
-    _, y_true_binary, y_probs_binary = metrics_top_k_binary_class
-    plot_precision_recall_curve(y_probs_binary[:, 1], y_true_binary)
+    #_, y_true_binary, y_probs_binary = metrics_top_k_binary_class
+    #plot_precision_recall_curve(y_probs_binary[:, 1], y_true_binary)
 
     _, y_true_multi, y_probs_multi = metrics_top_k_multi_class
     with pytest.raises(ValueError) as exception:
@@ -51,9 +51,9 @@ def test_plot_precision_recall_curve(metrics_top_k_binary_class, metrics_top_k_m
     actual = str(exception).split('ValueError: ')[1]
     assert actual == expected
 
-    y_true_multi_one_hot = to_categorical(y_true_multi)
-    y_true_multi_positive_class = y_true_multi_one_hot[:, 1]
-    plot_precision_recall_curve(y_probs_multi[:, 1], y_true_multi_positive_class)
+    #y_true_multi_one_hot = to_categorical(y_true_multi)
+    #y_true_multi_positive_class = y_true_multi_one_hot[:, 1]
+    #plot_precision_recall_curve(y_probs_multi[:, 1], y_true_multi_positive_class)
 
 
 def test_plot_concept_metrics():
