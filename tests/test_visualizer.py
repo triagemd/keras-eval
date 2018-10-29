@@ -1,7 +1,9 @@
 import pytest
 import numpy as np
 
-from keras_eval.visualizer import plot_confusion_matrix, plot_concept_metrics, plot_threshold
+from keras.utils.np_utils import to_categorical
+from keras_eval.visualizer import plot_confusion_matrix, plot_ROC_curve, plot_precision_recall_curve,\
+    plot_concept_metrics, plot_threshold
 
 
 def test_plot_confusion_matrix():
@@ -20,6 +22,38 @@ def test_plot_confusion_matrix():
     expected = 'Number of concepts (6) and dimensions of confusion matrix do not coincide (5, 5)'
     actual = str(exception).split('ValueError: ')[1]
     assert actual == expected
+
+
+def test_plot_ROC_curve(metrics_top_k_binary_class, metrics_top_k_multi_class):
+    _, y_true_binary, y_probs_binary = metrics_top_k_binary_class
+    plot_ROC_curve(y_probs_binary[:, 1], y_true_binary)
+
+    _, y_true_multi, y_probs_multi = metrics_top_k_multi_class
+    with pytest.raises(ValueError) as exception:
+        plot_ROC_curve(y_probs_multi[:, 1], y_true_multi)
+    expected = 'y_true must contain the true binary labels.'
+    actual = str(exception).split('ValueError: ')[1]
+    assert actual == expected
+
+    y_true_multi_one_hot = to_categorical(y_true_multi)
+    y_true_multi_positive_class = y_true_multi_one_hot[:, 1]
+    plot_ROC_curve(y_probs_multi[:, 1], y_true_multi_positive_class)
+
+
+def test_plot_precision_recall_curve(metrics_top_k_binary_class, metrics_top_k_multi_class):
+    _, y_true_binary, y_probs_binary = metrics_top_k_binary_class
+    plot_precision_recall_curve(y_probs_binary[:, 1], y_true_binary)
+
+    _, y_true_multi, y_probs_multi = metrics_top_k_multi_class
+    with pytest.raises(ValueError) as exception:
+        plot_precision_recall_curve(y_probs_multi[:, 1], y_true_multi)
+    expected = 'y_true must contain the true binary labels.'
+    actual = str(exception).split('ValueError: ')[1]
+    assert actual == expected
+
+    y_true_multi_one_hot = to_categorical(y_true_multi)
+    y_true_multi_positive_class = y_true_multi_one_hot[:, 1]
+    plot_precision_recall_curve(y_probs_multi[:, 1], y_true_multi_positive_class)
 
 
 def test_plot_concept_metrics():
