@@ -22,9 +22,10 @@ def plot_confusion_matrix(cm, concepts, normalize=False, show_text=True, fontsiz
         cmap: Color choice
         save_path: If `save_path` specified, save confusion matrix in that location
 
-    Returns: Nothing, shows confusion matrix
+    Returns: Nothing. Plots confusion matrix
 
     '''
+
     if cm.ndim != 2 or cm.shape[0] != cm.shape[1]:
         raise ValueError('Invalid confusion matrix shape, it should be square and ndim=2')
 
@@ -41,7 +42,7 @@ def plot_confusion_matrix(cm, concepts, normalize=False, show_text=True, fontsiz
 
     fig = plt.figure(figsize=figsize)
     ax = fig.add_subplot(111)
-    cax = ax.matshow(cm_normalized, vmin=0, vmax=1, alpha=0.8, cmap=cmap)
+    cax = ax.matshow(cm, vmin=np.min(cm), vmax=np.max(cm), alpha=0.8, cmap=cmap)
 
     fig.colorbar(cax)
     ax.xaxis.tick_bottom()
