@@ -1,5 +1,6 @@
 import os
 import pytest
+import numpy as np
 
 from keras_eval.eval import Evaluator
 from keras_model_specs import ModelSpec
@@ -91,3 +92,19 @@ def evaluator_mobilenet_class_combine(test_animals_model_path, test_animals_dict
         model_path=test_animals_model_path,
         concept_dictionary_path=test_animals_dictionary_path
     )
+
+
+@pytest.fixture('session')
+def metrics_top_k_binary_class():
+    concepts = ['class0', 'class1']
+    y_true = np.asarray([0, 1, 0, 1])  # 4 samples, 2 classes.
+    y_probs = np.asarray([[1, 0], [0.2, 0.8], [0.8, 0.2], [0.35, 0.65]])
+    return concepts, y_true, y_probs
+
+
+@pytest.fixture('session')
+def metrics_top_k_multi_class():
+    concepts = ['class0', 'class1', 'class3']
+    y_true = np.asarray([0, 1, 2, 2])  # 4 samples, 3 classes.
+    y_probs = np.asarray([[1, 0, 0], [0.2, 0.2, 0.6], [0.8, 0.2, 0], [0.35, 0.25, 0.4]])
+    return concepts, y_true, y_probs
