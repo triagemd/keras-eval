@@ -6,11 +6,10 @@ from math import log
 from collections import OrderedDict
 
 
-def test_metrics_top_k_multi_class():
-    concepts = ['class0', 'class1', 'class3']
-    y_true = np.asarray([0, 1, 2, 2])  # 4 samples, 3 classes.
-    y_probs = np.asarray([[1, 0, 0], [0.2, 0.2, 0.6], [0.8, 0.2, 0], [0.35, 0.25, 0.4]])
-    # 2 Correct, 2 Mistakes
+def test_metrics_top_k_multi_class(metrics_top_k_multi_class):
+    concepts, y_true, y_probs = metrics_top_k_multi_class
+
+    # 2 Correct, 2 Mistakes for top_k=1
     actual = metrics.metrics_top_k(y_probs, y_true, concepts, top_k=1)
     expected = {
         'individual': [{
@@ -49,6 +48,42 @@ def test_metrics_top_k_multi_class():
         )}
 
     np.testing.assert_equal(actual, expected)
+
+    # 2 Correct, 2 Mistakes for top_k=2
+    actual_accuracy = metrics.metrics_top_k(y_probs, y_true, concepts, top_k=2)['average']['accuracy']
+    expected_accuracy = [0.5, 0.75]
+    np.testing.assert_equal(actual_accuracy, expected_accuracy)
+
+    actual_sensitivity = metrics.metrics_top_k(y_probs, y_true, concepts, top_k=2)
+    actual_sensitivity_class_0 = actual_sensitivity['individual'][0]['metrics']['sensitivity']
+    expected_sensitivity_class_0 = [1.0, 1.0]
+    np.testing.assert_equal(actual_sensitivity_class_0, expected_sensitivity_class_0)
+
+    actual_sensitivity_class_1 = actual_sensitivity['individual'][1]['metrics']['sensitivity']
+    expected_sensitivity_class_1 = [0.0, 1.0]
+    np.testing.assert_equal(actual_sensitivity_class_1, expected_sensitivity_class_1)
+
+    actual_sensitivity_class_2 = actual_sensitivity['individual'][2]['metrics']['sensitivity']
+    expected_sensitivity_class_2 = [0.5, 0.5]
+    np.testing.assert_equal(actual_sensitivity_class_2, expected_sensitivity_class_2)
+
+    # 2 Correct, 2 Mistakes for top_k=3
+    actual = metrics.metrics_top_k(y_probs, y_true, concepts, top_k=3)['average']['accuracy']
+    expected = [0.5, 0.75, 1.0]
+    np.testing.assert_equal(actual, expected)
+
+    actual_sensitivity = metrics.metrics_top_k(y_probs, y_true, concepts, top_k=3)
+    actual_sensitivity_class_0 = actual_sensitivity['individual'][0]['metrics']['sensitivity']
+    expected_sensitivity_class_0 = [1.0, 1.0, 1.0]
+    np.testing.assert_equal(actual_sensitivity_class_0, expected_sensitivity_class_0)
+
+    actual_sensitivity_class_1 = actual_sensitivity['individual'][1]['metrics']['sensitivity']
+    expected_sensitivity_class_1 = [0.0, 1.0, 1.0]
+    np.testing.assert_equal(actual_sensitivity_class_1, expected_sensitivity_class_1)
+
+    actual_sensitivity_class_2 = actual_sensitivity['individual'][2]['metrics']['sensitivity']
+    expected_sensitivity_class_2 = [0.5, 0.5, 1.0]
+    np.testing.assert_equal(actual_sensitivity_class_2, expected_sensitivity_class_2)
 
     # Assert error when top_k <= 0 or > len(concepts)
     with pytest.raises(ValueError) as exception:
@@ -223,3 +258,19 @@ def test_metrics_top_k_binary():
 
     np.testing.assert_equal(actual, expected)
 '''
+
+
+def test_get_top_k_sensitivity(metrics_top_k_multi_class):
+    concepts, y_true, y_probs = metrics_top_k_multi_class
+
+    actual = metrics.get_top_k_sensitivity(concepts, y_true, y_probs, top_k=1, round_decimals=2)
+    expected = [[1.0], [0.0], [0.5]]
+    assert expected == actual
+
+    actual = metrics.get_top_k_sensitivity(concepts, y_true, y_probs, top_k=2, round_decimals=2)
+    expected = [[1.0, 1.0], [0.0, 1.0], [0.5, 0.5]]
+    assert expected == actual
+
+    actual = metrics.get_top_k_sensitivity(concepts, y_true, y_probs, top_k=3, round_decimals=2)
+    expected = [[1.0, 1.0, 1.0], [0.0, 1.0, 1.0], [0.5, 0.5, 1.0]]
+    assert expected == actual
