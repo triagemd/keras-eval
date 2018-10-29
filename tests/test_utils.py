@@ -3,6 +3,8 @@ import pytest
 import numpy as np
 import keras_eval.utils as utils
 
+from collections import OrderedDict
+
 
 def test_safe_divide():
     assert np.isnan(utils.safe_divide(10.0, 0.0))
@@ -162,27 +164,132 @@ def test_show_results():
                            'auroc': [0.8333333], 'f1_score': [1.0], 'accuracy': [1.0],
                            'specificity': [1.0], 'fdr': [0.0]}}
 
-    concepts = [{'id': 'C_0', 'label': 'Class_0'}, {'id': 'C_1', 'label': 'Class_1'}]
     # Assert error when incorrect mode
     with pytest.raises(ValueError) as exception:
-        utils.show_results(results, concepts, mode='asdf')
-    expected = 'results mode must be either "average" or "individual"'
+        utils.show_results(results, mode='asdf')
+    expected = 'Results mode must be either "average" or "individual"'
     actual = str(exception).split('ValueError: ')[1]
     assert actual == expected
 
-    average_df = utils.show_results(results, concepts)
+    average_df = utils.show_results(results)
     assert average_df['model'][0] == 'default_model'
     assert average_df['accuracy'][0] == average_df['precision'][0] == average_df['f1_score'][0] == 1.0
 
-    individual_df = utils.show_results(results, concepts, mode='individual')
-    assert individual_df['class'][0] == 'C_0'
-    assert individual_df['class'][1] == 'C_1'
+    individual_df = utils.show_results(results, mode='individual')
+    assert individual_df['class'][0] == 'Class_0'
+    assert individual_df['class'][1] == 'Class_1'
     assert individual_df['sensitivity'][0] == individual_df['sensitivity'][1] == 1.0
     assert individual_df['precision'][0] == individual_df['precision'][1] == 1.0
     assert individual_df['f1_score'][0] == individual_df['f1_score'][1] == 1.0
     assert individual_df['TP'][0] == individual_df['TP'][1] == 2
     assert individual_df['FP'][0] == individual_df['FP'][1] == individual_df['FN'][1] == individual_df['FN'][1] == 0
     assert individual_df['AUROC'][0] == individual_df['AUROC'][1] == 0.833
+
+
+def test_compute_differential_results():
+    results_1 = {
+        'average': OrderedDict([
+            ('accuracy', [0.5, 1.0]), ('precision', 0.65),
+            ('f1_score', 0.55), ('number_of_samples', 2000),
+            ('number_of_classes', 2), ('confusion_matrix', np.array([[100, 0], [200, 50]]))]),
+        'individual': [{'concept': 'cats',
+                        'metrics': OrderedDict([
+                            ('sensitivity', 0.90), ('precision', 0.55),
+                            ('f1_score', 0.68), ('specificity', 0.25),
+                            ('FDR', 0.45), ('AUROC', 1.0), ('TP', 10),
+                            ('FP', 10), ('FN', 5), ('% of samples', 50.0)])
+                        },
+                       {'concept': 'dogs',
+                        'metrics': OrderedDict([
+                            ('sensitivity', 0.25), ('precision', 0.75),
+                            ('f1_score', 0.4), ('specificity', 0.90), ('FDR', 0.25),
+                            ('AUROC', 1.0), ('TP', 10), ('FP', 0), ('FN', 15),
+                            ('% of samples', 50.0)])}]}
+
+    results_2 = {
+        'average': OrderedDict([
+            ('accuracy', [0.3, 1.0]), ('precision', 0.8),
+            ('f1_score', 0.55), ('number_of_samples', 2000),
+            ('number_of_classes', 2), ('confusion_matrix', np.array([[150, 50], [100, 50]]))]),
+        'individual': [{'concept': 'cats',
+                        'metrics': OrderedDict([
+                            ('sensitivity', 0.50), ('precision', 0.80),
+                            ('f1_score', 0.68), ('specificity', 0.25),
+                            ('FDR', 0.45), ('AUROC', 1.0), ('TP', 4),
+                            ('FP', 1), ('FN', 4), ('% of samples', 50.0)])
+                        },
+                       {'concept': 'dogs',
+                        'metrics': OrderedDict([
+                            ('sensitivity', 0.80), ('precision', 0.50),
+                            ('f1_score', 0.4), ('specificity', 0.90), ('FDR', 0.25),
+                            ('AUROC', 1.0), ('TP', 4), ('FP', 4), ('FN', 1),
+                            ('% of samples', 50.0)])}]}
+
+    actual = utils.compute_differential_results(results_1, results_2)
+
+    expected = {
+        'individual': [
+            {'concept': 'cats',
+             'metrics': OrderedDict([
+                 ('sensitivity', 0.4), ('precision', -0.25),
+                 ('f1_score', 0.0), ('specificity', 0.0),
+                 ('FDR', 0.0), ('AUROC', 0.0), ('TP', 6), ('FP', 9), ('FN', 1),
+                 ('% of samples', 0.0)])
+             },
+            {'concept': 'dogs',
+             'metrics': OrderedDict([('sensitivity', -0.55), ('precision', 0.25),
+                                     ('f1_score', 0.0), ('specificity', 0.0),
+                                     ('FDR', 0.0), ('AUROC', 0.0), ('TP', 6), ('FP', -4), ('FN', 14),
+                                     ('% of samples', 0.0)])
+             }],
+        'average': OrderedDict([
+            ('accuracy', [0.2, 0.0]), ('precision', -0.15000000000000002),
+            ('f1_score', 0.0), ('number_of_samples', 2000),
+            ('number_of_classes', 2), ('confusion_matrix', np.array([[-50, -50], [100, 0]]))
+        ])
+    }
+
+    np.testing.assert_equal(actual, expected)
+
+    results_2 = {
+        'average': OrderedDict([
+            ('accuracy', [0.3, 1.0]), ('precision', 0.8),
+            ('f1_score', 0.55), ('number_of_samples', 2000),
+            ('number_of_classes', 2), ('confusion_matrix', np.array([[150, 50], [100, 50]]))]),
+        'individual': [{'concept': 'cats',
+                        'metrics': OrderedDict([
+                            ('sensitivity', 0.50), ('precision', 0.80),
+                            ('f1_score', 0.68), ('specificity', 0.25),
+                            ('FDR', 0.45), ('AUROC', 1.0), ('TP', 4),
+                            ('FP', 1), ('FN', 4), ('% of samples', 50.0)])
+                        },
+                       ]}
+
+    # Assert error when incorrect lengths
+    with pytest.raises(ValueError) as exception:
+        actual = utils.compute_differential_results(results_1, results_2)
+    expected = 'Results length do not match for "individual" values'
+    actual = str(exception).split('ValueError: ')[1]
+    assert actual == expected
+
+    results_2 = {
+        'average': OrderedDict([
+            ('number_of_classes', 2), ('confusion_matrix', np.array([[150, 50], [100, 50]]))]),
+        'individual': [{'concept': 'cats',
+                        'metrics': OrderedDict([
+                            ('sensitivity', 0.50), ('precision', 0.80),
+                            ('f1_score', 0.68), ('specificity', 0.25),
+                            ('FDR', 0.45), ('AUROC', 1.0), ('TP', 4),
+                            ('FP', 1), ('FN', 4), ('% of samples', 50.0)])
+                        },
+                       ]}
+
+    # Assert error when incorrect lengths
+    with pytest.raises(ValueError) as exception:
+        actual = utils.compute_differential_results(results_1, results_2)
+    expected = 'Results length do not match for "average" values'
+    actual = str(exception).split('ValueError: ')[1]
+    assert actual == expected
 
 
 def test_ensemble_models(test_image_path, model_spec_mobilenet, test_ensemble_models_path):
