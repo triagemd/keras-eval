@@ -180,8 +180,8 @@ def check_input_samples(y_probs, y_true):
     '''
     Checks if number predicted samples from 'y_probs' is the same as the ground truth samples from 'y_true'
     Args:
-        y_probs: a numpy array of the class probabilities.
-        y_true: a numpy array of the true class labels (*not* encoded as 1-hot).
+        y_probs: A numpy array of the class probabilities.
+        y_true: A numpy array of the true class labels (*not* encoded as 1-hot).
     Returns:
         True, if len(y_probs) == len(y_true), otherwise raises error
     '''
@@ -196,8 +196,8 @@ def check_top_k_concepts(concepts, top_k):
     '''
     Checks if the 'top_k' requested is not higher than the number of 'concepts', or zero.
     Args:
-        concepts: a list containing the names of the classes.
-        top_k: a number specifying the top-k results to compute. E.g. 2 will compute top-1 and top-2
+        concepts: A list containing the names of the classes.
+        top_k: A number specifying the top-k results to compute. E.g. 2 will compute top-1 and top-2
     Returns:
         True, if len(top_k)>0 && len(top_k)>len(concepts), otherwise raises error
     '''
