@@ -258,19 +258,3 @@ def test_metrics_top_k_binary():
 
     np.testing.assert_equal(actual, expected)
 '''
-
-
-def test_get_top_k_sensitivity(metrics_top_k_multi_class):
-    concepts, y_true, y_probs = metrics_top_k_multi_class
-
-    actual = metrics.get_top_k_sensitivity(concepts, y_true, y_probs, top_k=1, round_decimals=2)
-    expected = [[1.0], [0.0], [0.5]]
-    assert expected == actual
-
-    actual = metrics.get_top_k_sensitivity(concepts, y_true, y_probs, top_k=2, round_decimals=2)
-    expected = [[1.0, 1.0], [0.0, 1.0], [0.5, 0.5]]
-    assert expected == actual
-
-    actual = metrics.get_top_k_sensitivity(concepts, y_true, y_probs, top_k=3, round_decimals=2)
-    expected = [[1.0, 1.0, 1.0], [0.0, 1.0, 1.0], [0.5, 0.5, 1.0]]
-    assert expected == actual
