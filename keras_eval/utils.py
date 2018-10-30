@@ -176,6 +176,37 @@ def create_training_json(train_dir, output_json_file):
         json.dump(concept_dict, file_obj, indent=4, sort_keys=True)
 
 
+def check_input_samples(y_probs, y_true):
+    '''
+    Checks if number predicted samples from 'y_probs' is the same as the ground truth samples from 'y_true'
+    Args:
+        y_probs: A numpy array of the class probabilities.
+        y_true: A numpy array of the true class labels (*not* encoded as 1-hot).
+    Returns:
+        True, if len(y_probs) == len(y_true), otherwise raises error
+    '''
+    if len(y_probs) != len(y_true):
+        raise ValueError('The number predicted samples (%i) is different from the ground truth samples (%i)' %
+                         (len(y_probs), len(y_true)))
+    else:
+        return True
+
+
+def check_top_k_concepts(concepts, top_k):
+    '''
+    Checks if the 'top_k' requested is not higher than the number of 'concepts', or zero.
+    Args:
+        concepts: A list containing the names of the classes.
+        top_k: A number specifying the top-k results to compute. E.g. 2 will compute top-1 and top-2
+    Returns:
+        True, if len(top_k)>0 && len(top_k)>len(concepts), otherwise raises error
+    '''
+    if top_k <= 0 or top_k > len(concepts):
+        raise ValueError('`top_k` value should be between 1 and the total number of concepts (%i)' % len(concepts))
+    else:
+        return True
+
+
 def check_concept_unique(concept_dict):
     '''
     Checks if evaluation concepts are unique
@@ -405,11 +436,11 @@ def compute_differential_results(results_1, results_2):
         if metric not in ['number_of_samples', 'number_of_classes']:
             if not isinstance(results_1['average'][metric], list):
                 differential_results['average'][metric] = results_1['average'][metric] - \
-                                                          results_2['average'][metric]
+                    results_2['average'][metric]
             else:
                 if len(results_1['average'][metric]) == 1:
                     differential_results['average'][metric] = results_1['average'][metric][0] - \
-                                                              results_2['average'][metric][0]
+                        results_2['average'][metric][0]
                 else:
                     for k in range(len(results_1['average'][metric])):
                         differential_results['average'][metric][k] = \

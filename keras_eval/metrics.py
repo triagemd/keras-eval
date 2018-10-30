@@ -2,9 +2,9 @@ from __future__ import print_function, division, absolute_import
 
 import numpy as np
 import scipy.stats
-import keras_eval.utils as utils
 
 from math import log
+from keras_eval import utils
 from sklearn.metrics import confusion_matrix, roc_curve
 from keras.utils.np_utils import to_categorical
 from collections import OrderedDict
@@ -22,8 +22,8 @@ def metrics_top_k(y_probs, y_true, concepts, top_k, round_decimals=7):
             and/or if there is no values for `y_true` for a certain class.
 
     Args:
-        y_true: a numpy array of the true class labels (*not* encoded as 1-hot).
         y_probs: a numpy array of the class probabilities.
+        y_true: a numpy array of the true class labels (*not* encoded as 1-hot).
         concepts: a list containing the names of the classes.
         top_k: a number specifying the top-k results to compute. E.g. 2 will compute top-1 and top-2
         round_decimals: Integer indicating the number of decimals to rounded.
@@ -34,34 +34,38 @@ def metrics_top_k(y_probs, y_true, concepts, top_k, round_decimals=7):
             For clarity, see the tests in `tests/test_metrics/test_metrics_top_k()`
 
     """
-    if len(y_probs) != len(y_true):
-        raise ValueError('The number predicted samples (%i) is different from the ground truth samples (%i)' %
-                         (len(y_probs), len(y_true)))
-
-    if top_k <= 0 or top_k > len(concepts):
-        raise ValueError('`top_k` value should be between 1 and the total number of concepts (%i)' % len(concepts))
+    utils.check_input_samples(y_probs, y_true)
+    utils.check_top_k_concepts(concepts, top_k)
 
     average_accuracy_k = []
     average_precision = []
     average_f1_score = []
 
-    top_k = np.arange(1, top_k + 1, 1)
+    top_k_sensitivity = []
+    top_k_sensitivity_dict = []
+    top_k_array = np.arange(1, top_k + 1, 1)
     one_hot_y_true = to_categorical(y_true, num_classes=len(concepts))
 
-    # Sort predicions from higher to smaller and get class indices
+    # Sort predictions from higher to smaller and get class indices
     top_preds = y_probs.argsort(axis=1)[:, ::-1]
     total_samples = y_true.shape[0]
 
     metrics = {'average': {}, 'individual': []}
 
     # top-K Accuracy
-    for k in top_k:
+    for k in top_k_array:
         # Select k top predictions
         top_k_preds = top_preds[:, 0:k]
         # Compute the top-k matches
         matches_k = (top_k_preds == y_true[:, np.newaxis])
         in_top_k = np.sum(matches_k, axis=1) > 0
         average_accuracy_k.append(np.sum(in_top_k) / float(len(in_top_k)))
+
+        for idx, concept in enumerate(concepts):
+            total_samples_concept = np.sum(y_true == idx)
+            tp_top_k = np.sum(in_top_k[(y_true == idx)])
+            sensitivity = round(utils.safe_divide(float(tp_top_k), total_samples_concept), round_decimals)
+            top_k_sensitivity_dict.append({'concept': concept, 'k': k, 'sensitivity': sensitivity})
 
     # Top-1 metrics
     one_hot_top_1_preds = to_categorical(top_preds[:, 0:1], num_classes=len(concepts))
@@ -73,17 +77,25 @@ def metrics_top_k(y_probs, y_true, concepts, top_k, round_decimals=7):
         tn, fp, fn, tp = confusion_matrix(one_hot_y_true[:, idx], one_hot_top_1_preds[:, idx], labels=[0, 1]).astype(
             np.float32).ravel()
 
-        sensitivity = round(utils.safe_divide(tp, tp + fn), round_decimals)
+        concept_sensitivity = []
+        for dict_item in top_k_sensitivity_dict:
+            if dict_item['concept'] == concept:
+                concept_sensitivity.append(dict_item['sensitivity'])
+        top_k_sensitivity.append(concept_sensitivity)
+
+        sensitivity = top_k_sensitivity[idx]
 
         precision = round(utils.safe_divide(tp, tp + fp), round_decimals)
         if not np.isnan(precision):
             average_precision.append(precision * total_samples_concept)
 
-        f1_score = round(2 * utils.safe_divide(precision * sensitivity, precision + sensitivity), round_decimals)
+        f1_score = round(2 * utils.safe_divide(precision * sensitivity[0], precision + sensitivity[0]), round_decimals)
         if not np.isnan(f1_score):
             average_f1_score.append(f1_score * total_samples_concept)
 
-        metrics_dict = OrderedDict([('sensitivity', sensitivity), ('precision', precision), ('f1_score', f1_score)])
+        sensitivity = utils.round_list(sensitivity, round_decimals)
+        metrics_dict = OrderedDict([('sensitivity', sensitivity if len(sensitivity) > 1 else sensitivity[0]),
+                                    ('precision', precision), ('f1_score', f1_score)])
 
         # Binary classification metrics
         if len(concepts) == 2:

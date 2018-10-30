@@ -1,21 +1,27 @@
 import numpy as np
-import matplotlib.pyplot as plt
 import plotly.graph_objs as go
+import matplotlib.pyplot as plt
+
+from sklearn import metrics
+from keras_eval import utils
 from plotly.offline import iplot
+from sklearn.utils.fixes import signature
 
 
-def plot_confusion_matrix(cm, concepts, normalize=False, fontsize=18, figsize=(16, 12),
+def plot_confusion_matrix(cm, concepts, normalize=False, show_text=True, fontsize=18, figsize=(16, 12),
                           cmap=plt.cm.coolwarm_r, save_path=None):
     '''
+    Plot confusion matrix provided in 'cm'
 
     Args:
         cm: Confusion Matrix, square sized numpy array
         concepts: Name of the categories to show
         normalize: If True, normalize values between 0 and ones. Not valid if negative values.
-        fontsize: Text size
-        figsize: Figure size
-        cmap: Colormap of your choice
-        save_path: If `save_path` specified save confusion matrix in that location
+        show_text: If True, display cell values as text. Otherwise only display cell colors.
+        fontsize: Size of text
+        figsize: Size of figure
+        cmap: Color choice
+        save_path: If `save_path` specified, save confusion matrix in that location
 
     Returns: Nothing. Plots confusion matrix
 
@@ -49,13 +55,89 @@ def plot_confusion_matrix(cm, concepts, normalize=False, fontsize=18, figsize=(1
     plt.ylabel('True label', fontweight='bold')
     plt.xlabel('Predicted label', fontweight='bold')
 
-    # http://stackoverflow.com/questions/21712047/matplotlib-imshow-matshow-display-values-on-plot
-    min_val, max_val = 0, len(concepts)
-    ind_array = np.arange(min_val, max_val, 1.0)
-    x, y = np.meshgrid(ind_array, ind_array)
-    for i, (x_val, y_val) in enumerate(zip(x.flatten(), y.flatten())):
-        c = cm[int(x_val), int(y_val)]
-        ax.text(y_val, x_val, c, va='center', ha='center')
+    if show_text:
+        # http://stackoverflow.com/questions/21712047/matplotlib-imshow-matshow-display-values-on-plot
+        min_val, max_val = 0, len(concepts)
+        ind_array = np.arange(min_val, max_val, 1.0)
+        x, y = np.meshgrid(ind_array, ind_array)
+        for i, (x_val, y_val) in enumerate(zip(x.flatten(), y.flatten())):
+            c = cm[int(x_val), int(y_val)]
+            ax.text(y_val, x_val, c, va='center', ha='center')
+
+    if save_path is not None:
+        plt.savefig(save_path)
+
+
+def plot_ROC_curve(y_probs, y_true, title='ROC curve', save_path=None):
+    """
+    Plot Receiver Operating Characteristic (ROC) curve understood as true positive rate (TPR) against the
+    false positive rate (FPR) at various threshold settings.
+
+    Note: this implementation is restricted to the binary classification task.
+
+    Args:
+        y_probs: A numpy array containing the probabilities of the positive class.
+        y_true: A numpy array of the true binary labels (*not* encoded as 1-hot).
+        title: String with the title.
+        save_path: If `save_path` specified, save confusion matrix in that location
+
+    Returns: Nothing, displays ROC curve
+    """
+    utils.check_input_samples(y_probs, y_true)
+
+    if not np.array_equal(y_true, y_true.astype(bool)):
+        raise ValueError('y_true must contain the true binary labels.')
+
+    fpr, tpr, thresholds = metrics.roc_curve(y_true, y_probs)
+    roc_auc = metrics.auc(fpr, tpr)
+
+    plt.figure()
+    lw = 2
+    plt.plot(fpr, tpr, color='darkorange', lw=lw, label='ROC curve (AUC = %0.2f)' % roc_auc)
+    plt.xlim([0.0, 1.0])
+    plt.ylim([0.0, 1.05])
+    plt.plot([0, 1], [0, 1], color='navy', lw=lw, linestyle='--')
+    plt.xlabel('False Positive Rate (FPR)')
+    plt.ylabel('True Positive Rate (TPR)')
+    plt.title(title)
+    plt.legend(loc="lower right")
+
+    if save_path is not None:
+        plt.savefig(save_path)
+
+
+def plot_precision_recall_curve(y_probs, y_true, title='2-class Precision-Recall curve', save_path=None):
+    """
+    Plot Precision-Recall curve for a binary classification task.
+
+    Note: this implementation is restricted to the binary classification task.
+
+    Args:
+        y_probs: A numpy array containing the probabilities of the positive class.
+        y_true: A numpy array of the true binary labels (*not* encoded as 1-hot).
+        title: String with the title.
+        save_path: If `save_path` specified, save confusion matrix in that location.
+
+    Returns: Nothing, displays Precision-Recall curve
+    """
+    if not np.array_equal(y_true, y_true.astype(bool)):
+        raise ValueError('y_true must contain the true binary labels.')
+
+    precision, recall, _ = metrics.precision_recall_curve(y_true, y_probs)
+    average_precision = metrics.average_precision_score(y_true, y_probs)
+
+    # In matplotlib < 1.5, plt.fill_between does not have a 'step' argument
+    step_kwargs = ({'step': 'post'}
+                   if 'step' in signature(plt.fill_between).parameters
+                   else {})
+    plt.step(recall, precision, color='b', alpha=0.2, where='post')
+    plt.fill_between(recall, precision, alpha=0.2, color='b', **step_kwargs)
+
+    plt.xlabel('Recall')
+    plt.ylabel('Precision')
+    plt.xlim([0.0, 1.0])
+    plt.ylim([0.0, 1.05])
+    plt.title(title + ': AP={0:0.2f}'.format(average_precision))
 
     if save_path is not None:
         plt.savefig(save_path)
