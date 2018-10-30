@@ -16,6 +16,7 @@ def plot_confusion_matrix(cm, concepts, normalize=False, show_text=True, fontsiz
     Args:
         cm: Confusion matrix in the form of numpy array
         concepts: Name of the classes
+        normalize: If True, normalize values between 0 and ones. Not valid if negative values.
         show_text: If True, display cell values as text. Otherwise only display cell colors.
         fontsize: Size of text
         figsize: Size of figure
