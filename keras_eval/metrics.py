@@ -41,6 +41,8 @@ def metrics_top_k(y_probs, y_true, concepts, top_k, round_decimals=7):
     average_precision = []
     average_f1_score = []
 
+    top_k_sensitivity = []
+    top_k_sensitivity_dict = []
     top_k_array = np.arange(1, top_k + 1, 1)
     one_hot_y_true = to_categorical(y_true, num_classes=len(concepts))
 
@@ -59,8 +61,11 @@ def metrics_top_k(y_probs, y_true, concepts, top_k, round_decimals=7):
         in_top_k = np.sum(matches_k, axis=1) > 0
         average_accuracy_k.append(np.sum(in_top_k) / float(len(in_top_k)))
 
-    # top-k sensitivity
-    top_k_sensitivity = get_top_k_sensitivity(concepts, y_true, y_probs, top_k, round_decimals)
+        for idx, concept in enumerate(concepts):
+            total_samples_concept = np.sum(y_true == idx)
+            tp_top_k = np.sum(in_top_k[(y_true == idx)])
+            sensitivity = round(utils.safe_divide(float(tp_top_k), total_samples_concept), round_decimals)
+            top_k_sensitivity_dict.append({'concept': concept, 'k': k, 'sensitivity': sensitivity})
 
     # Top-1 metrics
     one_hot_top_1_preds = to_categorical(top_preds[:, 0:1], num_classes=len(concepts))
@@ -71,6 +76,12 @@ def metrics_top_k(y_probs, y_true, concepts, top_k, round_decimals=7):
 
         tn, fp, fn, tp = confusion_matrix(one_hot_y_true[:, idx], one_hot_top_1_preds[:, idx], labels=[0, 1]).astype(
             np.float32).ravel()
+
+        concept_sensitivity = []
+        for dict_item in top_k_sensitivity_dict:
+            if dict_item['concept'] == concept:
+                concept_sensitivity.append(dict_item['sensitivity'])
+        top_k_sensitivity.append(concept_sensitivity)
 
         sensitivity = top_k_sensitivity[idx]
 
@@ -333,44 +344,3 @@ def get_top1_entropy_stats(y_probs, labels, entropy, verbose=0):
     n_errors = np.array(n_errors)
 
     return correct_list, errors_list, n_correct, n_errors
-
-
-def get_top_k_sensitivity(concepts, y_true, y_probs, top_k, round_decimals=7):
-    """
-    Compute the top-k true positive rate (sensitivity).
-
-    Args:
-        concepts: a list containing the names of the classes.
-        y_true: a numpy array of the true class labels (*not* encoded as 1-hot).
-        y_probs: a numpy array of the class probabilities.
-        top_k: a number specifying the top-k results to compute. E.g. 2 will compute top-1 and top-2
-        round_decimals: Integer indicating the number of decimals to rounded.
-
-    Returns:
-        top_k_sensitivity: a matrix of top-k sensitivity per class.
-            For clarity, see the tests in `tests/test_metrics/test_get_top_k_sensitivity()`
-    """
-    top_k_sensitivity_dict = []
-    top_k_array = np.arange(1, top_k + 1, 1)
-    top_preds = y_probs.argsort(axis=1)[:, ::-1]
-
-    for k in top_k_array:
-        top_k_preds = top_preds[:, 0:k]
-        matches_k = (top_k_preds == y_true[:, np.newaxis])
-        in_top_k = np.sum(matches_k, axis=1) > 0
-
-        for idx, concept in enumerate(concepts):
-            total_samples_concept = np.sum(y_true == idx)
-            tp_top_k = np.sum(in_top_k[(y_true == idx)])
-            sensitivity = round(utils.safe_divide(float(tp_top_k), total_samples_concept), round_decimals)
-            top_k_sensitivity_dict.append({'concept': concept, 'k': k, 'sensitivity': sensitivity})
-
-    top_k_sensitivity = []
-    for concept_name in concepts:
-        concept_sensitivity = []
-        for dict_item in top_k_sensitivity_dict:
-            if dict_item['concept'] == concept_name:
-                concept_sensitivity.append(dict_item['sensitivity'])
-        top_k_sensitivity.append(concept_sensitivity)
-
-    return top_k_sensitivity
