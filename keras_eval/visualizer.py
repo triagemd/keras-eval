@@ -14,9 +14,9 @@ def plot_confusion_matrix(cm, concepts, normalize=False, show_text=True, fontsiz
     Plot confusion matrix provided in 'cm'
 
     Args:
-        cm: confusion matrix in the form of numpy array
+        cm: Confusion matrix in the form of numpy array
         concepts: Name of the classes
-        show_text: if True, display cell values as text. Otherwise only display cell colors.
+        show_text: If True, display cell values as text. Otherwise only display cell colors.
         fontsize: Size of text
         figsize: Size of figure
         cmap: Color choice
@@ -75,9 +75,9 @@ def plot_ROC_curve(y_probs, y_true, title='ROC curve', save_path=None):
     Note: this implementation is restricted to the binary classification task.
 
     Args:
-        y_probs: a numpy array containing the probabilities of the positive class.
-        y_true: a numpy array of the true binary labels (*not* encoded as 1-hot).
-        title: string with the title.
+        y_probs: A numpy array containing the probabilities of the positive class.
+        y_true: A numpy array of the true binary labels (*not* encoded as 1-hot).
+        title: String with the title.
         save_path: If `save_path` specified, save confusion matrix in that location
 
     Returns: Nothing, displays ROC curve
@@ -112,9 +112,9 @@ def plot_precision_recall_curve(y_probs, y_true, title='2-class Precision-Recall
     Note: this implementation is restricted to the binary classification task.
 
     Args:
-        y_probs: a numpy array containing the probabilities of the positive class.
-        y_true: a numpy array of the true binary labels (*not* encoded as 1-hot).
-        title: string with the title.
+        y_probs: A numpy array containing the probabilities of the positive class.
+        y_true: A numpy array of the true binary labels (*not* encoded as 1-hot).
+        title: String with the title.
         save_path: If `save_path` specified, save confusion matrix in that location.
 
     Returns: Nothing, displays Precision-Recall curve
