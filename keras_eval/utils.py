@@ -436,11 +436,11 @@ def compute_differential_results(results_1, results_2):
         if metric not in ['number_of_samples', 'number_of_classes']:
             if not isinstance(results_1['average'][metric], list):
                 differential_results['average'][metric] = results_1['average'][metric] - \
-                                                          results_2['average'][metric]
+                    results_2['average'][metric]
             else:
                 if len(results_1['average'][metric]) == 1:
                     differential_results['average'][metric] = results_1['average'][metric][0] - \
-                                                              results_2['average'][metric][0]
+                        results_2['average'][metric][0]
                 else:
                     for k in range(len(results_1['average'][metric])):
                         differential_results['average'][metric][k] = \
