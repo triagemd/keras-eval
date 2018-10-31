@@ -39,6 +39,7 @@ def metrics_top_k(y_probs, y_true, concepts, top_k, round_decimals=7):
 
     average_accuracy_k = []
     average_precision = []
+    average_sensitivity = []
     average_f1_score = []
 
     top_k_sensitivity = []
@@ -84,10 +85,12 @@ def metrics_top_k(y_probs, y_true, concepts, top_k, round_decimals=7):
         top_k_sensitivity.append(concept_sensitivity)
 
         sensitivity = top_k_sensitivity[idx]
-
+        average_sensitivity.append(sensitivity)
         precision = round(utils.safe_divide(tp, tp + fp), round_decimals)
+
         if not np.isnan(precision):
-            average_precision.append(precision * total_samples_concept)
+            average_precision_weighted.append(precision * total_samples_concept)
+            average_precision.append(precision)
 
         f1_score = round(2 * utils.safe_divide(precision * sensitivity[0], precision + sensitivity[0]), round_decimals)
         if not np.isnan(f1_score):
@@ -113,8 +116,12 @@ def metrics_top_k(y_probs, y_true, concepts, top_k, round_decimals=7):
     accuracy = utils.round_list(average_accuracy_k, round_decimals)
 
     metrics['average'] = OrderedDict([('accuracy', accuracy if len(accuracy) > 1 else accuracy[0]),
-                                      ('precision', round(utils.safe_divide(sum(average_precision), total_samples),
+                                      ('sensitivity', round(utils.safe_divide(sum(average_sensitivity), len(concepts)),
+                                                         round_decimals)),
+                                      ('precision', round(utils.safe_divide(sum(average_precision), len(concepts)),
                                                           round_decimals)),
+                                      ('weighted_precision', round(utils.safe_divide(sum(average_precision), total_samples),
+                                                         round_decimals)),
                                       ('f1_score', round(utils.safe_divide(sum(average_f1_score), total_samples),
                                                          round_decimals)),
                                       ('number_of_samples', total_samples),
