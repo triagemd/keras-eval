@@ -37,8 +37,10 @@ def metrics_top_k(y_probs, y_true, concepts, top_k, round_decimals=7):
     utils.check_input_samples(y_probs, y_true)
     utils.check_top_k_concepts(concepts, top_k)
 
-    average_accuracy_k = []
-    average_precision = []
+    accuracy_k = []
+    class_precision = []
+    weighted_class_precision = []
+    class_sensitivity = []
     average_f1_score = []
 
     top_k_sensitivity = []
@@ -59,7 +61,7 @@ def metrics_top_k(y_probs, y_true, concepts, top_k, round_decimals=7):
         # Compute the top-k matches
         matches_k = (top_k_preds == y_true[:, np.newaxis])
         in_top_k = np.sum(matches_k, axis=1) > 0
-        average_accuracy_k.append(np.sum(in_top_k) / float(len(in_top_k)))
+        accuracy_k.append(np.sum(in_top_k) / float(len(in_top_k)))
 
         for idx, concept in enumerate(concepts):
             total_samples_concept = np.sum(y_true == idx)
@@ -85,9 +87,14 @@ def metrics_top_k(y_probs, y_true, concepts, top_k, round_decimals=7):
 
         sensitivity = top_k_sensitivity[idx]
 
+        if not np.isnan(sensitivity[0]):
+            class_sensitivity.append(sensitivity[0])
+
         precision = round(utils.safe_divide(tp, tp + fp), round_decimals)
+
         if not np.isnan(precision):
-            average_precision.append(precision * total_samples_concept)
+            weighted_class_precision.append(precision * total_samples_concept)
+            class_precision.append(precision)
 
         f1_score = round(2 * utils.safe_divide(precision * sensitivity[0], precision + sensitivity[0]), round_decimals)
         if not np.isnan(f1_score):
@@ -106,14 +113,19 @@ def metrics_top_k(y_probs, y_true, concepts, top_k, round_decimals=7):
 
             metrics_dict.update([('specificity', specificity), ('FDR', fdr), ('AUROC', auroc)])
 
-        metrics_dict.update([('TP', int(tp)), ('FP', int(fp)), ('FN', int(fn)), ('% of samples', percentage_samples_concept)])
+        metrics_dict.update(
+            [('TP', int(tp)), ('FP', int(fp)), ('FN', int(fn)), ('% of samples', percentage_samples_concept)])
 
         metrics['individual'].append({'concept': concept, 'metrics': metrics_dict})
 
-    accuracy = utils.round_list(average_accuracy_k, round_decimals)
+    accuracy = utils.round_list(accuracy_k, round_decimals)
 
     metrics['average'] = OrderedDict([('accuracy', accuracy if len(accuracy) > 1 else accuracy[0]),
-                                      ('precision', round(utils.safe_divide(sum(average_precision), total_samples),
+                                      ('weighted_precision', round(utils.safe_divide(sum(weighted_class_precision),
+                                                                                     total_samples), round_decimals)),
+                                      ('sensitivity', round(utils.safe_divide(sum(class_sensitivity), len(concepts)),
+                                                            round_decimals)),
+                                      ('precision', round(utils.safe_divide(sum(class_precision), len(concepts)),
                                                           round_decimals)),
                                       ('f1_score', round(utils.safe_divide(sum(average_f1_score), total_samples),
                                                          round_decimals)),
@@ -122,6 +134,7 @@ def metrics_top_k(y_probs, y_true, concepts, top_k, round_decimals=7):
                                       ('confusion_matrix', confusion_matrix(y_true, top_preds[:, 0],
                                                                             labels=np.arange(0, len(concepts))))
                                       ])
+
     return metrics
 
 

@@ -40,7 +40,9 @@ def test_metrics_top_k_multi_class(metrics_top_k_multi_class):
                  ('% of samples', 50.0)])}],
         'average': OrderedDict([
             ('accuracy', 0.5),
-            ('precision', 0.375),
+            ('weighted_precision', 0.375),
+            ('sensitivity', 0.5),
+            ('precision', 0.3333333),
             ('f1_score', 0.4166667),
             ('number_of_samples', 4),
             ('number_of_classes', 3),
