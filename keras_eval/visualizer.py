@@ -1,3 +1,5 @@
+import os
+import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 import plotly.graph_objs as go
@@ -163,3 +165,56 @@ def plot_concept_metrics(concepts, metrics, x_axis_label, y_axis_label, title=No
     )
     fig = go.Figure(data=data, layout=layout)
     iplot(fig, filename='line-mode')
+
+
+def plot_models_performance(model_dir, individual=False, class_idx=None, metric=None, save_name=None):
+    '''
+       Enables plotting of multiple models metrics for comparison
+       Args:
+           model_dir: A directory that contains multiple
+           individual: If True,compare individual metrics else, average metrics
+           class_idx: The index of class for when comparing individual metrics
+           metric: The metric to be plotted for comparison
+           save_name: The name, location of where the plot is to be saved
+
+       Returns: Nothing, Plot can be saved.
+
+       '''
+    x_axis = []
+    y_axis = []
+    tick_label = []
+    i = 0
+    for result_csv in os.listdir(model_dir):
+        if check_result_type(result_csv, individual):
+            df = pd.read_csv(os.path.join(model_dir, result_csv))
+            tick_label.append(result_csv[:result_csv.rfind('_')])
+            if individual:
+                if type(class_idx) == int and type(metric)==str:
+                    y_axis.append(df[metric][class_idx])
+                    x_axis.append(i)
+                else:
+                    raise ValueError('missing required option(s): class_idx, key')
+            else:
+                if metric:
+                    y_axis.append(df[metric][0])
+                    x_axis.append(i)
+            i += 1
+    plt.bar(x_axis, y_axis)
+    plt.ylabel(str(metric))
+    plt.xticks(x_axis, tick_label, rotation='vertical')
+    if save_name is not None:
+        plt.savefig(plot_name)
+
+
+def check_result_type(result_csv, individual):
+    csv_type = result_csv[result_csv.rfind('_')+1:-4]
+    if individual:
+        if csv_type=='individual':
+            return True
+        else:
+            return False
+    else:
+        if csv_type=='individual':
+            return False
+        else:
+            return True
