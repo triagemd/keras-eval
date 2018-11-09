@@ -204,7 +204,7 @@ def plot_images(image_paths, n_images, title='', n_cols=5, image_res=(20, 20), s
     if total_images_plot <= n_cols:
         f, axes = plt.subplots(nrows=1, ncols=n_cols, figsize=image_res)
         plt.title(title)
-        for i in range(0, n_cols):
+        for i in range(n_cols):
             if i < total_images_plot:
                 img = plt.imread(image_paths[i])
                 axes[n_col].imshow(img, aspect='equal')
@@ -219,7 +219,7 @@ def plot_images(image_paths, n_images, title='', n_cols=5, image_res=(20, 20), s
 
         f, axes = plt.subplots(nrows=n_rows_total, ncols=n_cols, figsize=image_res)
         plt.title(title)
-        for i in range(0, n_rows_total * n_cols):
+        for i in range(n_rows_total * n_cols):
             if i < total_images_plot:
                 img = plt.imread(image_paths[i])
                 axes[n_row, n_col].imshow(img, aspect='equal')
