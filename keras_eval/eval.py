@@ -428,7 +428,7 @@ class Evaluator(object):
             image_paths: List with image_paths
             n_images: Number of images to show
             title: Title for the plot
-            n_cols: Number of Columns to split the data
+            n_cols: Number of columns to split the data
             image_res: Plot image resolution
             save_name: If specified, will save the plot in save_name path
 
