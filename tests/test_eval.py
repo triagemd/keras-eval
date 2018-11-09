@@ -159,6 +159,8 @@ def test_show_results(evaluator_mobilenet, test_catdog_dataset_path):
     average_df = evaluator_mobilenet.show_results(mode='average')
     assert average_df['model'][0] == 'catdog-mobilenet.hdf5'
     assert average_df['accuracy'][0] == 0.75
+    assert average_df['sensitivity'][0] == 0.75
+    assert average_df['weighted_precision'][0] == 0.833
     assert average_df['precision'][0] == 0.833
     assert average_df['f1_score'][0] == 0.733
 

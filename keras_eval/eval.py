@@ -439,18 +439,23 @@ class Evaluator(object):
 
         return dict_image_paths_concept
 
-    def plot_images(self, image_paths, n_images=None, title='', n_cols=5, image_res=(20, 20), save_name=None):
+    @staticmethod
+    def plot_images(image_paths, n_images=None, title='', n_cols=5, image_res=(20, 20), save_name=None):
         # Works better defining a number of images between 5 and 30 at a time
         '''
 
         Args:
             image_paths: List with image_paths
-            n_imgs: Number of images to show
+            n_images: Number of images to show
             title: Title for the plot
+            n_cols: Number of columns to split the data
+            image_res: Plot image resolution
+            save_name: If specified, will save the plot in save_name path
 
         Returns: Plots images in the screen
 
         '''
+
         image_paths = np.array(image_paths)
         if n_images is None:
             n_images = image_paths.shape[0]
