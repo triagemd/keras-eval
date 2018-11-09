@@ -1,25 +1,82 @@
+import pytest
+
 from keras_eval.data_generators import AugmentedImageDataGenerator
+from keras_model_specs import ModelSpec
 
 
-def test_augmented_image_data_generator_wrong_scale_size():
+def test_augmented_image_data_generator_wrong_scale_size(test_catdog_dataset_path):
     model_spec = ModelSpec.get('test', preprocess_func='mean_subtraction',
                                preprocess_args=[141., 130., 123.], target_size=(224, 224, 3))
     with pytest.raises(ValueError) as exception:
         test_data_generator = AugmentedImageDataGenerator(preprocessing_function=model_spec.preprocess_input,
                                                           data_augmentation={'scale_sizes': 'asd'})
-    expected = 'Incorrect format for `scale_sizes`, list or `default` is expected'
+        test_data_generator.flow_from_directory(
+            directory=test_catdog_dataset_path,
+            batch_size=1,
+            target_size=model_spec.target_size[:2],
+            class_mode='categorical',
+            shuffle=False)
+    expected = 'Incorrect format for `scale_sizes`, list of ints or `= default` is expected'
     actual = str(exception).split('ValueError: ')[1]
     assert actual == expected
 
 
-def test_augmented_image_data_generator_wrong_transforms():
+def test_augmented_image_data_generator_wrong_transforms(test_catdog_dataset_path):
     model_spec = ModelSpec.get('test', preprocess_func='mean_subtraction',
                                preprocess_args=[141., 130., 123.], target_size=(224, 224, 3))
+
     with pytest.raises(ValueError) as exception:
         test_data_generator = AugmentedImageDataGenerator(preprocessing_function=model_spec.preprocess_input,
                                                           data_augmentation={'scale_sizes': [256],
                                                                              'transforms': ['failure']})
+        datagen = test_data_generator.flow_from_directory(
+            directory=test_catdog_dataset_path,
+            batch_size=1,
+            target_size=model_spec.target_size[:2],
+            class_mode='categorical',
+            shuffle=False)
+        datagen.next()
+
     expected = 'Wrong transform failure check documentation to see the supported ones'
+    actual = str(exception).split('ValueError: ')[1]
+    assert actual == expected
+
+    with pytest.raises(ValueError) as exception:
+        test_data_generator = AugmentedImageDataGenerator(preprocessing_function=model_spec.preprocess_input,
+                                                          data_augmentation={'scale_sizes': [256],
+                                                                             'transforms': 'blah'})
+        datagen = test_data_generator.flow_from_directory(
+            directory=test_catdog_dataset_path,
+            batch_size=1,
+            target_size=model_spec.target_size[:2],
+            class_mode='categorical',
+            shuffle=False)
+
+        datagen.next()
+
+    expected = 'Incorrect format for `transforms`, a list of transforms is expected'
+    actual = str(exception).split('ValueError: ')[1]
+    assert actual == expected
+
+
+def test_augmented_image_data_generator_wrong_crop_original(test_catdog_dataset_path):
+    model_spec = ModelSpec.get('test', preprocess_func='mean_subtraction',
+                               preprocess_args=[141., 130., 123.], target_size=(224, 224, 3))
+
+    with pytest.raises(ValueError) as exception:
+        test_data_generator = AugmentedImageDataGenerator(preprocessing_function=model_spec.preprocess_input,
+                                                          data_augmentation={'crop_original': 'fail',
+                                                                             'scale_sizes': [256]})
+        datagen = test_data_generator.flow_from_directory(
+            directory=test_catdog_dataset_path,
+            batch_size=1,
+            target_size=model_spec.target_size[:2],
+            class_mode='categorical',
+            shuffle=False)
+
+        datagen.next()
+
+    expected = 'crop_original entered not supported, only `central_crop` is being supported now'
     actual = str(exception).split('ValueError: ')[1]
     assert actual == expected
 
@@ -36,14 +93,51 @@ def test_augmented_image_data_generator(test_catdog_dataset_path):
                                                                                         'rotate_180',
                                                                                         'rotate_270']})
 
-    test_data_generator.flow_from_directory(
+    datagen = test_data_generator.flow_from_directory(
         directory=test_catdog_dataset_path,
         batch_size=1,
         target_size=model_spec.target_size[:2],
         class_mode='categorical',
         shuffle=False)
 
-    for batch_x, batch_y in test_data_generator:
-        assert batch_x.shape == [1, 36, 224, 224]
-        assert batch_y.shape == [1, 36, 224, 224]
-        break
+    batch_x, batch_y = datagen.next()
+    assert batch_x.shape == (1, 96, 224, 224, 3)
+    assert len(batch_y) == 96
+
+    test_data_generator = AugmentedImageDataGenerator(preprocessing_function=model_spec.preprocess_input,
+                                                      data_augmentation={'transforms': ['horizontal_flip',
+                                                                                        'vertical_flip',
+                                                                                        'rotate_90',
+                                                                                        'rotate_180',
+                                                                                        'rotate_270']})
+
+    datagen = test_data_generator.flow_from_directory(
+        directory=test_catdog_dataset_path,
+        batch_size=1,
+        target_size=model_spec.target_size[:2],
+        class_mode='categorical',
+        shuffle=False)
+
+    batch_x, batch_y = datagen.next()
+    assert batch_x.shape == (1, 6, 224, 224, 3)
+    assert len(batch_y) == 6
+
+    test_data_generator = AugmentedImageDataGenerator(preprocessing_function=model_spec.preprocess_input,
+                                                      data_augmentation={'scale_sizes': [256],
+                                                                         'crop_original': 'central_crop',
+                                                                         'transforms': ['horizontal_flip',
+                                                                                        'vertical_flip',
+                                                                                        'rotate_90',
+                                                                                        'rotate_180',
+                                                                                        'rotate_270']})
+
+    datagen = test_data_generator.flow_from_directory(
+        directory=test_catdog_dataset_path,
+        batch_size=1,
+        target_size=model_spec.target_size[:2],
+        class_mode='categorical',
+        shuffle=False)
+
+    batch_x, batch_y = datagen.next()
+    assert batch_x.shape == (1, 96, 224, 224, 3)
+    assert len(batch_y) == 96

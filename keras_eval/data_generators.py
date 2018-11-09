@@ -4,7 +4,7 @@ import PIL
 
 from keras_preprocessing.image import ImageDataGenerator, DirectoryIterator, get_keras_submodule, array_to_img, \
     load_img, img_to_array
-from keras_eval.utils import check_data_augmentation_keys
+from keras_eval import utils
 
 backend = get_keras_submodule('backend')
 
@@ -58,7 +58,7 @@ class AugmentedDirectoryIterator(DirectoryIterator):
                                interpolation,
                                )
 
-        check_data_augmentation_keys(data_augmentation)
+        utils.check_data_augmentation_keys(data_augmentation)
         self.data_augmentation = data_augmentation
 
         self.crop_original = None
@@ -67,21 +67,25 @@ class AugmentedDirectoryIterator(DirectoryIterator):
 
         self.transforms = ['none']
         if 'transforms' in self.data_augmentation.keys():
-            self.transforms += self.data_augmentation['transforms']
+            if isinstance(self.data_augmentation['transforms'], list):
+                self.transforms += self.data_augmentation['transforms']
+            else:
+                raise ValueError('Incorrect format for `transforms`, a list of transforms is expected')
         self.n_transforms = len(self.transforms)
 
         if 'scale_sizes' in self.data_augmentation.keys():
             if self.data_augmentation['scale_sizes'] == 'default':
                 self.scale_sizes = self._get_default_sizes(self.target_size[0])
-            elif isinstance(self.data_augmentation['scale_sizes'], list):
+            elif isinstance(self.data_augmentation['scale_sizes'], list) and \
+                    all(isinstance(x, int) for x in self.data_augmentation['scale_sizes']):
                 self.scale_sizes = []
                 for size in self.data_augmentation['scale_sizes']:
                     size = round(size)
                     if size % 2 != 0:
                         size += 1
-                    self.scale_sizes = size
+                    self.scale_sizes.append(size)
             else:
-                raise ValueError('Incorrect format for `scale_sizes`, list or `default` is expected')
+                raise ValueError('Incorrect format for `scale_sizes`, list of ints or `= default` is expected')
 
             self.n_crops = len(self.scale_sizes) * 5 * 3 * self.n_transforms + self.n_transforms
         else:
@@ -106,12 +110,12 @@ class AugmentedDirectoryIterator(DirectoryIterator):
 
         if w >= h:
             im_1 = image.crop((0, 0, h, h))
-            im_2 = image.crop((w_center - h/2, 0, w_center + h/2, h))
-            im_3 = image.crop((w-h, 0, w, h))
+            im_2 = image.crop((w_center - h / 2, 0, w_center + h / 2, h))
+            im_3 = image.crop((w - h, 0, w, h))
         else:
             im_1 = image.crop((0, 0, w, w))
-            im_2 = image.crop((0, h_center - w/2, w, h_center + w/2))
-            im_3 = image.crop((0, h-w, w, h))
+            im_2 = image.crop((0, h_center - w / 2, w, h_center + w / 2))
+            im_3 = image.crop((0, h - w, w, h))
 
         return [im_1, im_2, im_3]
 
@@ -122,10 +126,10 @@ class AugmentedDirectoryIterator(DirectoryIterator):
                           'rotate_270': PIL.Image.ROTATE_270}
         if transform == 'none':
             return image
-        if transform in transform_dict.keys():
+        elif transform in transform_dict.keys():
             return image.transpose(transform_dict[transform])
         else:
-            raise ValueError('Wrong transform %s check documentation to see the supported ones' %transform)
+            raise ValueError('Wrong transform %s check documentation to see the supported ones' % transform)
 
     def _apply_augmentation(self, image, size, transforms):
         crops = []
@@ -141,10 +145,10 @@ class AugmentedDirectoryIterator(DirectoryIterator):
             for transform in transforms:
                 # Central Crop
                 crops.append(self._apply_transform(img.crop((w_center - target_w / 2,
-                                                           h_center - target_h / 2,
-                                                           w_center + target_w / 2,
-                                                           h_center + target_h / 2))
-                                                 .resize((target_w, target_h)), transform))
+                                                             h_center - target_h / 2,
+                                                             w_center + target_w / 2,
+                                                             h_center + target_h / 2))
+                                                   .resize((target_w, target_h)), transform))
                 # Left-Up
                 crops.append(self._apply_transform(img.crop((0, 0, target_w, target_h)), transform))
                 # Left-Bottom
@@ -171,12 +175,11 @@ class AugmentedDirectoryIterator(DirectoryIterator):
             if self.crop_original == 'central_crop':
                 w, h = image.size
                 if w > h:
-                    image = image.crop((w/2 - h/2, 0, w/2 + h/2, h))
+                    image = image.crop((w / 2 - h / 2, 0, w / 2 + h / 2, h))
                 else:
-                    image = image.crop((0, h/2 - w/2, w, h/2 + w/2))
-
-            elif self.crop_original == 'automatic_roi':
-                pass
+                    image = image.crop((0, h / 2 - w / 2, w, h / 2 + w / 2))
+            elif self.crop_original:
+                raise ValueError('crop_original entered not supported, only `central_crop` is being supported now')
 
             image_w, image_h = image.size
 

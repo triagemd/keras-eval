@@ -269,7 +269,7 @@ class Evaluator(object):
                         if k == steps:
                             break
                         progbar = generic_utils.Progbar(steps)
-                        progbar.add(k+1)
+                        progbar.add(k + 1)
                         probs = model.predict(batch[0][0], batch_size=self.batch_size)
                         probabilities_model.append(np.mean(probs, axis=0))
                     probabilities.append(probabilities_model)
