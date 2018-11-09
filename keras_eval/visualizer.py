@@ -181,42 +181,61 @@ def plot_threshold(threshold, correct, errors, title='Threshold Tuning'):
     iplot(fig, filename='Threshold Tuning')
 
 
-def plot_images(image_paths, n_imgs, title='', image_res=(20, 20), save_name=None):
+def plot_images(image_paths, n_images, title='', n_cols=5, image_res=(20, 20), save_name=None):
+    '''
+
+    Args:
+        image_paths: List with image_paths
+        n_images: Number of images to show
+        title: Title for the plot
+        n_cols: Number of columns to split the data
+        image_res: Plot image resolution
+        save_name: If specified, will save the plot in save_name path
+
+    Returns: Plots images in the screen
+
+    '''
     n_row = 0
     n_col = 0
 
-    if n_imgs <= 5:
-        f, axes = plt.subplots(nrows=1, ncols=n_imgs, figsize=image_res)
+    if len(image_paths) < n_images:
+        total_images_plot = len(image_paths)
+    else:
+        total_images_plot = n_images
+
+    if total_images_plot <= n_cols:
+        f, axes = plt.subplots(nrows=1, ncols=n_cols, figsize=image_res)
         plt.title(title)
-        for i, image_path in enumerate(image_paths):
-
-            if i == n_imgs:
-                break
-
-            img = plt.imread(image_path)
-            axes[n_col].imshow(img, aspect='equal')
-            axes[n_col].grid('off')
-            axes[n_col].axis('off')
+        for i in range(0, n_cols):
+            if i < total_images_plot:
+                img = plt.imread(image_paths[i])
+                axes[n_col].imshow(img, aspect='equal')
+                axes[n_col].grid('off')
+                axes[n_col].axis('off')
+            else:
+                f.delaxes(axes[n_col])
             n_col += 1
 
     else:
-        n_rows_total = int(np.ceil(n_imgs / 5))
+        n_rows_total = int(np.ceil(n_images / n_cols))
 
-        f, axes = plt.subplots(nrows=n_rows_total, ncols=5, figsize=image_res)
+        f, axes = plt.subplots(nrows=n_rows_total, ncols=n_cols, figsize=image_res)
         plt.title(title)
-        for i, image_path in enumerate(image_paths):
+        for i in range(0, n_rows_total * n_cols):
+            if i < total_images_plot:
+                img = plt.imread(image_paths[i])
+                axes[n_row, n_col].imshow(img, aspect='equal')
+                axes[n_row, n_col].grid('off')
+                axes[n_row, n_col].axis('off')
+            else:
+                axes[n_row, n_col].grid('off')
+                f.delaxes(axes[n_row, n_col])
 
-            if i == n_imgs:
-                break
+            n_col += 1
 
-            img = plt.imread(image_path)
-            axes[n_row, n_col].imshow(img, aspect='equal')
-            axes[n_row, n_col].grid('off')
-            axes[n_row, n_col].axis('off')
-            n_row += 1
-            if n_row == int(np.ceil(n_imgs / 5)):
-                n_row = 0
-                n_col += 1
+            if n_col == n_cols:
+                n_col = 0
+                n_row += 1
 
     if save_name is not None:
         plt.savefig(save_name)

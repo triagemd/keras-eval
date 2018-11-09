@@ -259,7 +259,6 @@ class Evaluator(object):
                                                                  workers=1,
                                                                  verbose=1)[0:generator.samples])
                 else:
-                    utils.check_data_augmentation_keys(data_augmentation)
                     generator, labels = utils.create_image_generator(data_dir, self.batch_size, self.model_specs[i],
                                                                      data_augmentation=data_augmentation)
                     print('Averaging probabilities of %i different outputs at sizes: %s with transforms: %s'
@@ -440,7 +439,7 @@ class Evaluator(object):
 
         return dict_image_paths_concept
 
-    def plot_images(self, image_paths, n_imgs=None, title='', save_name=None):
+    def plot_images(self, image_paths, n_images=None, title='', n_cols=5, image_res=(20, 20), save_name=None):
         # Works better defining a number of images between 5 and 30 at a time
         '''
 
@@ -453,10 +452,10 @@ class Evaluator(object):
 
         '''
         image_paths = np.array(image_paths)
-        if n_imgs is None:
-            n_imgs = image_paths.shape[0]
+        if n_images is None:
+            n_images = image_paths.shape[0]
 
-        visualizer.plot_images(image_paths, n_imgs, title, save_name)
+        visualizer.plot_images(image_paths, n_images, title, n_cols, image_res, save_name)
 
     def compute_confidence_prediction_distribution(self, verbose=1):
         '''

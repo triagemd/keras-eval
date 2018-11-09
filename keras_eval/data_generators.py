@@ -4,6 +4,7 @@ import PIL
 
 from keras_preprocessing.image import ImageDataGenerator, DirectoryIterator, get_keras_submodule, array_to_img, \
     load_img, img_to_array
+from keras_eval.utils import check_data_augmentation_keys
 
 backend = get_keras_submodule('backend')
 
@@ -17,9 +18,10 @@ class AugmentedDirectoryIterator(DirectoryIterator):
     Added functionality of doing multiple crops following the paper Going Deeper with Convolutions
     (https://arxiv.org/pdf/1409.4842.pdf) and allowing the use of performing transforms on the crops.
 
-    Has the addition of data_augmentation as an argument. It is a dictionary consisting of 2 elements,
-    'scale_sizes' being 'default' or a list of sizes and transforms being a list of transforms ('horizontal_flip',
-    'vertical_flip', 'rotate_90', 'rotate_180', 'rotate_270' are supported now).
+    Has the addition of data_augmentation as an argument. It is a dictionary consisting of 3 elements,
+    'scale_sizes' being 'default' or a list of sizes, 'transforms' being a list of transforms ('horizontal_flip',
+    'vertical_flip', 'rotate_90', 'rotate_180', 'rotate_270' are supported now) and 'crop_original' that allows to
+    center crop the original image prior do the rest of transforms and scalings.
 
     E.g. data_augmentation={'scale_sizes':'default', 'transforms':['mirror', 'rotate_180']}
 
@@ -56,7 +58,13 @@ class AugmentedDirectoryIterator(DirectoryIterator):
                                interpolation,
                                )
 
+        check_data_augmentation_keys(data_augmentation)
         self.data_augmentation = data_augmentation
+
+        self.crop_original = None
+        if 'crop_original' in data_augmentation.keys():
+            self.crop_original = self.data_augmentation['crop_original']
+
         self.transforms = ['none']
         if 'transforms' in self.data_augmentation.keys():
             self.transforms += self.data_augmentation['transforms']
@@ -159,6 +167,17 @@ class AugmentedDirectoryIterator(DirectoryIterator):
                              grayscale=grayscale,
                              target_size=None,
                              interpolation=self.interpolation)
+
+            if self.crop_original == 'central_crop':
+                w, h = image.size
+                if w > h:
+                    image = image.crop((w/2 - h/2, 0, w/2 + h/2, h))
+                else:
+                    image = image.crop((0, h/2 - w/2, w, h/2 + w/2))
+
+            elif self.crop_original == 'automatic_roi':
+                pass
+
             image_w, image_h = image.size
 
             if self.scale_sizes is not None:
@@ -204,7 +223,7 @@ class AugmentedDirectoryIterator(DirectoryIterator):
                 batch_y[i, label] = 1.
         else:
             return batch_x
-        return batch_x, [batch_y for n in range(0, self.n_crops)]
+        return batch_x, [batch_y for n in range(self.n_crops)]
 
 
 class AugmentedImageDataGenerator(ImageDataGenerator):

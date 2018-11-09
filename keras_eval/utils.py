@@ -250,8 +250,9 @@ def compare_group_test_concepts(test_concepts_list, concept_dict):
 def check_data_augmentation_keys(data_augmentation):
     if isinstance(data_augmentation, dict):
         keys = data_augmentation.keys()
-        if 'scale_sizes' not in keys and 'transforms' not in keys:
-            raise ValueError('data_augmentation dictionary should contain `scale_sizes` or `transforms` as keys')
+        if 'scale_sizes' not in keys and 'transforms' not in keys and 'crop_original' not in keys:
+            raise ValueError('data_augmentation dictionary should contain '
+                             '`crop_original` `scale_sizes` or `transforms` as keys')
     else:
         raise ValueError('`data_augmentation` is %s and it should be a dictionary' % type(data_augmentation))
 
