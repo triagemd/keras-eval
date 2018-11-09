@@ -5,13 +5,14 @@ import numpy as np
 import keras.models
 import tensorflow as tf
 import pandas as pd
+import keras_model_specs.models.custom_layers as custom_layers
 
 from copy import deepcopy
 from keras.layers import average, maximum
 from keras.models import Model, Input
 from keras.preprocessing import image
 from keras_model_specs import ModelSpec
-import keras_model_specs.models.custom_layers as custom_layers
+from keras_eval.data_generators import AugmentedImageDataGenerator
 
 
 def safe_divide(numerator, denominator):
@@ -246,7 +247,16 @@ def compare_group_test_concepts(test_concepts_list, concept_dict):
         return True
 
 
-def create_image_generator(data_dir, batch_size, model_spec):
+def check_data_augmentation_keys(data_augmentation):
+    if isinstance(data_augmentation, dict):
+        keys = data_augmentation.keys()
+        if 'scale_sizes' not in keys and 'transforms' not in keys:
+            raise ValueError('data_augmentation dictionary should contain `scale_sizes` or `transforms` as keys')
+    else:
+        raise ValueError('`data_augmentation` is %s and it should be a dictionary' % type(data_augmentation))
+
+
+def create_image_generator(data_dir, batch_size, model_spec, data_augmentation=None):
     '''
     Creates a Keras image generator
     Args:
@@ -257,10 +267,19 @@ def create_image_generator(data_dir, batch_size, model_spec):
     Returns: Keras generator without shuffling samples and ground truth labels associated with generator
 
     '''
-    test_gen = image.ImageDataGenerator(preprocessing_function=model_spec.preprocess_input)
+    if data_augmentation is None:
+        test_gen = image.ImageDataGenerator(preprocessing_function=model_spec.preprocess_input)
+        generator = test_gen.flow_from_directory(data_dir, batch_size=batch_size,
+                                                 target_size=model_spec.target_size[:2],
+                                                 class_mode='categorical', shuffle=False)
+    else:
+        test_gen = AugmentedImageDataGenerator(data_augmentation=data_augmentation,
+                                               preprocessing_function=model_spec.preprocess_input)
+        generator = test_gen.flow_from_directory(data_dir, batch_size=1,
+                                                 target_size=model_spec.target_size[:2],
+                                                 class_mode='categorical', shuffle=False)
+
     print('Input image size: ', model_spec.target_size)
-    generator = test_gen.flow_from_directory(data_dir, batch_size=batch_size, target_size=model_spec.target_size[:2],
-                                             class_mode='categorical', shuffle=False)
 
     labels = keras.utils.np_utils.to_categorical(generator.classes, generator.num_classes)
 
