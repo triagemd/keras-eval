@@ -435,7 +435,7 @@ class Evaluator(object):
         Returns: Plots images in the screen
 
         '''
-        
+
         image_paths = np.array(image_paths)
         if n_images is None:
             n_images = image_paths.shape[0]
