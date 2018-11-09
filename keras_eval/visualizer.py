@@ -182,6 +182,20 @@ def plot_threshold(threshold, correct, errors, title='Threshold Tuning'):
 
 
 def plot_images(image_paths, n_images, title='', n_cols=5, image_res=(20, 20), save_name=None):
+    '''
+
+    Args:
+        image_paths: List with image_paths
+        n_images: Number of images to show
+        title: Title for the plot
+        n_cols: Number of columns to split the data
+        image_res: Plot image resolution
+        save_name: If specified, will save the plot in save_name path
+
+    Returns: Plots images in the screen
+
+    '''
+
     n_row = 0
     n_col = 0
 
