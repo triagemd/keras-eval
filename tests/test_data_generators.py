@@ -43,8 +43,6 @@ def test_augmented_image_data_generator(test_catdog_dataset_path):
         class_mode='categorical',
         shuffle=False)
 
-    import pdb
-    pdb.set_trace()
     for batch_x, batch_y in test_data_generator:
         assert batch_x.shape == [1, 36, 224, 224]
         assert batch_y.shape == [1, 36, 224, 224]
