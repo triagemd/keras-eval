@@ -199,10 +199,7 @@ def plot_images(image_paths, n_images, title='', n_cols=5, image_res=(20, 20), s
     n_row = 0
     n_col = 0
 
-    if len(image_paths) < n_images:
-        total_images_plot = len(image_paths)
-    else:
-        total_images_plot = n_images
+    total_images_plot = min(len(image_paths), n_images)
 
     if total_images_plot <= n_cols:
         f, axes = plt.subplots(nrows=1, ncols=n_cols, figsize=image_res)
