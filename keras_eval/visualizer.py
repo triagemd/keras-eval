@@ -186,7 +186,7 @@ def plot_images(image_paths, n_images, title='', n_cols=5, image_res=(20, 20), s
 
     Args:
         image_paths: List with image_paths
-        n_images: Number of images to show
+        n_images: Number of images to show in the plot. Upper bounded by len(image_paths).
         title: Title for the plot
         n_cols: Number of columns to split the data
         image_res: Plot image resolution
