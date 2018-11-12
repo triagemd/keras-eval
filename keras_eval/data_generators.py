@@ -18,9 +18,11 @@ class AugmentedDirectoryIterator(DirectoryIterator):
     (https://arxiv.org/pdf/1409.4842.pdf) and allowing the use of performing transforms on the crops.
 
     Has the addition of data_augmentation as an argument. It is a dictionary consisting of 3 elements,
-    'scale_sizes' being 'default' or a list of sizes, 'transforms' being a list of transforms ('horizontal_flip',
-    'vertical_flip', 'rotate_90', 'rotate_180', 'rotate_270' are supported now) and 'crop_original' that allows to
-    center crop the original image prior do the rest of transforms and scalings.
+    'scale_sizes' could be 'default' - similar to Google's paper or a list of sizes. Each scaled image then will
+    be cropped in three square parts, 'transforms' is a list of transforms to apply to these crops in addition to not
+    applying any transform ('horizontal_flip', 'vertical_flip', 'rotate_90', 'rotate_180', 'rotate_270' are
+    supported now) and 'crop_original' that allows to center crop the original image prior do the rest of transforms
+    and scale + croppings.
 
     E.g. data_augmentation={'scale_sizes':'default', 'transforms':['horizontal_flip', 'rotate_180'],
     'crop_original':'center_crop'}

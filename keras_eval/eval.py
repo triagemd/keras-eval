@@ -118,6 +118,12 @@ class Evaluator(object):
             top_k: The top-k predictions to consider. E.g. top_k = 5 is top-5 preds
             filter_indices: If given take only the predictions corresponding to that indices to compute metrics
             confusion_matrix: True/False whether to show the confusion matrix
+            data_augmentation: It is a dictionary consisting of 3 elements, 'scale_sizes' could be 'default' - similar
+            to Google's paper or a list of sizes. Each scaled image then will be cropped in three square parts,
+            'transforms' is a list of transforms to apply to these crops in addition to not applying any transform 
+            ('horizontal_flip', 'vertical_flip', 'rotate_90', 'rotate_180', 'rotate_270' are supported now) and
+            'crop_original' that allows to center crop the original image prior do the rest of transforms and
+            scale + croppings.
             save_confusion_matrix_path: If path specified save confusion matrix there
 
 
