@@ -257,7 +257,7 @@ class AugmentedDirectoryIterator(DirectoryIterator):
                     print(fname)
                     img.save(os.path.join(self.save_to_dir, fname))
 
-        # build batch of labels
+        # Build batch of labels
         if self.class_mode == 'input':
             batch_y = batch_x.copy()
         elif self.class_mode == 'sparse':
