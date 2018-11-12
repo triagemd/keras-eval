@@ -264,9 +264,8 @@ def create_image_generator(data_dir, batch_size, model_spec, data_augmentation=N
                                                  target_size=model_spec.target_size[:2],
                                                  class_mode='categorical', shuffle=False)
     else:
-        test_gen = AugmentedImageDataGenerator(data_augmentation=data_augmentation,
-                                               preprocessing_function=model_spec.preprocess_input)
-        generator = test_gen.flow_from_directory(data_dir, batch_size=1,
+        test_gen = AugmentedImageDataGenerator(preprocessing_function=model_spec.preprocess_input)
+        generator = test_gen.flow_from_directory(data_dir, data_augmentation=data_augmentation, batch_size=1,
                                                  target_size=model_spec.target_size[:2],
                                                  class_mode='categorical', shuffle=False)
 

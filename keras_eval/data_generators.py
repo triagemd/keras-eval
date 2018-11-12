@@ -127,6 +127,11 @@ class AugmentedDirectoryIterator(DirectoryIterator):
             im_2 = image.crop((0, h_center - w / 2, w, h_center + w / 2))
             im_3 = image.crop((0, h - w, w, h))
 
+        image.save('ori.jpg')
+        im_1.save('im_1.jpg')
+        im_2.save('im_2.jpg')
+        im_3.save('im_3.jpg')
+
         return [im_1, im_2, im_3]
 
     @staticmethod
@@ -189,7 +194,7 @@ class AugmentedDirectoryIterator(DirectoryIterator):
                 else:
                     image = image.crop((0, h / 2 - w / 2, w, h / 2 + w / 2))
             elif self.crop_original:
-                raise ValueError('crop_original entered not supported, only `center_crops` is being supported now')
+                raise ValueError('crop_original entered not supported, only `center_crop` is being supported now')
 
             image_w, image_h = image.size
 
@@ -245,7 +250,6 @@ class AugmentedImageDataGenerator(ImageDataGenerator):
     '''
 
     def __init__(self,
-                 data_augmentation,
                  featurewise_center=False,
                  samplewise_center=False,
                  featurewise_std_normalization=False,
@@ -291,9 +295,8 @@ class AugmentedImageDataGenerator(ImageDataGenerator):
                                data_format=data_format,
                                validation_split=validation_split,
                                )
-        self.data_augmentation = data_augmentation
 
-    def flow_from_directory(self, directory,
+    def flow_from_directory(self, directory, data_augmentation,
                             target_size=(256, 256), color_mode='rgb',
                             classes=None, class_mode='categorical',
                             batch_size=32, shuffle=True, seed=None,
@@ -306,7 +309,7 @@ class AugmentedImageDataGenerator(ImageDataGenerator):
                             ):
         return AugmentedDirectoryIterator(
             directory, self,
-            data_augmentation=self.data_augmentation,
+            data_augmentation=data_augmentation,
             target_size=target_size, color_mode=color_mode,
             classes=classes, class_mode=class_mode,
             data_format=self.data_format,
