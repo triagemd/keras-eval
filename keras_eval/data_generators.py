@@ -4,7 +4,6 @@ import PIL
 
 from keras_preprocessing.image import ImageDataGenerator, DirectoryIterator, get_keras_submodule, array_to_img, \
     load_img, img_to_array
-from keras_eval import utils
 
 backend = get_keras_submodule('backend')
 
@@ -58,7 +57,7 @@ class AugmentedDirectoryIterator(DirectoryIterator):
                                interpolation,
                                )
 
-        utils.check_data_augmentation_keys(data_augmentation)
+        self._check_data_augmentation_keys(data_augmentation)
         self.data_augmentation = data_augmentation
 
         self.crop_original = None
@@ -91,6 +90,16 @@ class AugmentedDirectoryIterator(DirectoryIterator):
         else:
             self.scale_sizes = None
             self.n_crops = self.n_transforms
+
+    @staticmethod
+    def _check_data_augmentation_keys(data_augmentation):
+        if isinstance(data_augmentation, dict):
+            keys = data_augmentation.keys()
+            if 'scale_sizes' not in keys and 'transforms' not in keys and 'crop_original' not in keys:
+                raise ValueError('data_augmentation dictionary should contain '
+                                 '`crop_original` `scale_sizes` or `transforms` as keys')
+        else:
+            raise ValueError('`data_augmentation` is %s and it should be a dictionary' % type(data_augmentation))
 
     @staticmethod
     def _get_default_sizes(target_size, multipliers=(1.1, 1.2, 1.3, 1.4)):
