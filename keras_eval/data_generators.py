@@ -189,7 +189,7 @@ class AugmentedDirectoryIterator(DirectoryIterator):
                 else:
                     image = image.crop((0, h / 2 - w / 2, w, h / 2 + w / 2))
             elif self.crop_original:
-                raise ValueError('crop_original entered not supported, only `center_crop` is being supported now')
+                raise ValueError('crop_original entered not supported, only `center_crops` is being supported now')
 
             image_w, image_h = image.size
 
