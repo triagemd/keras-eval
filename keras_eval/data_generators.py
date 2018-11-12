@@ -116,6 +116,16 @@ class AugmentedDirectoryIterator(DirectoryIterator):
 
     @staticmethod
     def _get_3_crops(image):
+        '''
+
+        Args:
+            image: PIL Image
+
+        Returns: 3 square sized crops of the image. Top, central and bottom in the case of a vertical image
+        and left, central and right in the case of a horizontal image.
+
+        '''
+
         w, h = image.size
         w_center = w / 2
         h_center = h / 2
@@ -138,6 +148,15 @@ class AugmentedDirectoryIterator(DirectoryIterator):
 
     @staticmethod
     def _apply_transform(image, transform):
+        '''
+
+        Args:
+            image: PIL input image
+            transform: Transform to apply
+
+        Returns: Transformed image in PIL format.
+
+        '''
         transform_dict = {'horizontal_flip': PIL.Image.FLIP_LEFT_RIGHT, 'vertical_flip': PIL.Image.FLIP_TOP_BOTTOM,
                           'rotate_90': PIL.Image.ROTATE_90, 'rotate_180': PIL.Image.ROTATE_180,
                           'rotate_270': PIL.Image.ROTATE_270}
@@ -149,6 +168,16 @@ class AugmentedDirectoryIterator(DirectoryIterator):
             raise ValueError('Wrong transform %s check documentation to see the supported ones' % transform)
 
     def _apply_augmentation(self, image, size, transforms):
+        '''
+
+        Args:
+            image: PIL input image
+            size: Target output size
+            transforms: List of transforms to apply
+
+        Returns:
+
+        '''
         crops = []
 
         target_w, target_h = size
