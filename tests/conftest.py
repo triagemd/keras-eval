@@ -77,6 +77,15 @@ def evaluator_mobilenet(test_catdog_mobilenet_model):
 
 
 @pytest.fixture('function')
+def evaluator_mobilenet_data_augmentation(test_catdog_mobilenet_model):
+    return Evaluator(
+        batch_size=1,
+        model_path=test_catdog_mobilenet_model,
+        data_augmentation={'scale_sizes': [256], 'transforms': ['horizontal_flip'], 'crop_original': 'center_crop'}
+    )
+
+
+@pytest.fixture('function')
 def evaluator_ensemble_mobilenet(test_ensemble_models_path):
     return Evaluator(
         ensemble_models_dir=test_ensemble_models_path,
