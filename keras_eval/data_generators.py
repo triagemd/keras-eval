@@ -183,7 +183,7 @@ class AugmentedDirectoryIterator(DirectoryIterator):
         target_w, target_h = size
         images_cropped_at_scale = self._get_3_crops(image)
 
-        for img in images_cropped_at_scale:
+        for image in images_cropped_at_scale:
             w, h = img.size
             w_center = w / 2
             h_center = h / 2
