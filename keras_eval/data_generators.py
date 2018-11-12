@@ -250,6 +250,7 @@ class AugmentedImageDataGenerator(ImageDataGenerator):
     '''
 
     def __init__(self,
+                 data_augmentation,
                  featurewise_center=False,
                  samplewise_center=False,
                  featurewise_std_normalization=False,
@@ -296,7 +297,9 @@ class AugmentedImageDataGenerator(ImageDataGenerator):
                                validation_split=validation_split,
                                )
 
-    def flow_from_directory(self, directory, data_augmentation,
+        self.data_augmentation = data_augmentation
+
+    def flow_from_directory(self, directory,
                             target_size=(256, 256), color_mode='rgb',
                             classes=None, class_mode='categorical',
                             batch_size=32, shuffle=True, seed=None,
@@ -309,7 +312,7 @@ class AugmentedImageDataGenerator(ImageDataGenerator):
                             ):
         return AugmentedDirectoryIterator(
             directory, self,
-            data_augmentation=data_augmentation,
+            data_augmentation=self.data_augmentation,
             target_size=target_size, color_mode=color_mode,
             classes=classes, class_mode=class_mode,
             data_format=self.data_format,
