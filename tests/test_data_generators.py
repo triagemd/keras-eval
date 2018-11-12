@@ -76,7 +76,7 @@ def test_augmented_image_data_generator_wrong_crop_original(test_catdog_dataset_
 
         datagen.next()
 
-    expected = 'crop_original entered not supported, only `central_crop` is being supported now'
+    expected = 'crop_original entered not supported, only `center_crop` is being supported now'
     actual = str(exception).split('ValueError: ')[1]
     assert actual == expected
 
@@ -124,7 +124,7 @@ def test_augmented_image_data_generator(test_catdog_dataset_path):
 
     test_data_generator = AugmentedImageDataGenerator(preprocessing_function=model_spec.preprocess_input,
                                                       data_augmentation={'scale_sizes': [256],
-                                                                         'crop_original': 'central_crop',
+                                                                         'crop_original': 'center_crop',
                                                                          'transforms': ['horizontal_flip',
                                                                                         'vertical_flip',
                                                                                         'rotate_90',

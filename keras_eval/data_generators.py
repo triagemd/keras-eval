@@ -22,7 +22,8 @@ class AugmentedDirectoryIterator(DirectoryIterator):
     'vertical_flip', 'rotate_90', 'rotate_180', 'rotate_270' are supported now) and 'crop_original' that allows to
     center crop the original image prior do the rest of transforms and scalings.
 
-    E.g. data_augmentation={'scale_sizes':'default', 'transforms':['mirror', 'rotate_180']}
+    E.g. data_augmentation={'scale_sizes':'default', 'transforms':['horizontal_flip', 'rotate_180'],
+    'crop_original':'center_crop'}
 
     '''
 
@@ -181,14 +182,14 @@ class AugmentedDirectoryIterator(DirectoryIterator):
                              target_size=None,
                              interpolation=self.interpolation)
 
-            if self.crop_original == 'central_crop':
+            if self.crop_original == 'center_crop':
                 w, h = image.size
                 if w > h:
                     image = image.crop((w / 2 - h / 2, 0, w / 2 + h / 2, h))
                 else:
                     image = image.crop((0, h / 2 - w / 2, w, h / 2 + w / 2))
             elif self.crop_original:
-                raise ValueError('crop_original entered not supported, only `central_crop` is being supported now')
+                raise ValueError('crop_original entered not supported, only `center_crop` is being supported now')
 
             image_w, image_h = image.size
 
