@@ -37,7 +37,7 @@ def test_augmented_image_data_generator_wrong_transforms(test_catdog_dataset_pat
             shuffle=False)
         datagen.next()
 
-    expected = 'Wrong transform failure check documentation to see the supported ones'
+    expected = 'Wrong transform: failure . Check documentation to see the supported ones'
     actual = str(exception).split('ValueError: ')[1]
     assert actual == expected
 
