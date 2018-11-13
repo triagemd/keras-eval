@@ -14,17 +14,19 @@ class AugmentedDirectoryIterator(DirectoryIterator):
     AugmentedDirectoryIterator inherits from DirectoryIterator:
     (https://github.com/keras-team/keras-preprocessing/blob/master/keras_preprocessing/image.py#L1811)
 
-    Added functionality of doing multiple crops following the paper Going Deeper with Convolutions
-    (https://arxiv.org/pdf/1409.4842.pdf) and allowing the use of performing transforms on the crops.
+    This implementation adds the functionality of computing multiple crops following the paper Going Deeper with
+    Convolutions (https://arxiv.org/pdf/1409.4842.pdf) and allowing the use of transforms on such crops.
 
-    Has the addition of data_augmentation as an argument. It is a dictionary consisting of 3 elements,
-    'scale_sizes' could be 'default' - similar to Google's paper or a list of sizes. Each scaled image then will
-    be cropped in three square parts, 'transforms' is a list of transforms to apply to these crops in addition to not
+    It includes the addition of data_augmentation as an argument. It is a dictionary consisting of 3 elements:
+    - 'scale_sizes': 'default' (4 similar scales to Google's paper) or a list of sizes. Each scaled image then
+    will be cropped into three square parts.
+    - 'transforms': list of transforms to apply to these crops in addition to not
     applying any transform ('horizontal_flip', 'vertical_flip', 'rotate_90', 'rotate_180', 'rotate_270' are
-    supported now) and 'crop_original' that allows to center crop the original image prior do the rest of transforms
-    and scale + croppings.
+    supported now).
+    - 'crop_original': 'center_crop' mode allows to center crop the original image prior do the rest of transforms,
+    scalings + croppings.
 
-    E.g. data_augmentation={'scale_sizes':'default', 'transforms':['horizontal_flip', 'rotate_180'],
+    For instance: data_augmentation={'scale_sizes':'default', 'transforms':['horizontal_flip', 'rotate_180'],
     'crop_original':'center_crop'}
 
     '''
@@ -83,6 +85,7 @@ class AugmentedDirectoryIterator(DirectoryIterator):
                 self.scale_sizes = []
                 for size in self.data_augmentation['scale_sizes']:
                     size = round(size)
+                    # Use sizes that are multiples of 2
                     if size % 2 != 0:
                         size += 1
                     self.scale_sizes.append(size)
@@ -138,11 +141,6 @@ class AugmentedDirectoryIterator(DirectoryIterator):
             im_1 = image.crop((0, 0, w, w))
             im_2 = image.crop((0, h_center - w / 2, w, h_center + w / 2))
             im_3 = image.crop((0, h - w, w, h))
-
-        image.save('ori.jpg')
-        im_1.save('im_1.jpg')
-        im_2.save('im_2.jpg')
-        im_3.save('im_3.jpg')
 
         return [im_1, im_2, im_3]
 
@@ -209,7 +207,7 @@ class AugmentedDirectoryIterator(DirectoryIterator):
     def _get_batches_of_transformed_samples(self, index_array):
         grayscale = self.color_mode == 'grayscale'
         batch_x = np.zeros((len(index_array), self.n_crops,) + self.image_shape, dtype=backend.floatx())
-        # build batch of image data
+        # Build batch of image data
         for i, j in enumerate(index_array):
             crops = []
             fname = self.filenames[j]
@@ -225,7 +223,7 @@ class AugmentedDirectoryIterator(DirectoryIterator):
                 else:
                     image = image.crop((0, h / 2 - w / 2, w, h / 2 + w / 2))
             elif self.crop_original:
-                raise ValueError('crop_original entered not supported, only `center_crop` is being supported now')
+                raise ValueError('crop_original mode entered not supported, only `center_crop` is being supported now')
 
             image_w, image_h = image.size
 
@@ -244,7 +242,7 @@ class AugmentedDirectoryIterator(DirectoryIterator):
                 x = self.image_data_generator.standardize(x)
                 batch_x[i, c_i] = x
 
-        # optionally save augmented images to disk for debugging purposes
+        # Optionally save augmented images to disk for debugging purposes
         if self.save_to_dir:
             for i, j in enumerate(index_array):
                 for crop in batch_x[i]:
@@ -254,10 +252,9 @@ class AugmentedDirectoryIterator(DirectoryIterator):
                         index=j,
                         hash=np.random.randint(1e7),
                         format=self.save_format)
-                    print(fname)
                     img.save(os.path.join(self.save_to_dir, fname))
 
-        # build batch of labels
+        # Build batch of labels
         if self.class_mode == 'input':
             batch_y = batch_x.copy()
         elif self.class_mode == 'sparse':
@@ -277,7 +274,10 @@ class AugmentedDirectoryIterator(DirectoryIterator):
 
 class AugmentedImageDataGenerator(ImageDataGenerator):
     '''
-    ImageDataGenerator that returns multiple outputs using AugmentedDirectoryIterator as iterator.
+
+    ImageDataGenerator that returns multiple outputs using AugmentedDirectoryIterator as iterator. It has the addition
+    of `data_augmentation` argument to control the type of modifications desired.
+
     '''
 
     def __init__(self,
