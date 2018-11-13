@@ -8,12 +8,11 @@ python:
 before_install:
   - script/up
 
+script:
+  - script/test
+
 jobs:
   include:
-    - stage: test
-      script:
-        - script/test
-
     - stage: distribute
       python: "3.6"
       if: branch = master AND type != pull_request
