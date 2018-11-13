@@ -2,6 +2,7 @@ language: python
 sudo: required
 
 python:
+  - "3.5"
   - "3.6"
 
 before_install:
@@ -15,5 +16,6 @@ jobs:
     - stage: distribute
       if: branch = master AND type != pull_request
       install: skip
+      python: "3.6"
       script:
         - script/distribute
