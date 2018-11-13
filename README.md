@@ -6,7 +6,7 @@
 
 Evaluation abstraction for Keras models. [Example Notebook](https://github.com/triagemd/keras-eval/blob/master/example.ipynb)
 
-Requires [keras-model-specs](https://github.com/triagemd/keras-model-specs).
+Requires [keras-model-specs](https://github.com/triagemd/keras-model-specs). We support python 3+.
 
 # Example Evaluation
 
@@ -71,6 +71,26 @@ ensemble_models_dir = '/model_folder'
 # e.g. '/model_folder/resnet_50/model.h5', '/model_folder/resnet_50/model_spec.json', '/model_folder/densenet201/model.h5', '/model_folder/densenet201/model_spec.json'
 
 ```
+
+**Apply Data Augmentation at Test time**
+
+We include the addition of data_augmentation as an argument in evaluate. It is a dictionary consisting of 3 elements:
+    
+- 'scale_sizes': 'default' (4 similar scales to Original paper) or a list of sizes. Each scaled image then
+    will be cropped into three square parts.
+- 'transforms': list of transforms to apply to these crops in addition to not
+    applying any transform ('horizontal_flip', 'vertical_flip', 'rotate_90', 'rotate_180', 'rotate_270' are
+    supported now).
+- 'crop_original': 'center_crop' mode allows to center crop the original image prior do the rest of transforms,
+    scalings + croppings.
+    
+For instance:
+
+```
+probs, labels = evaluator.evaluate(data_dir=data_dir, top_k=2, confusion_matrix=True, data_augmentation={'scale_sizes': [356, 284], 'transforms': ['horizontal_flip'], 'crop_original': 'center_crop'})
+
+```
+
 **To evaluate on coarse classes after training on granular classes**
 
 Given a model trained on M classes and test set based on N classes (M > N), allow the evaluation on sets of classes by providing a *concept dictionary*.
