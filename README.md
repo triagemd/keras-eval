@@ -248,8 +248,8 @@ evaluator.add_model_ensemble(model_path)
 **set_concepts**
 
 ```
-concepts = [{'label':'Dog', 'id': 'dogs'},
-           {'label':'Cat', 'id': 'cats'}]
+concepts = [{'label':'Cat', 'id': 'cats'},
+            {'label':'Dog', 'id': 'dogs'},]
 
 evaluator.set_concepts(concepts)
 ```
