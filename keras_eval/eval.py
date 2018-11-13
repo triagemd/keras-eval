@@ -133,6 +133,7 @@ class Evaluator(object):
         Returns: Probabilities computed and ground truth labels associated.
 
         '''
+
         self.data_dir = data_dir or self.data_dir
         self.data_augmentation = data_augmentation or self.data_augmentation
         if self.data_dir is None:
