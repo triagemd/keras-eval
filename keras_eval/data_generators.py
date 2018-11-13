@@ -165,7 +165,7 @@ class AugmentedDirectoryIterator(DirectoryIterator):
         elif transform in transform_dict.keys():
             return image.transpose(transform_dict[transform])
         else:
-            raise ValueError('Wrong transform %s check documentation to see the supported ones' % transform)
+            raise ValueError('Wrong transform: %s . Check documentation to see the supported ones' % transform)
 
     def _apply_augmentation(self, image, size, transforms):
         '''
