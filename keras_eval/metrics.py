@@ -10,7 +10,7 @@ from keras.utils.np_utils import to_categorical
 from collections import OrderedDict
 
 
-def metrics_top_k(y_probs, y_true, concepts, top_k, round_decimals=7):
+def metrics_top_k(y_probs, y_true, concepts, top_k=1, round_decimals=7):
     """
     Compute the accuracy, sensitivity and precision between the predicted `y_probs` and the true labels
     `y_true`.
