@@ -163,7 +163,7 @@ class AugmentedDirectoryIterator(DirectoryIterator):
         elif transform in transform_dict.keys():
             return image.transpose(transform_dict[transform])
         else:
-            raise ValueError('Wrong transform %s check documentation to see the supported ones' % transform)
+            raise ValueError('Wrong transform: %s . Check documentation to see the supported ones' % transform)
 
     def _apply_augmentation(self, image, size, transforms):
         '''
@@ -181,7 +181,7 @@ class AugmentedDirectoryIterator(DirectoryIterator):
         target_w, target_h = size
         images_cropped_at_scale = self._get_3_crops(image)
 
-        for img in images_cropped_at_scale:
+        for image in images_cropped_at_scale:
             w, h = img.size
             w_center = w / 2
             h_center = h / 2

@@ -249,7 +249,7 @@ def compare_group_test_concepts(test_concepts_list, concept_dict):
 
 def create_image_generator(data_dir, batch_size, model_spec, data_augmentation=None):
     '''
-    Creates a Keras image generator
+    Creates a Keras Image Generator.
     Args:
         batch_size: N images per batch
         preprocessing_function: Function to preprocess the images
