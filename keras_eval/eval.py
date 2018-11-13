@@ -119,8 +119,8 @@ class Evaluator(object):
             filter_indices: If given take only the predictions corresponding to that indices to compute metrics
             confusion_matrix: True/False whether to show the confusion matrix
             It includes the addition of data_augmentation as an argument. It is a dictionary consisting of 3 elements:
-            - 'scale_sizes': 'default' (4 similar scales to Google's paper) or a list of sizes. Each scaled image then
-            will be cropped into three square parts.
+            - 'scale_sizes': 'default' (4 scales similar to Going Deeper with Convolutions work) or a list of sizes.
+            Each scaled image then will be cropped into three square parts.
             - 'transforms': list of transforms to apply to these crops in addition to not
             applying any transform ('horizontal_flip', 'vertical_flip', 'rotate_90', 'rotate_180', 'rotate_270' are
             supported now).

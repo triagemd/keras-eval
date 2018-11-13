@@ -14,11 +14,11 @@ class AugmentedDirectoryIterator(DirectoryIterator):
     AugmentedDirectoryIterator inherits from DirectoryIterator:
     (https://github.com/keras-team/keras-preprocessing/blob/master/keras_preprocessing/image.py#L1811)
 
-    This implementation adds the functionality of computing multiple crops following the paper Going Deeper with
+    This implementation adds the functionality of computing multiple crops following the work Going Deeper with
     Convolutions (https://arxiv.org/pdf/1409.4842.pdf) and allowing the use of transforms on such crops.
 
     It includes the addition of data_augmentation as an argument. It is a dictionary consisting of 3 elements:
-    - 'scale_sizes': 'default' (4 similar scales to Google's paper) or a list of sizes. Each scaled image then
+    - 'scale_sizes': 'default' (4 similar scales to Original paper) or a list of sizes. Each scaled image then
     will be cropped into three square parts.
     - 'transforms': list of transforms to apply to these crops in addition to not
     applying any transform ('horizontal_flip', 'vertical_flip', 'rotate_90', 'rotate_180', 'rotate_270' are
