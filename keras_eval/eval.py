@@ -1,4 +1,3 @@
-from __future__ import print_function
 import os
 import copy
 import numpy as np
@@ -7,6 +6,7 @@ import keras_eval.metrics as metrics
 import keras_eval.visualizer as visualizer
 
 from math import log
+from keras.utils import generic_utils
 
 
 class Evaluator(object):
@@ -24,10 +24,11 @@ class Evaluator(object):
         'metrics': {'type': list, 'default': ['accuracy']},
         'batch_size': {'type': int, 'default': 1},
         'verbose': {'type': int, 'default': 0},
+        'data_augmentation': {'type': dict, 'default': None},
     }
 
     def __init__(self, **options):
-        # Be able to load keras_applications models by default
+        # Be able to load Keras_applications models by default
         self.custom_objects = utils.create_default_custom_objects()
 
         for key, option in self.OPTIONS.items():
@@ -106,7 +107,7 @@ class Evaluator(object):
             image_paths.append(os.path.join(self.data_dir, filename))
         return image_paths
 
-    def evaluate(self, data_dir=None, top_k=1, filter_indices=None, confusion_matrix=False,
+    def evaluate(self, data_dir=None, top_k=1, filter_indices=None, confusion_matrix=False, data_augmentation=None,
                  save_confusion_matrix_path=None):
         '''
         Evaluate a set of images. Each sub-folder under 'data_dir/' will be considered as a different class.
@@ -117,14 +118,24 @@ class Evaluator(object):
             top_k: The top-k predictions to consider. E.g. top_k = 5 is top-5 preds
             filter_indices: If given take only the predictions corresponding to that indices to compute metrics
             confusion_matrix: True/False whether to show the confusion matrix
+            It includes the addition of data_augmentation as an argument. It is a dictionary consisting of 3 elements:
+            - 'scale_sizes': 'default' (4 scales similar to Going Deeper with Convolutions work) or a list of sizes.
+            Each scaled image then will be cropped into three square parts.
+            - 'transforms': list of transforms to apply to these crops in addition to not
+            applying any transform ('horizontal_flip', 'vertical_flip', 'rotate_90', 'rotate_180', 'rotate_270' are
+            supported now).
+            - 'crop_original': 'center_crop' mode allows to center crop the original image prior do the rest of
+            transforms, scalings + croppings.
+
             save_confusion_matrix_path: If path specified save confusion matrix there
 
 
         Returns: Probabilities computed and ground truth labels associated.
 
         '''
-        self.data_dir = data_dir or self.data_dir
 
+        self.data_dir = data_dir or self.data_dir
+        self.data_augmentation = data_augmentation or self.data_augmentation
         if self.data_dir is None:
             raise ValueError('No data directory found, please specify a valid data directory under variable `data_dir`')
         else:
@@ -134,16 +145,19 @@ class Evaluator(object):
 
             # Obtain labels to show on the metrics results
             self.concept_labels = utils.get_concept_items(self.concepts, key='label')
+
             if hasattr(self, 'concept_dictionary'):
                 if utils.compare_group_test_concepts(self.concept_labels,
                                                      self.concept_dictionary) and utils.check_concept_unique(self.concept_dictionary):
                     # Create Keras image generator and obtain probabilities
-                    self.probabilities, self.labels = self._compute_probabilities_generator(data_dir=self.data_dir)
+                    self.probabilities, self.labels = self._compute_probabilities_generator(
+                        data_dir=self.data_dir, data_augmentation=self.data_augmentation)
                     self.compute_inference_probabilities(self.concept_dictionary, self.probabilities)
 
             else:
                 # Create Keras image generator and obtain probabilities
-                self.probabilities, self.labels = self._compute_probabilities_generator(data_dir=self.data_dir)
+                self.probabilities, self.labels = self._compute_probabilities_generator(
+                    data_dir=self.data_dir, data_augmentation=self.data_augmentation)
 
             # Compute metrics
             self.results = self.get_metrics(probabilities=self.probabilities, labels=self.labels,
@@ -195,7 +209,7 @@ class Evaluator(object):
         visualizer.plot_confusion_matrix(confusion_matrix, concepts=concept_labels, save_path=save_path)
 
     def get_metrics(self, probabilities, labels, top_k=1, concept_labels=None, filter_indices=None,
-                    confusion_matrix=False, save_confusion_matrix_path=None, verbose=0):
+                    confusion_matrix=False, save_confusion_matrix_path=None):
         '''
          Print to screen metrics from experiment given probabilities and labels
 
@@ -207,7 +221,6 @@ class Evaluator(object):
             filter_indices: If given take only the predictions corresponding to that indices to compute metrics
             confusion_matrix: If True show the confusion matrix
             save_confusion_matrix_path: If path specified save confusion matrix there
-            verbose:
 
         Returns: Dictionary with metrics for each concept
 
@@ -232,7 +245,7 @@ class Evaluator(object):
 
         return results
 
-    def _compute_probabilities_generator(self, data_dir=None):
+    def _compute_probabilities_generator(self, data_dir=None, data_augmentation=None):
         '''
 
         Args:
@@ -247,12 +260,28 @@ class Evaluator(object):
         else:
             for i, model in enumerate(self.models):
                 print('Making predictions from model ', str(i))
-                generator, labels = utils.create_image_generator(data_dir, self.batch_size, self.model_specs[i])
-                # N_batches + 1 to gather all the images + collect without repetition [0:n_samples]
-                probabilities.append(model.predict_generator(generator=generator,
-                                                             steps=(generator.samples // self.batch_size) + 1,
-                                                             workers=1,
-                                                             verbose=1)[0:generator.samples])
+                if data_augmentation is None:
+                    generator, labels = utils.create_image_generator(data_dir, self.batch_size, self.model_specs[i])
+                    # N_batches + 1 to gather all the images + collect without repetition [0:n_samples]
+                    probabilities.append(model.predict_generator(generator=generator,
+                                                                 steps=(generator.samples // self.batch_size) + 1,
+                                                                 workers=1,
+                                                                 verbose=1)[0:generator.samples])
+                else:
+                    generator, labels = utils.create_image_generator(data_dir, self.batch_size, self.model_specs[i],
+                                                                     data_augmentation=data_augmentation)
+                    print('Averaging probabilities of %i different outputs at sizes: %s with transforms: %s'
+                          % (generator.n_crops, generator.scale_sizes, generator.transforms))
+                    steps = generator.samples
+                    probabilities_model = []
+                    for k, batch in enumerate(generator):
+                        if k == steps:
+                            break
+                        progbar = generic_utils.Progbar(steps)
+                        progbar.add(k + 1)
+                        probs = model.predict(batch[0][0], batch_size=self.batch_size)
+                        probabilities_model.append(np.mean(probs, axis=0))
+                    probabilities.append(probabilities_model)
 
             self.generator = generator
             self.num_classes = generator.num_classes

@@ -64,6 +64,15 @@ def check_predict_single_image(evaluator, test_image_path):
     assert len(evaluator.image_paths) == 1
 
 
+def test_check_compute_inference_probabilities_data_augmentation(evaluator_mobilenet_data_augmentation,
+                                                                 test_catdog_dataset_path):
+    probabilities, labels = evaluator_mobilenet_data_augmentation.evaluate(test_catdog_dataset_path)
+
+    assert probabilities[0].shape == (4, 2)
+
+    np.testing.assert_almost_equal(sum(sum(p[1] for p in probabilities)), 1.0)
+
+
 def test_check_compute_inference_probabilities(evaluator_mobilenet_class_combine, test_animals_dataset_path):
     probabilities, labels = evaluator_mobilenet_class_combine.evaluate(test_animals_dataset_path)
 
