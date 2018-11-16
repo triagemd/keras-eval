@@ -289,15 +289,17 @@ def plot_models_performance(model_dir, individual=False, class_idx=None, metric=
             df = pd.read_csv(os.path.join(model_dir, result_csv))
             tick_label.append(result_csv[:result_csv.rfind('_')])
             if individual:
-                if type(class_idx) == int and type(metric)==str:
+                if type(class_idx) == int and type(metric) == str:
                     y_axis.append(df[metric][class_idx])
                     x_axis.append(i)
                 else:
-                    raise ValueError('missing required option(s): class_idx, key')
+                    raise ValueError('missing required option(s): class_idx, metric')
             else:
                 if metric:
                     y_axis.append(df[metric][0])
                     x_axis.append(i)
+                else:
+                    raise ValueError('missing required option: metric')
             i += 1
     plt.bar(x_axis, y_axis)
     plt.ylabel(str(metric))
