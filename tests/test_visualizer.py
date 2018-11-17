@@ -2,7 +2,7 @@ import pytest
 import numpy as np
 
 from keras_eval.visualizer import plot_confusion_matrix, plot_ROC_curve, plot_precision_recall_curve,\
-    plot_concept_metrics, plot_threshold
+    plot_concept_metrics, plot_threshold, plot_models_performance
 
 
 def test_plot_confusion_matrix():
@@ -58,5 +58,14 @@ def test_plot_threshold():
     with pytest.raises(ValueError) as exception:
         plot_threshold(th, c, e)
     expected = 'The length of the arrays introduced do not coincide (3), (4), (5)'
+    actual = str(exception).split('ValueError: ')[1]
+    assert actual == expected
+
+
+def test_plot_models_performance():
+
+    with pytest.raises(ValueError) as exception:
+        plot_models_performance(eval_dir='./tests/files/eval', individual=True, class_idx=0, metric=None, save_name='plot.png')
+    expected = 'Missing required option(s): class_idx, metric'
     actual = str(exception).split('ValueError: ')[1]
     assert actual == expected

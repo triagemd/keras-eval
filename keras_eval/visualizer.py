@@ -267,11 +267,11 @@ def plot_concept_metrics(concepts, metrics, x_axis_label, y_axis_label, title=No
     iplot(fig, filename='line-mode')
 
 
-def plot_models_performance(model_dir, individual=False, class_idx=None, metric=None, save_name=None):
+def plot_models_performance(eval_dir, individual=False, class_idx=None, metric=None, save_name=None):
     '''
        Enables plotting of multiple models metrics for comparison
        Args:
-           model_dir: A directory that contains multiple
+           eval_dir: A directory that contains multiple metric files
            individual: If True,compare individual metrics else, average metrics
            class_idx: The index of class for when comparing individual metrics
            metric: The metric to be plotted for comparison
@@ -284,22 +284,22 @@ def plot_models_performance(model_dir, individual=False, class_idx=None, metric=
     y_axis = []
     tick_label = []
     i = 0
-    for result_csv in os.listdir(model_dir):
+    for result_csv in os.listdir(eval_dir):
         if check_result_type(result_csv, individual):
-            df = pd.read_csv(os.path.join(model_dir, result_csv))
+            df = pd.read_csv(os.path.join(eval_dir, result_csv))
             tick_label.append(result_csv[:result_csv.rfind('_')])
             if individual:
-                if type(class_idx) == int and type(metric) == str:
+                if isinstance(class_idx, int) and isinstance(metric, str):
                     y_axis.append(df[metric][class_idx])
                     x_axis.append(i)
                 else:
-                    raise ValueError('missing required option(s): class_idx, metric')
+                    raise ValueError('Missing required option(s): class_idx, metric')
             else:
                 if metric:
                     y_axis.append(df[metric][0])
                     x_axis.append(i)
                 else:
-                    raise ValueError('missing required option: metric')
+                    raise ValueError('Missing required option: metric')
             i += 1
     plt.bar(x_axis, y_axis)
     plt.ylabel(str(metric))
@@ -309,14 +309,14 @@ def plot_models_performance(model_dir, individual=False, class_idx=None, metric=
 
 
 def check_result_type(result_csv, individual):
-    csv_type = result_csv[result_csv.rfind('_')+1:-4]
+    csv_type = result_csv[result_csv.rfind('_') + 1:-4]
     if individual:
-        if csv_type=='individual':
+        if csv_type == 'individual':
             return True
         else:
             return False
     else:
-        if csv_type=='individual':
+        if csv_type == 'individual':
             return False
         else:
             return True
