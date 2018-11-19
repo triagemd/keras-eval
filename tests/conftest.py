@@ -63,6 +63,20 @@ def test_animals_dictionary_path():
 
 
 @pytest.fixture('session')
+def test_average_results_csv_paths():
+    return [os.path.abspath(os.path.join('tests', 'files', 'catdog', 'results_csv', 'eval_avg_1.csv')),
+            os.path.abspath(os.path.join('tests', 'files', 'catdog', 'results_csv', 'eval_avg_2.csv')),
+            os.path.abspath(os.path.join('tests', 'files', 'catdog', 'results_csv', 'eval_avg_3.csv'))]
+
+
+@pytest.fixture('session')
+def test_individual_results_csv_paths():
+    return [os.path.abspath(os.path.join('tests', 'files', 'catdog', 'results_csv', 'eval_class_1.csv')),
+            os.path.abspath(os.path.join('tests', 'files', 'catdog', 'results_csv', 'eval_class_2.csv')),
+            os.path.abspath(os.path.join('tests', 'files', 'catdog', 'results_csv', 'eval_class_3.csv'))]
+
+
+@pytest.fixture('session')
 def model_spec_mobilenet():
     dataset_mean = [142.69182214, 119.05833338, 106.89884415]
     return ModelSpec.get('mobilenet_v1', preprocess_func='mean_subtraction', preprocess_args=dataset_mean)

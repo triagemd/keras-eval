@@ -7,7 +7,6 @@ import tensorflow as tf
 import pandas as pd
 import keras_model_specs.models.custom_layers as custom_layers
 
-from copy import deepcopy
 from keras.layers import average, maximum
 from keras.models import Model, Input
 from keras.preprocessing import image
@@ -357,7 +356,7 @@ def combine_probabilities(probabilities, combination_mode='arithmetic'):
                          '[n_models, n_samples, n_classes]')
 
 
-def show_results(results, id='default_model', mode='average', csv_path=None, round_decimals=3):
+def results_to_pandas(results, id='default_model', mode='average', round_decimals=3, show_id=True):
     '''
 
     Converts results to pandas to show a nice visualization of the results. Allow saving them to a csv file.
@@ -367,7 +366,7 @@ def show_results(results, id='default_model', mode='average', csv_path=None, rou
         id: Name of the results evaluation
         mode: Mode of results. "average" will show the average metrics while "individual" will show metrics by class
         csv_path: If specified, results will be saved on that location
-        round_decimals: Position to round the numbers.
+        round_decimals: Decimal position to round the numbers.
 
     Returns: A pandas dataframe with the results and prints a nice visualization
 
@@ -377,7 +376,7 @@ def show_results(results, id='default_model', mode='average', csv_path=None, rou
         raise ValueError('Results mode must be either "average" or "individual"')
 
     if mode is 'average':
-        df = pd.DataFrame({'model': id}, index=range(1))
+        df = pd.DataFrame({'id': id}, index=range(1))
 
         for metric in results['average'].keys():
             if metric is not 'confusion_matrix':
@@ -393,6 +392,7 @@ def show_results(results, id='default_model', mode='average', csv_path=None, rou
     if mode is 'individual':
         df = pd.DataFrame()
         metrics = results['individual'][0]['metrics'].keys()
+        df['id'] = [id for i in range(len(results['individual']))]
         df['class'] = [result['concept'] for result in results['individual']]
 
         for metric in metrics:
@@ -413,64 +413,96 @@ def show_results(results, id='default_model', mode='average', csv_path=None, rou
                         concept_list.append(
                             round(results['individual'][idx]['metrics'][metric][k], round_decimals))
                     df[metric + '_top_' + str(k + 1)] = concept_list
-
-    if csv_path:
-        df.to_csv(csv_path, index=False)
+    if not show_id:
+        df.drop('id', axis=1, inplace=True)
 
     return df
 
 
-def compute_differential_results(results_1, results_2):
-    '''
+def mkdir(path):
+    if not os.path.exists(path):
+        os.makedirs(path)
 
-    Given two results dictionaries this function will compute the difference between both
+
+def save_results(results, id, csv_path, mode='average', round_decimals=3, show_id=True):
+    df = results_to_pandas(results, id=id, mode=mode, round_decimals=round_decimals, show_id=show_id)
+    mkdir(csv_path)
+    df.to_csv(os.path.join(csv_path, id + '.csv'), float_format='%.' + str(round_decimals) + 'f', index=False)
+
+
+def load_csv_to_dataframe(csv_paths):
+    '''
 
     Args:
-        results_1: Array of results (1)
-        results_2: Array of results (2)
+        csv_paths: Path or list of paths to the csvs
 
-    Returns: The resulting differential results dictionary
+    Returns: A Pandas dataframe containing the csv information
 
     '''
+    results_dataframe = []
+    if isinstance(csv_paths, list):
+        for path in csv_paths:
+            results_dataframe.append(pd.read_csv(path))
+    elif isinstance(csv_paths, str):
+        results_dataframe = pd.read_csv(path)
+    else:
+        raise ValueError('Incorrect format for `csv_paths`, a list of strings or a single string are expected')
+    return results_dataframe
 
-    if len(results_1['average']) != len(results_2['average']):
-        raise ValueError('Results length do not match for "average" values')
 
-    if len(results_1['individual']) != len(results_2['individual']):
-        raise ValueError('Results length do not match for "individual" values')
+def compute_differential_str(value_reference, value, round_decimals):
+    diff_value = round(value - value_reference, round_decimals)
+    if diff_value > 0:
+        return ' (+' + str(diff_value) + ')'
+    else:
+        return ' (' + str(diff_value) + ')'
 
-    # new array to store results
-    differential_results = deepcopy(results_1)
 
-    for metric in differential_results['average'].keys():
-        if metric not in ['number_of_samples', 'number_of_classes']:
-            if not isinstance(results_1['average'][metric], list):
-                differential_results['average'][metric] = results_1['average'][metric] - \
-                    results_2['average'][metric]
+def results_differential(dataframes, mode='average', round_decimals=4):
+    '''
+
+    Args:
+        dataframes: List of results dataframes. The first one will be considered the reference.
+        mode: Mode of results. "average" will show the average metrics while "individual" will show metrics by class
+        round_decimals: Decimal position to round the numbers.
+
+    Returns:
+
+    '''
+    if len(dataframes) < 2:
+        raise ValueError('The number of dataframes should be higher than 1')
+
+    if mode == 'average':
+        skip_values = ['id', 'number_of_samples', 'number_of_classes']
+        reference_dataframe = dataframes.pop(0)
+        differential_dataframe = reference_dataframe.copy()
+        for dataframe in dataframes:
+            for name, values in dataframe.iteritems():
+                if name not in skip_values:
+                    diff_str = compute_differential_str(reference_dataframe[name][0], dataframe[name][0],
+                                                        round_decimals)
+                    dataframe[name] = str(dataframe[name][0]) + diff_str
+            differential_dataframe = pd.concat((differential_dataframe, dataframe), ignore_index=True)
+
+    elif mode == 'individual':
+        skip_values = ['id', '% of samples', 'class']
+        n_evaluations = len(dataframes)
+        differential_dataframe = pd.concat(dataframes, ignore_index=True)
+        differential_dataframe = differential_dataframe.sort_values('class', ascending=True)
+        differential_dataframe = differential_dataframe.reset_index(drop=True)
+        reference_index = 0
+        for index, row in differential_dataframe.iterrows():
+            if index % n_evaluations == 0:
+                reference_index = index
             else:
-                if len(results_1['average'][metric]) == 1:
-                    differential_results['average'][metric] = results_1['average'][metric][0] - \
-                        results_2['average'][metric][0]
-                else:
-                    for k in range(len(results_1['average'][metric])):
-                        differential_results['average'][metric][k] = \
-                            results_1['average'][metric][k] - results_2['average'][metric][k]
+                reference_row = differential_dataframe.iloc[reference_index]
+                for name in list(differential_dataframe.columns.values):
+                    if name not in skip_values:
+                        diff_str = compute_differential_str(reference_row[name], row[name], round_decimals)
+                        row[name] = str(round(row[name], round_decimals)) + diff_str
+                differential_dataframe.iloc[index] = row
 
-    for index, category in enumerate(differential_results['individual']):
-        for metric in category['metrics'].keys():
-            if not isinstance(category['metrics'][metric], list):
-                differential_results['individual'][index]['metrics'][metric] = \
-                    results_1['individual'][index]['metrics'][metric] - \
-                    results_2['individual'][index]['metrics'][metric]
-            else:
-                if len(results_1['individual'][metric]) == 1:
-                    differential_results['individual'][index]['metrics'][metric] = \
-                        results_1['individual'][index]['metrics'][metric][0] - \
-                        results_2['individual'][index]['metrics'][metric][0]
-                else:
-                    for k in range(len(results_1['individual'][metric])):
-                        differential_results['individual'][index]['metrics'][metric][k] = \
-                            results_1['individual'][index]['metrics'][metric][k] - \
-                            results_2['individual'][index]['metrics'][metric][k]
+    else:
+        raise ValueError('Results mode must be either "average" or "individual"')
 
-    return differential_results
+    return differential_dataframe

@@ -218,10 +218,13 @@ class AugmentedDirectoryIterator(DirectoryIterator):
 
             if self.crop_original == 'center_crop':
                 w, h = image.size
+                print(fname)
+                print(w, h)
                 if w > h:
                     image = image.crop((w / 2 - h / 2, 0, w / 2 + h / 2, h))
                 else:
                     image = image.crop((0, h / 2 - w / 2, w, h / 2 + w / 2))
+                print(image.size)
             elif self.crop_original:
                 raise ValueError('crop_original mode entered not supported, only `center_crop` is being supported now')
 

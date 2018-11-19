@@ -520,11 +520,17 @@ class Evaluator(object):
         metrics = self.results['average']['accuracy']
         visualizer.plot_concept_metrics(['all'], [metrics], 'Top-k', 'Accuracy')
 
-    def show_results(self, mode='average', csv_path=None, round_decimals=3):
+    def show_results(self, mode='average', round_decimals=3, show_id=True):
         if self.results is None:
             raise ValueError('results parameter is None, please run a evaluation first')
 
-        return utils.show_results(self.results, self.id, mode, csv_path, round_decimals)
+        return utils.results_to_pandas(self.results, self.id, mode, round_decimals, show_id)
+
+    def save_results(self, id, csv_path, mode='average', round_decimals=3, show_id=True):
+        if self.results is None:
+            raise ValueError('results parameter is None, please run a evaluation first')
+
+        return utils.save_results(self.results, id, csv_path, mode, round_decimals, show_id)
 
     def ensemble_models(self, input_shape, combination_mode='average', ensemble_name='ensemble', model_filename=None):
         ensemble = utils.ensemble_models(self.models, input_shape=input_shape, combination_mode=combination_mode,
