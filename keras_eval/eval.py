@@ -524,7 +524,7 @@ class Evaluator(object):
         if self.results is None:
             raise ValueError('results parameter is None, please run a evaluation first')
 
-        return utils.results_to_pandas(self.results, self.id, mode, round_decimals, show_id)
+        return utils.results_to_dataframe(self.results, self.id, mode, round_decimals, show_id)
 
     def save_results(self, id, csv_path, mode='average', round_decimals=3, show_id=True):
         if self.results is None:

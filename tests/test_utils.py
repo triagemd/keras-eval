@@ -151,7 +151,7 @@ def test_get_class_dictionaries_items(test_catdog_dataset_path):
     assert label_output == id_output == ['cat', 'dog']
 
 
-def test_results_to_pandas():
+def test_results_to_dataframe():
     results = {'individual':
                [{'concept':
                  'Class_0', 'metrics': {'TP': 2, 'precision': 1.0, 'AUROC': 0.8333333, 'sensitivity': 1.0,
@@ -165,16 +165,16 @@ def test_results_to_pandas():
 
     # Assert error when incorrect mode
     with pytest.raises(ValueError) as exception:
-        utils.results_to_pandas(results, mode='asdf')
+        utils.results_to_dataframe(results, mode='asdf')
     expected = 'Results mode must be either "average" or "individual"'
     actual = str(exception).split('ValueError: ')[1]
     assert actual == expected
 
-    average_df = utils.results_to_pandas(results)
+    average_df = utils.results_to_dataframe(results)
     assert average_df['id'][0] == 'default_model'
     assert average_df['accuracy'][0] == average_df['precision'][0] == average_df['f1_score'][0] == 1.0
 
-    individual_df = utils.results_to_pandas(results, mode='individual')
+    individual_df = utils.results_to_dataframe(results, mode='individual')
     assert individual_df['class'][0] == 'Class_0'
     assert individual_df['class'][1] == 'Class_1'
     assert individual_df['sensitivity'][0] == individual_df['sensitivity'][1] == 1.0

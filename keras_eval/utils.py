@@ -356,7 +356,7 @@ def combine_probabilities(probabilities, combination_mode='arithmetic'):
                          '[n_models, n_samples, n_classes]')
 
 
-def results_to_pandas(results, id='default_model', mode='average', round_decimals=3, show_id=True):
+def results_to_dataframe(results, id='default_model', mode='average', round_decimals=3, v=True):
     '''
 
     Converts results to pandas to show a nice visualization of the results. Allow saving them to a csv file.
@@ -367,6 +367,7 @@ def results_to_pandas(results, id='default_model', mode='average', round_decimal
         mode: Mode of results. "average" will show the average metrics while "individual" will show metrics by class
         csv_path: If specified, results will be saved on that location
         round_decimals: Decimal position to round the numbers.
+        show_id: Show id in the first column.
 
     Returns: A pandas dataframe with the results and prints a nice visualization
 
@@ -420,12 +421,33 @@ def results_to_pandas(results, id='default_model', mode='average', round_decimal
 
 
 def mkdir(path):
+    '''
+
+    Args:
+        path: Path where directory will be created
+
+    Returns: Nothing. Creates directory with the path specified
+
+    '''
     if not os.path.exists(path):
         os.makedirs(path)
 
 
 def save_results(results, id, csv_path, mode='average', round_decimals=3, show_id=True):
-    df = results_to_pandas(results, id=id, mode=mode, round_decimals=round_decimals, show_id=show_id)
+    '''
+
+    Args:
+        results: Results dictionary provided by the evaluation (evaluator.results)
+        id: Name of the results evaluation
+        mode: Mode of results. "average" will show the average metrics while "individual" will show metrics by class
+        csv_path: If specified, results will be saved on that location
+        round_decimals: Decimal position to round the numbers.
+        show_id: Show id in the first column.
+
+    Returns: Nothing. Saves pandas dataframe on csv_path specified.
+
+    '''
+    df = results_to_dataframe(results, id=id, mode=mode, round_decimals=round_decimals, show_id=show_id)
     mkdir(csv_path)
     df.to_csv(os.path.join(csv_path, id + '.csv'), float_format='%.' + str(round_decimals) + 'f', index=False)
 
@@ -451,6 +473,16 @@ def load_csv_to_dataframe(csv_paths):
 
 
 def compute_differential_str(value_reference, value, round_decimals):
+    '''
+
+    Args:
+        value_reference: Reference Value
+        value: Value to modify
+        round_decimals: Decimal position to round the numbers.
+
+    Returns: A string with the differential between the two values (value - value_reference)
+
+    '''
     diff_value = round(value - value_reference, round_decimals)
     if diff_value > 0:
         return ' (+' + str(diff_value) + ')'
@@ -466,7 +498,7 @@ def results_differential(dataframes, mode='average', round_decimals=4):
         mode: Mode of results. "average" will show the average metrics while "individual" will show metrics by class
         round_decimals: Decimal position to round the numbers.
 
-    Returns:
+    Returns: Modified dataframe with the differential information.
 
     '''
     if len(dataframes) < 2:
