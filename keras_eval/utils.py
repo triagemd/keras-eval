@@ -356,7 +356,7 @@ def combine_probabilities(probabilities, combination_mode='arithmetic'):
                          '[n_models, n_samples, n_classes]')
 
 
-def results_to_dataframe(results, id='default_model', mode='average', round_decimals=3, v=True):
+def results_to_dataframe(results, id='default_model', mode='average', round_decimals=3, show_id=True):
     '''
 
     Converts results to pandas to show a nice visualization of the results. Allow saving them to a csv file.
