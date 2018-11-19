@@ -74,7 +74,7 @@ ensemble_models_dir = '/model_folder'
 
 **Apply Data Augmentation at Test time**
 
-We include the addition of data_augmentation as an argument in evaluate. It is a dictionary consisting of 3 elements:
+We include the addition of `data_augmentation` as an argument in `evaluate`. It is a dictionary consisting of 3 elements:
     
 - 'scale_sizes': 'default' (4 similar scales to Original paper) or a list of sizes. Each scaled image then
     will be cropped into three square parts.
