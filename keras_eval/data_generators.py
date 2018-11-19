@@ -173,7 +173,7 @@ class AugmentedDirectoryIterator(DirectoryIterator):
             size: Target output size
             transforms: List of transforms to apply
 
-        Returns:
+        Returns: Crops plus transformations done to the input image
 
         '''
         crops = []
