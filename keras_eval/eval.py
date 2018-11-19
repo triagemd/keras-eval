@@ -521,12 +521,35 @@ class Evaluator(object):
         visualizer.plot_concept_metrics(['all'], [metrics], 'Top-k', 'Accuracy')
 
     def show_results(self, mode='average', round_decimals=3, show_id=True):
+        '''
+        Args:
+
+            mode: Mode of results. "average" will show the average metrics while "individual" will show metrics by class
+            round_decimals: Decimal position to round the numbers.
+            show_id: Show id in the first column.
+
+        Returns: Pandas dataframe with results. 
+
+        '''
         if self.results is None:
             raise ValueError('results parameter is None, please run a evaluation first')
 
         return utils.results_to_dataframe(self.results, self.id, mode, round_decimals, show_id)
 
     def save_results(self, id, csv_path, mode='average', round_decimals=3, show_id=True):
+        '''
+
+        Args:
+
+            id: Name of the results evaluation
+            csv_path: If specified, results will be saved on that location
+            mode: Mode of results. "average" will show the average metrics while "individual" will show metrics by class
+            round_decimals: Decimal position to round the numbers.
+            show_id: Show id in the first column.
+
+        Returns: Nothing. Saves pandas dataframe on csv_path specified.
+
+        '''
         if self.results is None:
             raise ValueError('results parameter is None, please run a evaluation first')
 
