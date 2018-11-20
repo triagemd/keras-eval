@@ -224,6 +224,12 @@ def test_load_csv_to_dataframe(test_average_results_csv_paths):
 
 
 def test_results_differential(test_average_results_csv_paths, test_individual_results_csv_paths):
+    with pytest.raises(ValueError) as exception:
+        utils.results_differential(['asd'])
+    expected = 'The number of dataframes should be higher than 1'
+    actual = str(exception).split('ValueError: ')[1]
+    assert actual == expected
+
     dataframes = utils.load_csv_to_dataframe(test_average_results_csv_paths)
     df = utils.results_differential(dataframes, mode='average')
     assert len(df) == 3
