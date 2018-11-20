@@ -4,7 +4,6 @@ import numpy as np
 import keras_eval.utils as utils
 
 
-
 def test_safe_divide():
     assert np.isnan(utils.safe_divide(10.0, 0.0))
     assert utils.safe_divide(10.0, 5.0) == 2.0

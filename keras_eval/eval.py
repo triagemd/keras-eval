@@ -528,7 +528,7 @@ class Evaluator(object):
             round_decimals: Decimal position to round the numbers.
             show_id: Show id in the first column.
 
-        Returns: Pandas dataframe with results. 
+        Returns: Pandas dataframe with results.
 
         '''
         if self.results is None:
