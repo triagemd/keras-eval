@@ -547,7 +547,7 @@ class Evaluator(object):
             round_decimals: Decimal position to round the numbers.
             show_id: Show id in the first column.
 
-        Returns: Nothing. Saves pandas dataframe on csv_path specified.
+        Returns: Nothing. Saves Pandas dataframe on csv_path specified.
 
         '''
         if self.results is None:
