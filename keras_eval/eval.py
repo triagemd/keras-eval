@@ -486,7 +486,7 @@ class Evaluator(object):
 
         '''
         if self.probabilities is None:
-            raise ValueError('probabilities value is None, please run a evaluation first')
+            raise ValueError('probabilities value is None, please run an evaluation first')
         return metrics.compute_confidence_prediction_distribution(self.probabilities, self.combination_mode, verbose)
 
     def compute_uncertainty_distribution(self, verbose=1):
@@ -516,7 +516,7 @@ class Evaluator(object):
 
     def plot_top_k_accuracy(self):
         if self.results is None:
-            raise ValueError('results parameter is None, please run a evaluation first')
+            raise ValueError('results parameter is None, please run an evaluation first')
         metrics = self.results['average']['accuracy']
         visualizer.plot_concept_metrics(['all'], [metrics], 'Top-k', 'Accuracy')
 
