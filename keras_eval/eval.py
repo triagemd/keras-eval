@@ -523,7 +523,6 @@ class Evaluator(object):
     def show_results(self, mode='average', round_decimals=3, show_id=True):
         '''
         Args:
-
             mode: Mode of results. "average" will show the average metrics while "individual" will show metrics by class
             round_decimals: Decimal position to round the numbers.
             show_id: Show id in the first column.
@@ -540,14 +539,13 @@ class Evaluator(object):
         '''
 
         Args:
-
             id: Name of the results evaluation
             csv_path: If specified, results will be saved on that location
             mode: Mode of results. "average" will show the average metrics while "individual" will show metrics by class
             round_decimals: Decimal position to round the numbers.
             show_id: Show id in the first column.
 
-        Returns: Nothing. Saves pandas dataframe on csv_path specified.
+        Returns: Nothing. Saves Pandas dataframe on csv_path specified.
 
         '''
         if self.results is None:
