@@ -1,0 +1,2 @@
+id,accuracy,weighted_precision,sensitivity,precision,f1_score,number_of_samples,number_of_classes
+eval_avg_1,0.80,0.60,0.200,0.655,0.750,2000,2

@@ -486,7 +486,7 @@ class Evaluator(object):
 
         '''
         if self.probabilities is None:
-            raise ValueError('probabilities value is None, please run a evaluation first')
+            raise ValueError('probabilities value is None, please run an evaluation first')
         return metrics.compute_confidence_prediction_distribution(self.probabilities, self.combination_mode, verbose)
 
     def compute_uncertainty_distribution(self, verbose=1):
@@ -504,27 +504,54 @@ class Evaluator(object):
 
         '''
         if self.probabilities is None:
-            raise ValueError('probabilities value is None, please run a evaluation first')
+            raise ValueError('probabilities value is None, please run an evaluation first')
         return metrics.uncertainty_distribution(self.probabilities, self.combination_mode, verbose)
 
     def plot_top_k_sensitivity_by_concept(self):
         if self.results is None:
-            raise ValueError('results parameter is None, please run a evaluation first')
+            raise ValueError('results parameter is None, please run an evaluation first')
         concepts = utils.get_concept_items(self.concepts, key='label')
         metrics = [item['metrics']['sensitivity'] for item in self.results['individual']]
         visualizer.plot_concept_metrics(concepts, metrics, 'Top-k', 'Sensitivity')
 
     def plot_top_k_accuracy(self):
         if self.results is None:
-            raise ValueError('results parameter is None, please run a evaluation first')
+            raise ValueError('results parameter is None, please run an evaluation first')
         metrics = self.results['average']['accuracy']
         visualizer.plot_concept_metrics(['all'], [metrics], 'Top-k', 'Accuracy')
 
-    def show_results(self, mode='average', csv_path=None, round_decimals=3):
-        if self.results is None:
-            raise ValueError('results parameter is None, please run a evaluation first')
+    def show_results(self, mode='average', round_decimals=3, show_id=True):
+        '''
+        Args:
+            mode: Mode of results. "average" will show the average metrics while "individual" will show metrics by class
+            round_decimals: Decimal position to round the numbers.
+            show_id: Show id in the first column.
 
-        return utils.show_results(self.results, self.id, mode, csv_path, round_decimals)
+        Returns: Pandas dataframe with results.
+
+        '''
+        if self.results is None:
+            raise ValueError('results parameter is None, please run an evaluation first')
+
+        return utils.results_to_dataframe(self.results, self.id, mode, round_decimals, show_id)
+
+    def save_results(self, id, csv_path, mode='average', round_decimals=3, show_id=True):
+        '''
+
+        Args:
+            id: Name of the results evaluation
+            csv_path: If specified, results will be saved on that location
+            mode: Mode of results. "average" will show the average metrics while "individual" will show metrics by class
+            round_decimals: Decimal position to round the numbers.
+            show_id: Show id in the first column.
+
+        Returns: Nothing. Saves Pandas dataframe on csv_path specified.
+
+        '''
+        if self.results is None:
+            raise ValueError('results parameter is None, please run an evaluation first')
+
+        return utils.save_results(self.results, id, csv_path, mode, round_decimals, show_id)
 
     def ensemble_models(self, input_shape, combination_mode='average', ensemble_name='ensemble', model_filename=None):
         ensemble = utils.ensemble_models(self.models, input_shape=input_shape, combination_mode=combination_mode,
