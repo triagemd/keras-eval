@@ -504,12 +504,12 @@ class Evaluator(object):
 
         '''
         if self.probabilities is None:
-            raise ValueError('probabilities value is None, please run a evaluation first')
+            raise ValueError('probabilities value is None, please run an evaluation first')
         return metrics.uncertainty_distribution(self.probabilities, self.combination_mode, verbose)
 
     def plot_top_k_sensitivity_by_concept(self):
         if self.results is None:
-            raise ValueError('results parameter is None, please run a evaluation first')
+            raise ValueError('results parameter is None, please run an evaluation first')
         concepts = utils.get_concept_items(self.concepts, key='label')
         metrics = [item['metrics']['sensitivity'] for item in self.results['individual']]
         visualizer.plot_concept_metrics(concepts, metrics, 'Top-k', 'Sensitivity')
@@ -532,7 +532,7 @@ class Evaluator(object):
 
         '''
         if self.results is None:
-            raise ValueError('results parameter is None, please run a evaluation first')
+            raise ValueError('results parameter is None, please run an evaluation first')
 
         return utils.results_to_dataframe(self.results, self.id, mode, round_decimals, show_id)
 
@@ -551,7 +551,7 @@ class Evaluator(object):
 
         '''
         if self.results is None:
-            raise ValueError('results parameter is None, please run a evaluation first')
+            raise ValueError('results parameter is None, please run an evaluation first')
 
         return utils.save_results(self.results, id, csv_path, mode, round_decimals, show_id)
 

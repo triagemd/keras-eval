@@ -114,7 +114,7 @@ def test_evaluator_ensemble_mobilenet_v1_on_catdog_dataset(evaluator_ensemble_mo
 def test_compute_confidence_prediction_distribution(evaluator_mobilenet, test_catdog_dataset_path):
     with pytest.raises(ValueError) as exception:
         evaluator_mobilenet.compute_confidence_prediction_distribution()
-    expected = 'probabilities value is None, please run a evaluation first'
+    expected = 'probabilities value is None, please run an evaluation first'
     actual = str(exception).split('ValueError: ')[1]
     assert actual == expected
 
@@ -128,7 +128,7 @@ def test_compute_confidence_prediction_distribution(evaluator_mobilenet, test_ca
 def test_compute_uncertainty_distribution(evaluator_mobilenet, test_catdog_dataset_path):
     with pytest.raises(ValueError) as exception:
         evaluator_mobilenet.compute_uncertainty_distribution()
-    expected = 'probabilities value is None, please run a evaluation first'
+    expected = 'probabilities value is None, please run an evaluation first'
     actual = str(exception).split('ValueError: ')[1]
     assert actual == expected
 
@@ -142,7 +142,7 @@ def test_compute_uncertainty_distribution(evaluator_mobilenet, test_catdog_datas
 def test_plot_top_k_accuracy(evaluator_mobilenet):
     with pytest.raises(ValueError) as exception:
         evaluator_mobilenet.plot_top_k_accuracy()
-    expected = 'results parameter is None, please run a evaluation first'
+    expected = 'results parameter is None, please run an evaluation first'
     actual = str(exception).split('ValueError: ')[1]
     assert actual == expected
 
@@ -150,7 +150,7 @@ def test_plot_top_k_accuracy(evaluator_mobilenet):
 def test_plot_top_k_sensitivity_by_concept(evaluator_mobilenet):
     with pytest.raises(ValueError) as exception:
         evaluator_mobilenet.plot_top_k_sensitivity_by_concept()
-    expected = 'results parameter is None, please run a evaluation first'
+    expected = 'results parameter is None, please run an evaluation first'
     actual = str(exception).split('ValueError: ')[1]
     assert actual == expected
 
@@ -159,7 +159,7 @@ def test_show_results(evaluator_mobilenet, test_catdog_dataset_path):
     # Assert error without results
     with pytest.raises(ValueError) as exception:
         evaluator_mobilenet.show_results('average')
-    expected = 'results parameter is None, please run a evaluation first'
+    expected = 'results parameter is None, please run an evaluation first'
     actual = str(exception).split('ValueError: ')[1]
     assert actual == expected
 
