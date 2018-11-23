@@ -490,13 +490,14 @@ def compute_differential_str(value_reference, value, round_decimals):
         return ' (' + str(diff_value) + ')'
 
 
-def results_differential(dataframes, mode='average', round_decimals=4):
+def results_differential(dataframes, mode='average', round_decimals=4, save_csv_path=None):
     '''
 
     Args:
         dataframes: List of results dataframes. The first one will be considered the reference.
         mode: Mode of results. "average" will show the average metrics while "individual" will show metrics by class
         round_decimals: Decimal position to round the numbers.
+        save_csv_path: Path to save the resulting dataframe with the differential information.
 
     Returns: Modified dataframe with the differential information.
 
@@ -520,7 +521,8 @@ def results_differential(dataframes, mode='average', round_decimals=4):
         skip_values = ['id', '% of samples', 'class']
         n_evaluations = len(dataframes)
         differential_dataframe = pd.concat(dataframes, ignore_index=True)
-        differential_dataframe = differential_dataframe.sort_values('class', ascending=True)
+        differential_dataframe = differential_dataframe.rename_axis('index').sort_values(by=['class', 'index'],
+                                                                                         ascending=[True, True])
         differential_dataframe = differential_dataframe.reset_index(drop=True)
         reference_index = 0
         for index, row in differential_dataframe.iterrows():
@@ -536,5 +538,8 @@ def results_differential(dataframes, mode='average', round_decimals=4):
 
     else:
         raise ValueError('Results mode must be either "average" or "individual"')
+    
+    if save_csv_path is not None:
+        df.to_csv(save_csv_path, float_format='%.' + str(round_decimals) + 'f', index=False)
 
     return differential_dataframe
