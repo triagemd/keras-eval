@@ -540,6 +540,6 @@ def results_differential(dataframes, mode='average', round_decimals=4, save_csv_
         raise ValueError('Results mode must be either "average" or "individual"')
 
     if save_csv_path is not None:
-        df.to_csv(save_csv_path, float_format='%.' + str(round_decimals) + 'f', index=False)
+        differential_dataframe.to_csv(save_csv_path, float_format='%.' + str(round_decimals) + 'f', index=False)
 
     return differential_dataframe
