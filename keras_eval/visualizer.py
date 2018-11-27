@@ -271,13 +271,13 @@ def plot_models_performance(eval_dir, individual=False, class_idx=None, metric=N
     '''
        Enables plotting of multiple models metrics for comparison
        Args:
-           eval_dir: A directory that contains multiple metric files
-           individual: If True,compare individual metrics else, average metrics
+           eval_dir: A directory that contains multiple metrics files
+           individual: If True, compare individual metrics. Otherwise, compare average metrics.
            class_idx: The index of class for when comparing individual metrics
            metric: The metric to be plotted for comparison
-           save_name: The name, location of where the plot is to be saved
+           save_name:  If `save_path` specified, save plot in that location
 
-       Returns: Nothing, Plot can be saved.
+       Returns: Nothing. If save_path is provided, plot is stored.
 
        '''
     x_axis = []
@@ -285,7 +285,7 @@ def plot_models_performance(eval_dir, individual=False, class_idx=None, metric=N
     tick_label = []
     i = 0
     for result_csv in os.listdir(eval_dir):
-        if check_result_type(result_csv, individual):
+        if utils.check_result_type(result_csv, individual):
             df = pd.read_csv(os.path.join(eval_dir, result_csv))
             tick_label.append(result_csv[:result_csv.rfind('_')])
             if individual:
@@ -293,7 +293,7 @@ def plot_models_performance(eval_dir, individual=False, class_idx=None, metric=N
                     y_axis.append(df[metric][class_idx])
                     x_axis.append(i)
                 else:
-                    raise ValueError('Missing required option(s): class_idx, metric')
+                    raise ValueError('Unsupported type: class_idx, metric')
             else:
                 if metric:
                     y_axis.append(df[metric][0])
@@ -304,19 +304,5 @@ def plot_models_performance(eval_dir, individual=False, class_idx=None, metric=N
     plt.bar(x_axis, y_axis)
     plt.ylabel(str(metric))
     plt.xticks(x_axis, tick_label, rotation='vertical')
-    if save_name is not None:
-        plt.savefig(plot_name)
-
-
-def check_result_type(result_csv, individual):
-    csv_type = result_csv[result_csv.rfind('_') + 1:-4]
-    if individual:
-        if csv_type == 'individual':
-            return True
-        else:
-            return False
-    else:
-        if csv_type == 'individual':
-            return False
-        else:
-            return True
+    if save_name:
+        plt.savefig(save_name)
