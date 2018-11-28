@@ -1,3 +1,5 @@
+import os
+import pandas as pd
 import numpy as np
 import plotly.graph_objs as go
 import matplotlib.pyplot as plt
@@ -263,3 +265,44 @@ def plot_concept_metrics(concepts, metrics, x_axis_label, y_axis_label, title=No
     )
     fig = go.Figure(data=data, layout=layout)
     iplot(fig, filename='line-mode')
+
+
+def plot_models_performance(eval_dir, individual=False, class_idx=None, metric=None, save_name=None):
+    '''
+       Enables plotting of a single metric from multiple evaluation metrics files
+       Args:
+           eval_dir: A directory that contains multiple metrics files
+           individual: If True, compare individual metrics. Otherwise, compare average metrics.
+           class_idx: The index of class for when comparing individual metrics
+           metric: The metric to be plotted for comparison
+           save_name:  If `save_path` specified, save plot in that location
+
+       Returns: Nothing. If save_path is provided, plot is stored.
+
+    '''
+    x_axis = []
+    y_axis = []
+    tick_label = []
+    i = 0
+    for result_csv in os.listdir(eval_dir):
+        if utils.check_result_type(result_csv, individual):
+            df = pd.read_csv(os.path.join(eval_dir, result_csv))
+            tick_label.append(result_csv[:result_csv.rfind('_')])
+            if individual:
+                if isinstance(class_idx, int) and isinstance(metric, str):
+                    y_axis.append(df[metric][class_idx])
+                    x_axis.append(i)
+                else:
+                    raise ValueError('Unsupported type: class_idx, metric')
+            else:
+                if metric:
+                    y_axis.append(df[metric][0])
+                    x_axis.append(i)
+                else:
+                    raise ValueError('Missing required option: metric')
+            i += 1
+    plt.bar(x_axis, y_axis)
+    plt.ylabel(str(metric))
+    plt.xticks(x_axis, tick_label, rotation='vertical')
+    if save_name:
+        plt.savefig(save_name)
