@@ -62,10 +62,9 @@ def test_plot_threshold():
     assert actual == expected
 
 
-def test_plot_models_performance():
-
+def test_plot_models_performance(test_results_csv_paths):
     with pytest.raises(ValueError) as exception:
-        plot_models_performance(eval_dir='./tests/files/eval', individual=True, class_idx=0, metric=None, save_name='plot.png')
-    expected = 'Missing required option(s): class_idx, metric'
+        plot_models_performance(eval_dir=test_results_csv_paths, individual=True, class_idx=0, metric=None, save_name='plot.png')
+    expected = 'Unsupported type: class_idx, metric'
     actual = str(exception).split('ValueError: ')[1]
     assert actual == expected

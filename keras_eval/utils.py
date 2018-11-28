@@ -544,6 +544,7 @@ def results_differential(dataframes, mode='average', round_decimals=4, save_csv_
 
     return differential_dataframe
 
+
 def check_result_type(result_csv, individual):
     '''
     Checks if the file type is of the required format i.e. individual or average metrics
@@ -553,9 +554,9 @@ def check_result_type(result_csv, individual):
     Returns: True or False
     '''
     csv_type = result_csv[result_csv.rfind('_') + 1:-4]
-    if individual and csv_type =='individual' or not individual and csv_type =='average':
+    if individual and csv_type == 'individual' or not individual and csv_type == 'average':
         return True
-    elif individual and csv_type =='average' or not individual and csv_type =='individual':
+    elif individual and csv_type == 'average' or not individual and csv_type == 'individual':
         return False
     else:
         raise ValueError('File name not in required format')
