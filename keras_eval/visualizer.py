@@ -269,7 +269,7 @@ def plot_concept_metrics(concepts, metrics, x_axis_label, y_axis_label, title=No
 
 def plot_models_performance(eval_dir, individual=False, class_idx=None, metric=None, save_name=None):
     '''
-       Enables plotting of multiple models metrics for comparison
+       Enables plotting of a single metric from multiple evaluation metrics files
        Args:
            eval_dir: A directory that contains multiple metrics files
            individual: If True, compare individual metrics. Otherwise, compare average metrics.
@@ -279,7 +279,7 @@ def plot_models_performance(eval_dir, individual=False, class_idx=None, metric=N
 
        Returns: Nothing. If save_path is provided, plot is stored.
 
-       '''
+    '''
     x_axis = []
     y_axis = []
     tick_label = []
