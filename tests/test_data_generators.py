@@ -155,8 +155,8 @@ def test_augmented_image_data_generator(test_catdog_dataset_path):
         shuffle=False)
 
     batch_x, batch_y = datagen.next()
-    assert batch_x.shape == (1, 90, 224, 224, 3)
-    assert len(batch_y) == 90
+    assert batch_x.shape == (1, 108, 224, 224, 3)
+    assert len(batch_y) == 108
 
     test_data_generator = AugmentedImageDataGenerator(preprocessing_function=model_spec.preprocess_input,
                                                       data_augmentation={'transforms': ['horizontal_flip',
@@ -193,5 +193,5 @@ def test_augmented_image_data_generator(test_catdog_dataset_path):
         shuffle=False)
 
     batch_x, batch_y = datagen.next()
-    assert batch_x.shape == (1, 90, 224, 224, 3)
-    assert len(batch_y) == 90
+    assert batch_x.shape == (1, 108, 224, 224, 3)
+    assert len(batch_y) == 108
