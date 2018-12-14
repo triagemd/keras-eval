@@ -18,7 +18,7 @@ class AugmentedDirectoryIterator(DirectoryIterator):
     Convolutions (https://arxiv.org/pdf/1409.4842.pdf) and allowing the use of transforms on such crops.
 
     It includes the addition of data_augmentation as an argument. It is a dictionary consisting of 3 elements:
-    
+
     - 'scale_sizes': 'default' (4 similar scales to Original paper) or a list of sizes. Each scaled image then
     will be cropped into three square parts. For each square, we then take the 4 corners and the center "target_size"
     crop as well as the square resized to "target_size".
