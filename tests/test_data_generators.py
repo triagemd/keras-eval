@@ -124,6 +124,20 @@ def test_augmented_image_data_generator_wrong_arguments(test_catdog_dataset_path
 def test_augmented_image_data_generator(test_catdog_dataset_path):
     model_spec = ModelSpec.get('test', preprocess_func='mean_subtraction',
                                preprocess_args=[141., 130., 123.], target_size=(224, 224, 3))
+    test_data_generator = AugmentedImageDataGenerator(preprocessing_function=model_spec.preprocess_input,
+                                                      data_augmentation={'scale_sizes': 'default',
+                                                                         'transforms': ['horizontal_flip']})
+
+    datagen = test_data_generator.flow_from_directory(
+        directory=test_catdog_dataset_path,
+        batch_size=1,
+        target_size=model_spec.target_size[:2],
+        class_mode='categorical',
+        shuffle=False)
+
+    batch_x, batch_y = datagen.next()
+    assert batch_x.shape == (1, 144, 224, 224, 3)
+    assert len(batch_y) == 144
 
     test_data_generator = AugmentedImageDataGenerator(preprocessing_function=model_spec.preprocess_input,
                                                       data_augmentation={'scale_sizes': [256],
@@ -141,8 +155,8 @@ def test_augmented_image_data_generator(test_catdog_dataset_path):
         shuffle=False)
 
     batch_x, batch_y = datagen.next()
-    assert batch_x.shape == (1, 96, 224, 224, 3)
-    assert len(batch_y) == 96
+    assert batch_x.shape == (1, 90, 224, 224, 3)
+    assert len(batch_y) == 90
 
     test_data_generator = AugmentedImageDataGenerator(preprocessing_function=model_spec.preprocess_input,
                                                       data_augmentation={'transforms': ['horizontal_flip',
@@ -179,5 +193,5 @@ def test_augmented_image_data_generator(test_catdog_dataset_path):
         shuffle=False)
 
     batch_x, batch_y = datagen.next()
-    assert batch_x.shape == (1, 96, 224, 224, 3)
-    assert len(batch_y) == 96
+    assert batch_x.shape == (1, 90, 224, 224, 3)
+    assert len(batch_y) == 90
