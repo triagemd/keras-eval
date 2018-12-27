@@ -108,7 +108,7 @@ class Evaluator(object):
         return image_paths
 
     def evaluate(self, data_dir=None, top_k=1, filter_indices=None, confusion_matrix=False, data_augmentation=None,
-                 save_confusion_matrix_path=None):
+                 save_confusion_matrix_path=None, show_confusion_matrix_text=True):
         '''
         Evaluate a set of images. Each sub-folder under 'data_dir/' will be considered as a different class.
         E.g. 'data_dir/class_1/dog.jpg' , 'data_dir/class_2/cat.jpg
@@ -164,7 +164,8 @@ class Evaluator(object):
                                             concept_labels=self.concept_labels, top_k=top_k,
                                             filter_indices=filter_indices,
                                             confusion_matrix=confusion_matrix,
-                                            save_confusion_matrix_path=save_confusion_matrix_path)
+                                            save_confusion_matrix_path=save_confusion_matrix_path,
+                                            show_confusion_matrix_text=show_confusion_matrix_text)
 
         return self.probabilities, self.labels
 
@@ -198,7 +199,8 @@ class Evaluator(object):
                 self.combined_probs[0][:, idx] += probabilities[0][:, column_number]
         self.probabilities = self.combined_probs
 
-    def plot_confusion_matrix(self, confusion_matrix, concept_labels=None, save_path=None):
+    def plot_confusion_matrix(self, confusion_matrix, concept_labels=None, save_path=None, show_text=True,
+                              show_labels=True):
         '''
 
         Args:
@@ -211,10 +213,11 @@ class Evaluator(object):
 
         '''
         concept_labels = concept_labels or utils.get_concept_items(self.concepts, key='label')
-        visualizer.plot_confusion_matrix(confusion_matrix, concepts=concept_labels, save_path=save_path)
+        visualizer.plot_confusion_matrix(confusion_matrix, concepts=concept_labels, save_path=save_path,
+                                         show_text=show_text, show_labels=show_labels)
 
     def get_metrics(self, probabilities, labels, top_k=1, concept_labels=None, filter_indices=None,
-                    confusion_matrix=False, save_confusion_matrix_path=None):
+                    confusion_matrix=False, save_confusion_matrix_path=None, show_confusion_matrix_text=True):
         '''
          Print to screen metrics from experiment given probabilities and labels
 
@@ -246,7 +249,9 @@ class Evaluator(object):
         # Show metrics visualization as a confusion matrix
         if confusion_matrix:
             self.plot_confusion_matrix(confusion_matrix=results['average']['confusion_matrix'],
-                                       concept_labels=concept_labels, save_path=save_confusion_matrix_path)
+                                       concept_labels=concept_labels, save_path=save_confusion_matrix_path,
+                                       show_text=show_confusion_matrix_text,
+                                       show_labels=show_confusion_matrix_text)
 
         return results
 
@@ -490,7 +495,50 @@ class Evaluator(object):
         if n_images is None:
             n_images = image_paths.shape[0]
 
-        visualizer.plot_images(image_paths, n_images, title, n_cols, image_res, save_name)
+        visualizer.plot_images(image_paths, n_images, title, None, n_cols, image_res, save_name)
+
+    def plot_probability_histogram(self, mode='errors', bins=100):
+        if self.probabilities is None:
+            raise ValueError('There are not computed probabilities. Please run an evaluation first.')
+
+        self.combined_probabilities = utils.combine_probabilities(self.probabilities, self.combination_mode)
+        correct, errors = metrics.get_correct_errors_indices(self.combined_probabilities, self.labels, k=1)
+        probs_top = np.max(self.combined_probabilities, axis=1)
+
+        if mode == 'errors':
+            probs = probs_top[errors[0]]
+        elif mode == 'correct':
+            probs = probs_top[correct[0]]
+        else:
+            raise ValueError('Incorrect mode. Supported modes are "errors" and "correct"')
+
+        visualizer.plot_histogram(probs, bins, 'Probability', '', 'Histogram of '+mode+' probabilities')
+
+    def plot_most_confident(self, mode='errors', title='', n_cols=5, n_images=None, image_res=(20, 20), save_name=None):
+        if self.probabilities is None:
+            raise ValueError('There are not computed probabilities. Please run an evaluation first.')
+
+        self.combined_probabilities = utils.combine_probabilities(self.probabilities, self.combination_mode)
+        correct, errors = metrics.get_correct_errors_indices(self.combined_probabilities, self.labels, k=1)
+        probs_top = np.max(self.combined_probabilities, axis=1)
+
+        if mode == 'errors':
+            probs = probs_top[errors[0]]
+        elif mode == 'correct':
+            probs = probs_top[correct[0]]
+        else:
+            raise ValueError('Incorrect mode. Supported modes are "errors" and "correct"')
+
+        image_paths = np.array(self.image_paths)
+        index_max = np.argsort(probs)[::-1]
+        image_paths = image_paths[index_max]
+
+        if n_images is None:
+            n_images = min(len(image_paths), 20)
+
+        subtitles = ['Prob=' + str(prob)[0:5] for prob in probs[index_max]][0:n_images]
+
+        visualizer.plot_images(image_paths, n_images, title, subtitles[0:n_images], n_cols, image_res, save_name)
 
     def plot_confidence_interval(self, mode='accuracy', confidence_value=0.95,
                                  probability_interval=np.arange(0, 1.0, 0.01)):
