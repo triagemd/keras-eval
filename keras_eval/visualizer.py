@@ -11,7 +11,7 @@ from sklearn.utils.fixes import signature
 
 
 def plot_confusion_matrix(cm, concepts, normalize=False, show_text=True, fontsize=18, figsize=(16, 12),
-                          cmap=plt.cm.coolwarm_r, save_path=None):
+                          cmap=plt.cm.coolwarm_r, save_path=None, show_labels=True):
     '''
     Plot confusion matrix provided in 'cm'
 
@@ -49,13 +49,17 @@ def plot_confusion_matrix(cm, concepts, normalize=False, show_text=True, fontsiz
 
     fig.colorbar(cax)
     ax.xaxis.tick_bottom()
-    n_labels = len(concepts)
-    ax.set_xticklabels(concepts)
-    ax.set_yticklabels(concepts)
-    plt.xticks(np.arange(0, n_labels, 1.0), rotation='vertical')
-    plt.yticks(np.arange(0, n_labels, 1.0))
     plt.ylabel('True label', fontweight='bold')
     plt.xlabel('Predicted label', fontweight='bold')
+
+    if show_labels:
+        n_labels = len(concepts)
+        ax.set_xticklabels(concepts)
+        ax.set_yticklabels(concepts)
+        plt.xticks(np.arange(0, n_labels, 1.0), rotation='vertical')
+        plt.yticks(np.arange(0, n_labels, 1.0))
+    else:
+        plt.axis('off')
 
     if show_text:
         # http://stackoverflow.com/questions/21712047/matplotlib-imshow-matshow-display-values-on-plot
@@ -183,13 +187,14 @@ def plot_threshold(threshold, correct, errors, title='Threshold Tuning'):
     iplot(fig, filename='Threshold Tuning')
 
 
-def plot_images(image_paths, n_images, title='', n_cols=5, image_res=(20, 20), save_name=None):
+def plot_images(image_paths, n_images, title='', subtitles=None, n_cols=5, image_res=(20, 20), save_name=None):
     '''
 
     Args:
         image_paths: List with image_paths
         n_images: Number of images to show in the plot. Upper bounded by len(image_paths).
         title: Title for the plot
+        subtitles: Subtitles for plots
         n_cols: Number of columns to split the data
         image_res: Plot image resolution
         save_name: If specified, will save the plot in save_name path
@@ -197,12 +202,13 @@ def plot_images(image_paths, n_images, title='', n_cols=5, image_res=(20, 20), s
     Returns: Plots images in the screen
 
     '''
-
+    if subtitles is not None and len(subtitles) != n_images:
+        raise ValueError('Number of images and subtitles is different. There are %d images and %d subtitles'
+                         % (n_images, len(subtitles)))
     n_row = 0
     n_col = 0
 
     total_images_plot = min(len(image_paths), n_images)
-
     if total_images_plot <= n_cols:
         f, axes = plt.subplots(nrows=1, ncols=n_cols, figsize=image_res)
         plt.title(title)
@@ -213,6 +219,8 @@ def plot_images(image_paths, n_images, title='', n_cols=5, image_res=(20, 20), s
                 axes[n_col].imshow(img, aspect='equal')
                 axes[n_col].grid('off')
                 axes[n_col].axis('off')
+                if subtitles is not None:
+                    axes[n_col].set_title(subtitles[i])
             else:
                 f.delaxes(axes[n_col])
             n_col += 1
@@ -221,13 +229,15 @@ def plot_images(image_paths, n_images, title='', n_cols=5, image_res=(20, 20), s
         n_rows_total = int(np.ceil(n_images / n_cols))
 
         f, axes = plt.subplots(nrows=n_rows_total, ncols=n_cols, figsize=image_res)
-        plt.title(title)
+
         for i in range(n_rows_total * n_cols):
             if i < total_images_plot:
                 img = plt.imread(image_paths[i])
                 axes[n_row, n_col].imshow(img, aspect='equal')
                 axes[n_row, n_col].grid('off')
                 axes[n_row, n_col].axis('off')
+                if subtitles is not None:
+                    axes[n_row, n_col].set_title(subtitles[i])
             else:
                 axes[n_row, n_col].grid('off')
                 f.delaxes(axes[n_row, n_col])
@@ -346,3 +356,10 @@ def plot_confidence_interval(values_x, values_y, lower_bound, upper_bound, title
 
     fig = go.Figure(data=data, layout=layout)
     iplot(fig, filename='confidence_interval')
+
+
+def plot_histogram(data, bins, title, xlabel, ylabel):
+    plt.hist(data, bins=bins)
+    plt.xlabel(xlabel)
+    plt.ylabel(ylabel)
+    plt.title(title)
