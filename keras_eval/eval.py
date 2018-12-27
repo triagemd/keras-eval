@@ -168,6 +168,11 @@ class Evaluator(object):
 
         return self.probabilities, self.labels
 
+    def save_probabilities_labels(self, id, save_path):
+        if self.combined_probabilities is not None and self.labels is not None:
+            utils.save_numpy(id + '_probabilities', save_path, self.combined_probabilities)
+            utils.save_numpy(id + '_labels', save_path, self.labels)
+
     def compute_inference_probabilities(self, concept_dictionary, probabilities):
         '''
         Combines probabilities based on key "group" in concept_dictionary and saves the values in self.probabilities
@@ -418,7 +423,9 @@ class Evaluator(object):
                 'arithmetic': predictions are obtained by a arithmetic mean of all the probabilities
                 'harmonic': predictions are obtained by a harmonic mean of all the probabilities
 
-        Returns: A dictionary containing a list of images per confusion matrix square (relation ClassA_ClassB)
+        Returns: A dictionary containing a list of images per confusion matrix square (relation ClassA_ClassB), and the
+        predicted probabilities
+
         '''
         self.combined_probabilities = utils.combine_probabilities(probabilities, self.combination_mode)
 
@@ -437,14 +444,28 @@ class Evaluator(object):
 
         for name_1 in concept_labels:
             for name_2 in concept_labels:
-                dict_image_paths_concept.update({name_1 + '_' + name_2: []})
+                if name_1 == name_2:
+                    dict_image_paths_concept.update({name_1 + '_' + name_2: {'image_paths': [], 'probs': [],
+                                                                             'diagonal': True}})
+                else:
+                    dict_image_paths_concept.update({name_1 + '_' + name_2: {'image_paths': [], 'probs': [],
+                                                                             'diagonal': False}})
 
         for i, pred in enumerate(predictions):
             predicted_label = concept_labels[pred]
             correct_label = concept_labels[y_true[i]]
-            list_image_paths = dict_image_paths_concept[str(correct_label + '_' + predicted_label)]
+            list_image_paths = dict_image_paths_concept[str(correct_label + '_' + predicted_label)]['image_paths']
             list_image_paths.append(image_paths[i])
-            dict_image_paths_concept.update({correct_label + '_' + predicted_label: list_image_paths})
+            list_probs = dict_image_paths_concept[str(correct_label + '_' + predicted_label)]['probs']
+            list_probs.append(self.combined_probabilities[i])
+            diagonal = dict_image_paths_concept[str(correct_label + '_' + predicted_label)]['diagonal']
+            dict_image_paths_concept.update({correct_label + '_' + predicted_label:
+                                             {
+                                                 'image_paths': list_image_paths,
+                                                 'probs': list_probs,
+                                                 'diagonal': diagonal
+                                             }
+                                             })
 
         return dict_image_paths_concept
 
@@ -470,6 +491,41 @@ class Evaluator(object):
             n_images = image_paths.shape[0]
 
         visualizer.plot_images(image_paths, n_images, title, n_cols, image_res, save_name)
+
+    def plot_confidence_interval(self, mode='accuracy', confidence_value=0.95,
+                                 probability_interval=np.arange(0, 1.0, 0.01)):
+        '''
+        Computes and plot the confidence interval for a given mode. It uses a confidence value for a given success and
+        failure values following a binomial distribution using the gaussian approximation.
+        Args:
+            mode: Two modes, "accuracy" and "error" are supported
+            confidence_value:  Percentage of confidence. Values accepted are 0.9, 0.95, 0.98, 0.99 or 90, 95, 98, 99
+            probability_interval: Probabilities to compare with.
+
+        Returns: Mean, lower and upper bounds for each probability. Plot the graph. 
+
+        '''
+        if self.probabilities is None:
+            raise ValueError('There are not computed probabilities. Please run an evaluation first.')
+
+        self.combined_probabilities = utils.combine_probabilities(self.probabilities, self.combination_mode)
+        correct, errors = metrics.get_correct_errors_indices(self.combined_probabilities, self.labels, k=1)
+        probs_correct = np.max(self.combined_probabilities, axis=1)[correct[0]]
+        probs_error = np.max(self.combined_probabilities, axis=1)[errors[0]]
+
+        if mode == 'accuracy':
+            title = 'Accuracy Confidence Interval'
+            mean, lower_bound, upper_bound = \
+                metrics.compute_confidence_interval(probs_correct, probs_error, confidence_value, probability_interval)
+        elif mode == 'error':
+            title = 'Error Confidence Interval'
+            mean, lower_bound, upper_bound = \
+                metrics.compute_confidence_interval(probs_error, probs_correct, confidence_value, probability_interval)
+        else:
+            raise ValueError('Incorrect mode. Modes available are "accuracy" or "error".')
+
+        visualizer.plot_confidence_interval(intervals_prob, mean, lower_bound, upper_bound, title=title)
+        return mean, lower_bound, upper_bound
 
     def compute_confidence_prediction_distribution(self, verbose=1):
         '''

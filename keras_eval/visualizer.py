@@ -306,3 +306,43 @@ def plot_models_performance(eval_dir, individual=False, class_idx=None, metric=N
     plt.xticks(x_axis, tick_label, rotation='vertical')
     if save_name:
         plt.savefig(save_name)
+
+
+def plot_confidence_interval(values_x, values_y, lower_bound, upper_bound, title=''):
+    upper_bound = go.Scatter(
+        name='Upper Bound',
+        x=values_x,
+        y=upper_bound,
+        mode='lines',
+        marker=dict(color="#444"),
+        line=dict(width=0),
+        fillcolor='rgba(25, 25, 255, 0.2)',
+        fill='tonexty')
+
+    trace = go.Scatter(
+        name='Mean',
+        x=values_x,
+        y=values_y,
+        mode='lines',
+        line=dict(color='rgb(31, 119, 180)'),
+        fillcolor='rgba(25, 25, 255, 0.2)',
+        fill='tonexty')
+
+    lower_bound = go.Scatter(
+        name='Lower Bound',
+        x=values_x,
+        y=lower_bound,
+        marker=dict(color="#444"),
+        line=dict(width=0),
+        mode='lines')
+
+    data = [lower_bound, trace, upper_bound]
+
+    layout = go.Layout(
+        xaxis=dict(title='Top-1 Probability'),
+        yaxis=dict(title='Confidence Interval'),
+        title=title,
+        showlegend=False)
+
+    fig = go.Figure(data=data, layout=layout)
+    iplot(fig, filename='confidence_interval')

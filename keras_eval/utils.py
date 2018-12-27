@@ -433,6 +433,10 @@ def mkdir(path):
         os.makedirs(path)
 
 
+def save_numpy(id, path, file):
+    np.save(os.path.join(path, id + '.npy'), file)
+
+
 def save_results(results, id, csv_path, mode='average', round_decimals=3, show_id=True):
     '''
 
