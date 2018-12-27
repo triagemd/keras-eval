@@ -498,6 +498,15 @@ class Evaluator(object):
         visualizer.plot_images(image_paths, n_images, title, None, n_cols, image_res, save_name)
 
     def plot_probability_histogram(self, mode='errors', bins=100):
+        '''
+
+        Args:
+            mode: Two modes, "correct" and "error" are supported
+            bins: Number of histogram bins
+
+        Returns:
+
+        '''
         if self.probabilities is None:
             raise ValueError('There are not computed probabilities. Please run an evaluation first.')
 
@@ -515,6 +524,19 @@ class Evaluator(object):
         visualizer.plot_histogram(probs, bins,  'Histogram of ' + mode + ' probabilities', 'Probability', '')
 
     def plot_most_confident(self, mode='errors', title='', n_cols=5, n_images=None, image_res=(20, 20), save_name=None):
+        '''
+            Plots most confident errors or correct detections
+        Args:
+            mode: Two modes, "correct" and "error" are supported
+            title: Title of the Plot
+            n_cols: Number of columns
+            n_images: Number of images to show
+            image_res: Plot image resolution
+            save_name: If specified, will save the plot in save_name path
+
+        Returns: Sorted image paths with corresponding probabilities
+
+        '''
         if self.probabilities is None:
             raise ValueError('There are not computed probabilities. Please run an evaluation first.')
 
@@ -539,6 +561,8 @@ class Evaluator(object):
         subtitles = ['Prob=' + str(prob)[0:5] for prob in probs[index_max]][0:n_images]
 
         visualizer.plot_images(image_paths, n_images, title, subtitles[0:n_images], n_cols, image_res, save_name)
+
+        return image_paths, probs[index_max]
 
     def plot_confidence_interval(self, mode='accuracy', confidence_value=0.95,
                                  probability_interval=np.arange(0, 1.0, 0.01)):
