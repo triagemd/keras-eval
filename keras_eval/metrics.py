@@ -377,7 +377,7 @@ def confidence_interval_binomial_range(value, samples, confidence=0.95):
 
 
 def compute_confidence_interval_binomial(values_a, values_b, confidence=0.95,
-                                probability_interval=np.arange(0, 1.01, 0.01)):
+                                         probability_interval=np.arange(0, 1.01, 0.01)):
     '''
     Computes mean, lower and upper bounds for a determined confidence value for a given success and failure values
     following a binomial distribution using the gaussian approximation.

@@ -502,7 +502,7 @@ class Evaluator(object):
             confidence_value:  Percentage of confidence. Values accepted are 0.9, 0.95, 0.98, 0.99 or 90, 95, 98, 99
             probability_interval: Probabilities to compare with.
 
-        Returns: Mean, lower and upper bounds for each probability. Plot the graph. 
+        Returns: Mean, lower and upper bounds for each probability. Plot the graph.
 
         '''
         if self.probabilities is None:
@@ -516,15 +516,17 @@ class Evaluator(object):
         if mode == 'accuracy':
             title = 'Accuracy Confidence Interval'
             mean, lower_bound, upper_bound = \
-                metrics.compute_confidence_interval(probs_correct, probs_error, confidence_value, probability_interval)
+                metrics.compute_confidence_interval_binomial(probs_correct, probs_error,
+                                                             confidence_value, probability_interval)
         elif mode == 'error':
             title = 'Error Confidence Interval'
             mean, lower_bound, upper_bound = \
-                metrics.compute_confidence_interval(probs_error, probs_correct, confidence_value, probability_interval)
+                metrics.compute_confidence_interval_binomial(probs_error, probs_correct,
+                                                             confidence_value, probability_interval)
         else:
             raise ValueError('Incorrect mode. Modes available are "accuracy" or "error".')
 
-        visualizer.plot_confidence_interval(intervals_prob, mean, lower_bound, upper_bound, title=title)
+        visualizer.plot_confidence_interval(probability_interval, mean, lower_bound, upper_bound, title=title)
         return mean, lower_bound, upper_bound
 
     def compute_confidence_prediction_distribution(self, verbose=1):
