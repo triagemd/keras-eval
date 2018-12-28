@@ -362,3 +362,28 @@ def plot_histogram(data, bins, title, xlabel, ylabel):
     plt.xlabel(xlabel)
     plt.ylabel(ylabel)
     plt.title(title)
+
+
+def scatter_plot(values_x, values_y, axis_x, axis_y, title):
+    data = [go.Scatter(
+        x=values_x,
+        y=values_y,
+        mode='markers',
+        marker=dict(
+            color='rgba(156, 165, 196, 0.95)',
+            line=dict(
+                color='rgba(156, 165, 196, 1.0)',
+                width=1,
+            ),
+            symbol='circle',
+            size=8,
+        )
+    )]
+
+    layout = dict(title=title,
+                  xaxis=dict(title=axis_x),
+                  yaxis=dict(title=axis_y),
+                  )
+
+    fig = dict(data=data, layout=layout)
+    iplot(fig, filename='scatter-plot')

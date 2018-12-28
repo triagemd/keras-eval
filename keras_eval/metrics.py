@@ -372,8 +372,13 @@ def confidence_interval_binomial_range(value, samples, confidence=0.95):
 
     '''
     confidence_cts = {0.90: 1.64, 0.95: 1.96, 0.98: 2.33, 0.99: 2.58, 90: 1.64, 95: 1.96, 98: 2.33, 99: 2.58}
-    val = confidence_cts[confidence] * sqrt((value * (1 - value)) / samples)
-    return max(0.0, value - val), min(value + val, 1.0)
+    accepted_confidence_keys = confidence_cts.keys()
+    if confidence in accepted_confidence_keys:
+        val = confidence_cts[confidence] * sqrt((value * (1 - value)) / samples)
+        return max(0.0, value - val), min(value + val, 1.0)
+    else:
+        raise ValueError('Confidence value not valid.'
+                         ' Confidence values accepted are 0.9, 0.95, 0.98, 0.99 or 90, 95, 98, 99')
 
 
 def compute_confidence_interval_binomial(values_a, values_b, confidence=0.95,

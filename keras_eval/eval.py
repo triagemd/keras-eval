@@ -683,6 +683,42 @@ class Evaluator(object):
 
         return utils.save_results(self.results, id, csv_path, mode, round_decimals, show_id)
 
+    def get_sensitivity_per_samples(self, csv_path=None, round_decimals=4):
+        '''
+
+        Args:
+            id: Name of the results evaluation
+            csv_path: If specified, results will be saved on that location
+            mode: Mode of results. "average" will show the average metrics while "individual" will show metrics by class
+            round_decimals: Decimal position to round the numbers.
+            show_id: Show id in the first column.
+
+        Returns: Nothing. Saves Pandas dataframe on csv_path specified.
+
+        '''
+        if self.results is None:
+            raise ValueError('results parameter is None, please run an evaluation first')
+
+        results_classes = self.show_results('individual', round_decimals=round_decimals)
+        selection_lists = ['class', 'sensitivity_top_1', '% of samples']
+        results_classes = results_classes[results_classes.columns.intersection(selection_lists)]
+        results_classes = results_classes.sort_values(by='sensitivity_top_1').reset_index()
+        if csv_path is not None:
+            results_classes.to_csv(csv_path)
+        return results_classes
+
+    def plot_sensitivity_per_samples(self, csv_path=None, round_decimals=4):
+        if self.results is None:
+            raise ValueError('results parameter is None, please run an evaluation first')
+
+        results_classes = self.get_sensitivity_per_samples(csv_path, round_decimals)
+        visualizer.scatter_plot(results_classes['% of samples'],
+                                results_classes['sensitivity_top_1'],
+                                '% of Samples',
+                                'Sensitivity',
+                                'Sensitivity per Samples %')
+        return results_classes
+
     def ensemble_models(self, input_shape, combination_mode='average', ensemble_name='ensemble', model_filename=None):
         ensemble = utils.ensemble_models(self.models, input_shape=input_shape, combination_mode=combination_mode,
                                          ensemble_name=ensemble_name)
