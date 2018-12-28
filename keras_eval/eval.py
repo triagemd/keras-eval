@@ -521,7 +521,7 @@ class Evaluator(object):
         else:
             raise ValueError('Incorrect mode. Supported modes are "errors" and "correct"')
 
-        visualizer.plot_histogram(probs, bins,  'Histogram of ' + mode + ' probabilities', 'Probability', '')
+        visualizer.plot_histogram(probs, bins, 'Histogram of ' + mode + ' probabilities', 'Probability', '')
 
     def plot_most_confident(self, mode='errors', title='', n_cols=5, n_images=None, image_res=(20, 20), save_name=None):
         '''
