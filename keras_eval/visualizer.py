@@ -319,7 +319,6 @@ def plot_models_performance(eval_dir, individual=False, class_idx=None, metric=N
 
 def plot_confidence_interval(values_x, values_y, lower_bound, upper_bound, title=''):
     if len(values_x) == len(values_y) == len(lower_bound) == len(upper_bound):
-
         upper_bound = go.Scatter(
             name='Upper Bound',
             x=values_x,
