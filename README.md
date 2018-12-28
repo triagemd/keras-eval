@@ -12,7 +12,7 @@ Requires [keras-model-specs](https://github.com/triagemd/keras-model-specs). We 
 
 `probs, labels = evaluator.evaluate(data_dir=data_dir, top_k=2, confusion_matrix=True, save_confusion_matrix_path='cm.png')`
 
-![Confusion_matrix](https://github.com/triagemd/keras-eval/blob/master/figs/confusion_matrix.png)
+![Confusion_matrix](https://github.com/triagemd/keras-eval/blob/master/figs/confusion_matrix.png?raw=true)
 
 `evaluator.show_results('average')`
 
@@ -28,6 +28,20 @@ cats | 0.907 | 0.960 | 0.933 | 0.962 | 0.040 | 1.0 | 907 | 38 | 93 | 50.0
 dogs | 0.962 | 0.912 | 0.936 | 0.907 | 0.088 | 1.0 | 962 | 93 | 38 | 50.0
 
 
+`mean, lower, upper = evaluator.plot_confidence_interval('accuracy', confidence_value=0.95)`
+
+Plot the Classifier Confidence Interval:
+
+![Classifier Confidence Interval](https://github.com/triagemd/keras-eval/blob/master/figs/confidence_interval_classifier.png?raw=true)
+
+Plot the errors in which the classifier was more confident:
+
+`evaluator.plot_most_confident('errors', n_images=20)`
+
+![Most Confident Errors](https://github.com/triagemd/keras-eval/blob/master/figs/most_confident_errors.png?raw=true)
+
+And many more functions to evaluate and visualize results in the following lines and in the 
+[Example Notebook](https://github.com/triagemd/keras-eval/blob/master/example.ipynb)
 
 # Use the code
 
@@ -121,7 +135,8 @@ Regular evaluation scenario:
 [class_3]
 ```
 Results for regular evaluation:
-![Confusion_matrix](https://github.com/triagemd/keras-eval/blob/master/figs/confusion_matrix_granular.png)
+
+![Confusion_matrix](https://github.com/triagemd/keras-eval/blob/master/figs/confusion_matrix_granular.png?raw=true)
 
 model | accuracy | precision | f1_score | number_of_samples | number_of_classes
 -- | -- | -- | -- | -- | -- 
@@ -171,7 +186,7 @@ For this purpose, the mapping between the training and testing dictionary must b
 ]
 ```
 Results for class consolidated evaluation:
-![Confusion_matrix](https://github.com/triagemd/keras-eval/blob/master/figs/confusion_matrix_coarse.png)
+![Confusion_matrix](https://github.com/triagemd/keras-eval/blob/master/figs/confusion_matrix_coarse.png?raw=true)
 
 model | accuracy | precision | f1_score | number_of_samples	| number_of_classes
 -- | -- | -- | -- | -- | -- 
