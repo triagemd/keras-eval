@@ -318,43 +318,48 @@ def plot_models_performance(eval_dir, individual=False, class_idx=None, metric=N
 
 
 def plot_confidence_interval(values_x, values_y, lower_bound, upper_bound, title=''):
-    upper_bound = go.Scatter(
-        name='Upper Bound',
-        x=values_x,
-        y=upper_bound,
-        mode='lines',
-        marker=dict(color="#444"),
-        line=dict(width=0),
-        fillcolor='rgba(25, 25, 255, 0.2)',
-        fill='tonexty')
+    if len(values_x) == len(values_y) == len(lower_bound) == len(upper_bound):
 
-    trace = go.Scatter(
-        name='Mean',
-        x=values_x,
-        y=values_y,
-        mode='lines',
-        line=dict(color='rgb(31, 119, 180)'),
-        fillcolor='rgba(25, 25, 255, 0.2)',
-        fill='tonexty')
+        upper_bound = go.Scatter(
+            name='Upper Bound',
+            x=values_x,
+            y=upper_bound,
+            mode='lines',
+            marker=dict(color="#444"),
+            line=dict(width=0),
+            fillcolor='rgba(25, 25, 255, 0.2)',
+            fill='tonexty')
 
-    lower_bound = go.Scatter(
-        name='Lower Bound',
-        x=values_x,
-        y=lower_bound,
-        marker=dict(color="#444"),
-        line=dict(width=0),
-        mode='lines')
+        trace = go.Scatter(
+            name='Mean',
+            x=values_x,
+            y=values_y,
+            mode='lines',
+            line=dict(color='rgb(31, 119, 180)'),
+            fillcolor='rgba(25, 25, 255, 0.2)',
+            fill='tonexty')
 
-    data = [lower_bound, trace, upper_bound]
+        lower_bound = go.Scatter(
+            name='Lower Bound',
+            x=values_x,
+            y=lower_bound,
+            marker=dict(color="#444"),
+            line=dict(width=0),
+            mode='lines')
 
-    layout = go.Layout(
-        xaxis=dict(title='Top-1 Probability'),
-        yaxis=dict(title='Confidence Interval'),
-        title=title,
-        showlegend=False)
+        data = [lower_bound, trace, upper_bound]
 
-    fig = go.Figure(data=data, layout=layout)
-    iplot(fig, filename='confidence_interval')
+        layout = go.Layout(
+            xaxis=dict(title='Top-1 Probability'),
+            yaxis=dict(title='Confidence Interval'),
+            title=title,
+            showlegend=False)
+
+        fig = go.Figure(data=data, layout=layout)
+        iplot(fig, filename='confidence_interval')
+    else:
+        raise ValueError('Arrays "values_x", "values_y", "lower_bound" and '
+                         '"upper_bound" should have the same dimension')
 
 
 def plot_histogram(data, bins, title, xlabel, ylabel):
@@ -365,6 +370,9 @@ def plot_histogram(data, bins, title, xlabel, ylabel):
 
 
 def scatter_plot(values_x, values_y, axis_x, axis_y, title):
+    if len(values_x) != len(values_y):
+        raise ValueError('Both arrays "values_x" and "values_y" should have the same dimension')
+
     data = [go.Scatter(
         x=values_x,
         y=values_y,
