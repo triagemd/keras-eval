@@ -86,7 +86,7 @@ def test_scatter_plot():
     values_x = [0, 1]
     values_y = [0]
     with pytest.raises(ValueError) as exception:
-        scatter_plot(values_x, values_y)
+        scatter_plot(values_x, values_y, '', '', '')
     expected = 'Both arrays "values_x" and "values_y" should have the same dimension'
     actual = str(exception).split('ValueError: ')[1]
     assert actual == expected
