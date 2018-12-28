@@ -86,7 +86,7 @@ def test_get_image_paths_by_prediction(evaluator_mobilenet, test_catdog_dataset_
     image_dictionary = evaluator_mobilenet.get_image_paths_by_prediction(probabilities, labels)
 
     assert image_dictionary['cat_cat']['image_paths'] == [os.path.join(test_cat_folder, 'cat-1.jpg'),
-                                                 os.path.join(test_cat_folder, 'cat-4.jpg')]
+                                                          os.path.join(test_cat_folder, 'cat-4.jpg')]
     assert len(image_dictionary['cat_cat']['probs']) == 2
     assert image_dictionary['cat_dog']['image_paths'] == []
     assert len(image_dictionary['cat_dog']['probs']) == 0
