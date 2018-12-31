@@ -256,12 +256,22 @@ def test_plot_sensitivity_per_samples(evaluator_mobilenet):
     assert actual == expected
 
 
-def test_get_sensitivity_per_samples(evaluator_mobilenet):
+def test_get_sensitivity_per_samples(evaluator_mobilenet, test_catdog_dataset_path):
     with pytest.raises(ValueError) as exception:
         evaluator_mobilenet.get_sensitivity_per_samples()
     expected = 'results parameter is None, please run an evaluation first'
     actual = str(exception).split('ValueError: ')[1]
     assert actual == expected
+
+    evaluator_mobilenet.evaluate(test_catdog_dataset_path)
+    results_classes = evaluator_mobilenet.get_sensitivity_per_samples()
+    
+    assert results_classes['sensitivity'][0] == 0.5
+    assert results_classes['sensitivity'][1] == 1.0
+    assert results_classes['class'][0] == 'dog'
+    assert results_classes['class'][1] == 'cat'
+    assert results_classes['% of samples'][0] == 50.0
+    assert results_classes['% of samples'][1] == 50.0
 
 
 def test_ensemble_models(evaluator_ensemble_mobilenet, test_cat_folder):

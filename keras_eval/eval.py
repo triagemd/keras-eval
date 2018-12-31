@@ -133,7 +133,7 @@ class Evaluator(object):
         Returns: Probabilities computed and ground truth labels associated.
 
         '''
-
+        self.top_k = top_k
         self.data_dir = data_dir or self.data_dir
         self.data_augmentation = data_augmentation or self.data_augmentation
         if self.data_dir is None:
@@ -700,9 +700,14 @@ class Evaluator(object):
             raise ValueError('results parameter is None, please run an evaluation first')
 
         results_classes = self.show_results('individual', round_decimals=round_decimals)
-        selection_lists = ['class', 'sensitivity_top_1', '% of samples']
-        results_classes = results_classes[results_classes.columns.intersection(selection_lists)]
-        results_classes = results_classes.sort_values(by='sensitivity_top_1').reset_index()
+
+        if self.top_k > 1:
+            sensitivity = 'sensitivity_top_1'
+        else:
+            sensitivity = 'sensitivity'
+
+        results_classes = results_classes[results_classes.columns.intersection(['class', sensitivity, '% of samples'])]
+        results_classes = results_classes.sort_values(by=sensitivity).reset_index()
         if csv_path is not None:
             results_classes.to_csv(csv_path)
         return results_classes
