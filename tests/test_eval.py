@@ -265,7 +265,7 @@ def test_get_sensitivity_per_samples(evaluator_mobilenet, test_catdog_dataset_pa
 
     evaluator_mobilenet.evaluate(test_catdog_dataset_path)
     results_classes = evaluator_mobilenet.get_sensitivity_per_samples()
-    
+
     assert results_classes['sensitivity'][0] == 0.5
     assert results_classes['sensitivity'][1] == 1.0
     assert results_classes['class'][0] == 'dog'
