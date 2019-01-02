@@ -525,7 +525,7 @@ class Evaluator(object):
 
     def plot_most_confident(self, mode='errors', title='', n_cols=5, n_images=None, image_res=(20, 20), save_name=None):
         '''
-            Plots most confident errors or correct detections
+    Plots most confident errors or correct detections
         Args:
             mode: Two modes, "correct" and "error" are supported
             title: Title of the Plot
