@@ -11,7 +11,7 @@ from sklearn.utils.fixes import signature
 
 
 def plot_confusion_matrix(cm, concepts, normalize=False, show_text=True, fontsize=18, figsize=(16, 12),
-                          cmap=plt.cm.coolwarm_r, save_path=None):
+                          cmap=plt.cm.coolwarm_r, save_path=None, show_labels=True):
     '''
     Plot confusion matrix provided in 'cm'
 
@@ -49,13 +49,17 @@ def plot_confusion_matrix(cm, concepts, normalize=False, show_text=True, fontsiz
 
     fig.colorbar(cax)
     ax.xaxis.tick_bottom()
-    n_labels = len(concepts)
-    ax.set_xticklabels(concepts)
-    ax.set_yticklabels(concepts)
-    plt.xticks(np.arange(0, n_labels, 1.0), rotation='vertical')
-    plt.yticks(np.arange(0, n_labels, 1.0))
     plt.ylabel('True label', fontweight='bold')
     plt.xlabel('Predicted label', fontweight='bold')
+
+    if show_labels:
+        n_labels = len(concepts)
+        ax.set_xticklabels(concepts)
+        ax.set_yticklabels(concepts)
+        plt.xticks(np.arange(0, n_labels, 1.0), rotation='vertical')
+        plt.yticks(np.arange(0, n_labels, 1.0))
+    else:
+        plt.axis('off')
 
     if show_text:
         # http://stackoverflow.com/questions/21712047/matplotlib-imshow-matshow-display-values-on-plot
@@ -183,13 +187,14 @@ def plot_threshold(threshold, correct, errors, title='Threshold Tuning'):
     iplot(fig, filename='Threshold Tuning')
 
 
-def plot_images(image_paths, n_images, title='', n_cols=5, image_res=(20, 20), save_name=None):
+def plot_images(image_paths, n_images, title='', subtitles=None, n_cols=5, image_res=(20, 20), save_name=None):
     '''
 
     Args:
         image_paths: List with image_paths
         n_images: Number of images to show in the plot. Upper bounded by len(image_paths).
         title: Title for the plot
+        subtitles: Subtitles for plots
         n_cols: Number of columns to split the data
         image_res: Plot image resolution
         save_name: If specified, will save the plot in save_name path
@@ -197,12 +202,12 @@ def plot_images(image_paths, n_images, title='', n_cols=5, image_res=(20, 20), s
     Returns: Plots images in the screen
 
     '''
-
+    if subtitles is not None and len(subtitles) != n_images:
+        raise ValueError('Number of images and subtitles is different. There are %d images and %d subtitles'
+                         % (n_images, len(subtitles)))
     n_row = 0
     n_col = 0
-
     total_images_plot = min(len(image_paths), n_images)
-
     if total_images_plot <= n_cols:
         f, axes = plt.subplots(nrows=1, ncols=n_cols, figsize=image_res)
         plt.title(title)
@@ -213,6 +218,8 @@ def plot_images(image_paths, n_images, title='', n_cols=5, image_res=(20, 20), s
                 axes[n_col].imshow(img, aspect='equal')
                 axes[n_col].grid('off')
                 axes[n_col].axis('off')
+                if subtitles is not None:
+                    axes[n_col].set_title(subtitles[i])
             else:
                 f.delaxes(axes[n_col])
             n_col += 1
@@ -221,13 +228,15 @@ def plot_images(image_paths, n_images, title='', n_cols=5, image_res=(20, 20), s
         n_rows_total = int(np.ceil(n_images / n_cols))
 
         f, axes = plt.subplots(nrows=n_rows_total, ncols=n_cols, figsize=image_res)
-        plt.title(title)
+
         for i in range(n_rows_total * n_cols):
             if i < total_images_plot:
                 img = plt.imread(image_paths[i])
                 axes[n_row, n_col].imshow(img, aspect='equal')
                 axes[n_row, n_col].grid('off')
                 axes[n_row, n_col].axis('off')
+                if subtitles is not None:
+                    axes[n_row, n_col].set_title(subtitles[i])
             else:
                 axes[n_row, n_col].grid('off')
                 f.delaxes(axes[n_row, n_col])
@@ -306,3 +315,82 @@ def plot_models_performance(eval_dir, individual=False, class_idx=None, metric=N
     plt.xticks(x_axis, tick_label, rotation='vertical')
     if save_name:
         plt.savefig(save_name)
+
+
+def plot_confidence_interval(values_x, values_y, lower_bound, upper_bound, title=''):
+    if len(values_x) == len(values_y) == len(lower_bound) == len(upper_bound):
+        upper_bound = go.Scatter(
+            name='Upper Bound',
+            x=values_x,
+            y=upper_bound,
+            mode='lines',
+            marker=dict(color="#444"),
+            line=dict(width=0),
+            fillcolor='rgba(25, 25, 255, 0.2)',
+            fill='tonexty')
+
+        trace = go.Scatter(
+            name='Mean',
+            x=values_x,
+            y=values_y,
+            mode='lines',
+            line=dict(color='rgb(31, 119, 180)'),
+            fillcolor='rgba(25, 25, 255, 0.2)',
+            fill='tonexty')
+
+        lower_bound = go.Scatter(
+            name='Lower Bound',
+            x=values_x,
+            y=lower_bound,
+            marker=dict(color="#444"),
+            line=dict(width=0),
+            mode='lines')
+
+        data = [lower_bound, trace, upper_bound]
+
+        layout = go.Layout(
+            xaxis=dict(title='Top-1 Probability'),
+            yaxis=dict(title='Confidence Interval'),
+            title=title,
+            showlegend=False)
+
+        fig = go.Figure(data=data, layout=layout)
+        iplot(fig, filename='confidence_interval')
+    else:
+        raise ValueError('Arrays "values_x", "values_y", "lower_bound" and '
+                         '"upper_bound" should have the same dimension')
+
+
+def plot_histogram(data, bins, title, xlabel, ylabel):
+    plt.hist(data, bins=bins)
+    plt.xlabel(xlabel)
+    plt.ylabel(ylabel)
+    plt.title(title)
+
+
+def scatter_plot(values_x, values_y, axis_x, axis_y, title):
+    if len(values_x) != len(values_y):
+        raise ValueError('Both arrays "values_x" and "values_y" should have the same dimension')
+
+    data = [go.Scatter(
+        x=values_x,
+        y=values_y,
+        mode='markers',
+        marker=dict(
+            color='rgba(156, 165, 196, 0.95)',
+            line=dict(
+                color='rgba(156, 165, 196, 1.0)',
+                width=1,
+            ),
+            symbol='circle',
+            size=8,
+        )
+    )]
+
+    layout = dict(title=title,
+                  xaxis=dict(title=axis_x),
+                  yaxis=dict(title=axis_y),
+                  )
+
+    fig = dict(data=data, layout=layout)
+    iplot(fig, filename='scatter-plot')
