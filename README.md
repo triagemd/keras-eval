@@ -41,7 +41,7 @@ Plot the errors in which the classifier was more confident:
 ![Most Confident Errors](https://github.com/triagemd/keras-eval/blob/master/figs/most_confident_errors.png?raw=true)
 
 And many more functions to evaluate and visualize results in the following lines and in the 
-[Example Notebook](https://github.com/triagemd/keras-eval/blob/master/example.ipynb)
+[Example Notebook](https://github.com/triagemd/keras-eval/blob/master/example.ipynb) and [Report Template](https://github.com/triagemd/keras-eval/blob/master/report_template.ipynb)
 
 # Use the code
 

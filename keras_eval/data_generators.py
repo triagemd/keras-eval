@@ -28,7 +28,7 @@ class AugmentedDirectoryIterator(DirectoryIterator):
     - 'crop_original': 'center_crop' mode allows to center crop the original image prior do the rest of transforms,
     scalings + croppings.
 
-    If 'scale_sizes'is None the image will be resized to "target_size" and transforms will be applied over that image.
+    If 'scale_sizes' is None the image will be resized to "target_size" and transforms will be applied over that image.
 
     For instance: data_augmentation={'scale_sizes':'default', 'transforms':['horizontal_flip', 'rotate_180'],
     'crop_original':'center_crop'}
