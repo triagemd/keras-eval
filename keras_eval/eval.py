@@ -272,7 +272,7 @@ class Evaluator(object):
         else:
             for i, model in enumerate(self.models):
                 print('Making predictions from model ', str(i))
-                if self.data_generator is None
+                if self.data_generator is None:
                     # build generator
                     if data_augmentation is None:
                         generator, labels = utils.create_image_generator(data_dir, self.batch_size, self.model_specs[i])
@@ -297,7 +297,7 @@ class Evaluator(object):
                             probabilities_model.append(np.mean(probs, axis=0))
                         probabilities.append(probabilities_model)
                 else:
-                    generator, labels = import_image_generator(data_dir, self.batch_size, self.model_specs[i], self.data_generator)
+                    generator, labels = utils.import_image_generator(data_dir, self.batch_size, self.model_specs[i], self.data_generator)
                     probabilities.append(model.predict_generator(generator=generator,
                                                                  steps=(generator.samples // self.batch_size) + 1,
                                                                  workers=1,
