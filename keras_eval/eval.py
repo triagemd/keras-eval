@@ -4,6 +4,7 @@ import numpy as np
 import keras_eval.utils as utils
 import keras_eval.metrics as metrics
 import keras_eval.visualizer as visualizer
+from keras.preprocessing.image import ImageDataGenerator
 
 from math import log
 from keras.utils import generic_utils
@@ -25,6 +26,7 @@ class Evaluator(object):
         'batch_size': {'type': int, 'default': 1},
         'verbose': {'type': int, 'default': 0},
         'data_augmentation': {'type': dict, 'default': None},
+        'data_generator':{'type':ImageDataGenerator, 'default': None},
     }
 
     def __init__(self, **options):
