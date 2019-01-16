@@ -284,7 +284,7 @@ def import_image_generator(data_dir, batch_size, model_spec, data_gen):
         preprocessing_function: Function to preprocess the images
         target_size: Size of the images
         data_gen: The imported data generator
-        
+
     Returns: Keras generator without shuffling samples and ground truth labels associated with generator
     '''
     print('Input image size: ', model_spec.target_size)
