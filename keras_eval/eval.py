@@ -4,7 +4,6 @@ import numpy as np
 import keras_eval.utils as utils
 import keras_eval.metrics as metrics
 import keras_eval.visualizer as visualizer
-from keras.preprocessing.image import ImageDataGenerator
 
 from math import log
 from keras.utils import generic_utils
@@ -271,7 +270,7 @@ class Evaluator(object):
         else:
             for i, model in enumerate(self.models):
                 print('Making predictions from model ', str(i))
-                
+
                 if data_augmentation is None:
                     generator, labels = utils.create_image_generator(data_dir, self.batch_size, self.model_specs[i])
                     # N_batches + 1 to gather all the images + collect without repetition [0:n_samples]
@@ -294,7 +293,7 @@ class Evaluator(object):
                         probs = model.predict(batch[0][0], batch_size=self.batch_size)
                         probabilities_model.append(np.mean(probs, axis=0))
                     probabilities.append(probabilities_model)
-               
+
             self.generator = generator
             self.num_classes = generator.num_classes
             self.image_paths = self._get_complete_image_paths(generator.filenames)
