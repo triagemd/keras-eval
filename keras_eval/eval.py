@@ -7,6 +7,7 @@ import keras_eval.visualizer as visualizer
 
 from math import log
 from keras.utils import generic_utils
+from keras.preprocessing.image import ImageDataGenerator
 
 
 class Evaluator(object):
