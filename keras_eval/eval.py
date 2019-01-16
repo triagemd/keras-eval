@@ -26,7 +26,6 @@ class Evaluator(object):
         'batch_size': {'type': int, 'default': 1},
         'verbose': {'type': int, 'default': 0},
         'data_augmentation': {'type': dict, 'default': None},
-        'data_generator':{'type':ImageDataGenerator, 'default': None},
     }
 
     def __init__(self, **options):
@@ -272,38 +271,30 @@ class Evaluator(object):
         else:
             for i, model in enumerate(self.models):
                 print('Making predictions from model ', str(i))
-                if self.data_generator is None:
-                    # build generator
-                    if data_augmentation is None:
-                        generator, labels = utils.create_image_generator(data_dir, self.batch_size, self.model_specs[i])
-                        # N_batches + 1 to gather all the images + collect without repetition [0:n_samples]
-                        probabilities.append(model.predict_generator(generator=generator,
-                                                                     steps=(generator.samples // self.batch_size) + 1,
-                                                                     workers=1,
-                                                                     verbose=1)[0:generator.samples])
-                    else:
-                        generator, labels = utils.create_image_generator(data_dir, self.batch_size, self.model_specs[i],
-                                                                         data_augmentation=data_augmentation)
-                        print('Averaging probabilities of %i different outputs at sizes: %s with transforms: %s'
-                              % (generator.n_crops, generator.scale_sizes, generator.transforms))
-                        steps = generator.samples
-                        probabilities_model = []
-                        for k, batch in enumerate(generator):
-                            if k == steps:
-                                break
-                            progbar = generic_utils.Progbar(steps)
-                            progbar.add(k + 1)
-                            probs = model.predict(batch[0][0], batch_size=self.batch_size)
-                            probabilities_model.append(np.mean(probs, axis=0))
-                        probabilities.append(probabilities_model)
-                else:
-                    generator, labels = utils.import_image_generator(data_dir, self.batch_size, self.model_specs[i], self.data_generator)
+                
+                if data_augmentation is None:
+                    generator, labels = utils.create_image_generator(data_dir, self.batch_size, self.model_specs[i])
+                    # N_batches + 1 to gather all the images + collect without repetition [0:n_samples]
                     probabilities.append(model.predict_generator(generator=generator,
                                                                  steps=(generator.samples // self.batch_size) + 1,
                                                                  workers=1,
                                                                  verbose=1)[0:generator.samples])
-                
-
+                else:
+                    generator, labels = utils.create_image_generator(data_dir, self.batch_size, self.model_specs[i],
+                                                                     data_augmentation=data_augmentation)
+                    print('Averaging probabilities of %i different outputs at sizes: %s with transforms: %s'
+                          % (generator.n_crops, generator.scale_sizes, generator.transforms))
+                    steps = generator.samples
+                    probabilities_model = []
+                    for k, batch in enumerate(generator):
+                        if k == steps:
+                            break
+                        progbar = generic_utils.Progbar(steps)
+                        progbar.add(k + 1)
+                        probs = model.predict(batch[0][0], batch_size=self.batch_size)
+                        probabilities_model.append(np.mean(probs, axis=0))
+                    probabilities.append(probabilities_model)
+               
             self.generator = generator
             self.num_classes = generator.num_classes
             self.image_paths = self._get_complete_image_paths(generator.filenames)
