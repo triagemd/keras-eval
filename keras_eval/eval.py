@@ -25,6 +25,7 @@ class Evaluator(object):
         'batch_size': {'type': int, 'default': 1},
         'verbose': {'type': int, 'default': 0},
         'data_augmentation': {'type': dict, 'default': None},
+        'data_generator':{'type':ImageDataGenerator, 'default': None},
     }
 
     def __init__(self, **options):
