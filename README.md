@@ -104,7 +104,7 @@ If 'scale_sizes' is None the image will be resized to "target_size" and transfor
 For instance: `data_augmentation={'scale_sizes':'default', 'transforms':['horizontal_flip', 'rotate_180'],
 'crop_original':'center_crop'}`
 
-For 144 crops as GoogleNet paper, select `data_augmentation={'scale_sizes':'default',
+For 144 crops as the GoogleNet paper, select `data_augmentation={'scale_sizes':'default',
 'transforms':['horizontal_flip']}`. 
 This results in 4x3x6x2 = 144 crops per image.
 
