@@ -76,6 +76,25 @@ model_path = '/model_folder/resnet_50/model.h5'
 # Inside model folder, there should be a '/model_folder/resnet_50/model_spec.json' file
 ```
 
+with the following format as example:
+
+```
+{
+ "name": "your_name",
+ "preprocess_args": [
+  156.2336961908687,
+  122.03200584422879,
+  109.9825961313363
+ ],
+ "preprocess_func": "mean_subtraction",
+ "target_size": [
+  299,
+  299,
+  3
+ ]
+}
+```
+
 **For an ensemble of models**
 ```
 # The input is the parent folder
