@@ -12,7 +12,7 @@ Requires [keras-model-specs](https://github.com/triagemd/keras-model-specs). We 
 
 `probs, labels = evaluator.evaluate(data_dir=data_dir, top_k=2, confusion_matrix=True, save_confusion_matrix_path='cm.png')`
 
-![Confusion_matrix](https://github.com/triagemd/keras-eval/blob/master/figs/confusion_matrix.png)
+![Confusion_matrix](https://github.com/triagemd/keras-eval/blob/master/figs/confusion_matrix.png?raw=true)
 
 `evaluator.show_results('average')`
 
@@ -28,6 +28,20 @@ cats | 0.907 | 0.960 | 0.933 | 0.962 | 0.040 | 1.0 | 907 | 38 | 93 | 50.0
 dogs | 0.962 | 0.912 | 0.936 | 0.907 | 0.088 | 1.0 | 962 | 93 | 38 | 50.0
 
 
+`mean, lower, upper = evaluator.plot_confidence_interval('accuracy', confidence_value=0.95)`
+
+Plot the Classifier Confidence Interval:
+
+![Classifier Confidence Interval](https://github.com/triagemd/keras-eval/blob/master/figs/confidence_interval_classifier.png?raw=true)
+
+Plot the errors in which the classifier was more confident:
+
+`evaluator.plot_most_confident('errors', n_images=20)`
+
+![Most Confident Errors](https://github.com/triagemd/keras-eval/blob/master/figs/most_confident_errors.png?raw=true)
+
+And many more functions to evaluate and visualize results in the following lines and in the 
+[Example Notebook](https://github.com/triagemd/keras-eval/blob/master/example.ipynb) and [Report Template](https://github.com/triagemd/keras-eval/blob/master/report_template.ipynb)
 
 # Use the code
 
@@ -62,6 +76,25 @@ model_path = '/model_folder/resnet_50/model.h5'
 # Inside model folder, there should be a '/model_folder/resnet_50/model_spec.json' file
 ```
 
+with the following format as example:
+
+```
+{
+ "name": "your_name",
+ "preprocess_args": [
+  156.2336961908687,
+  122.03200584422879,
+  109.9825961313363
+ ],
+ "preprocess_func": "mean_subtraction",
+ "target_size": [
+  299,
+  299,
+  3
+ ]
+}
+```
+
 **For an ensemble of models**
 ```
 # The input is the parent folder
@@ -74,17 +107,25 @@ ensemble_models_dir = '/model_folder'
 
 **Apply Data Augmentation at Test time**
 
-We include the addition of `data_augmentation` as an argument in `evaluate`. It is a dictionary consisting of 3 elements:
+We include the addition of `data_augmentation` as an argument in `evaluate()`. It is a dictionary consisting of 3 elements:
     
 - 'scale_sizes': 'default' (4 similar scales to Original paper) or a list of sizes. Each scaled image then
-    will be cropped into three square parts.
+    will be cropped into three square parts. For each square, we then take the 4 corners and the center "target_size"
+    crop as well as the square resized to "target_size".
 - 'transforms': list of transforms to apply to these crops in addition to not
     applying any transform ('horizontal_flip', 'vertical_flip', 'rotate_90', 'rotate_180', 'rotate_270' are
     supported now).
 - 'crop_original': 'center_crop' mode allows to center crop the original image prior do the rest of transforms,
     scalings + croppings.
-    
-For instance:
+
+If 'scale_sizes' is None the image will be resized to "target_size" and transforms will be applied over that image.
+
+For instance: `data_augmentation={'scale_sizes':'default', 'transforms':['horizontal_flip', 'rotate_180'],
+'crop_original':'center_crop'}`
+
+For 144 crops as the GoogleNet paper, select `data_augmentation={'scale_sizes':'default',
+'transforms':['horizontal_flip']}`. 
+This results in 4x3x6x2 = 144 crops per image.
 
 ```
 probs, labels = evaluator.evaluate(data_dir=data_dir, top_k=2, confusion_matrix=True, data_augmentation={'scale_sizes': [356, 284], 'transforms': ['horizontal_flip'], 'crop_original': 'center_crop'})
@@ -113,7 +154,8 @@ Regular evaluation scenario:
 [class_3]
 ```
 Results for regular evaluation:
-![Confusion_matrix](https://github.com/triagemd/keras-eval/blob/master/figs/confusion_matrix_granular.png)
+
+![Confusion_matrix](https://github.com/triagemd/keras-eval/blob/master/figs/confusion_matrix_granular.png?raw=true)
 
 model | accuracy | precision | f1_score | number_of_samples | number_of_classes
 -- | -- | -- | -- | -- | -- 
@@ -163,7 +205,7 @@ For this purpose, the mapping between the training and testing dictionary must b
 ]
 ```
 Results for class consolidated evaluation:
-![Confusion_matrix](https://github.com/triagemd/keras-eval/blob/master/figs/confusion_matrix_coarse.png)
+![Confusion_matrix](https://github.com/triagemd/keras-eval/blob/master/figs/confusion_matrix_coarse.png?raw=true)
 
 model | accuracy | precision | f1_score | number_of_samples	| number_of_classes
 -- | -- | -- | -- | -- | -- 
@@ -236,7 +278,6 @@ model_path = '/your_model_path/model.h5
 custom_objects = None
 evaluator.add_model(model_path, custom_objects)
 ```
-
 
 **add_model_ensemble**
 

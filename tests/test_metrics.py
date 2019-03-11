@@ -217,6 +217,44 @@ def test_get_top1_probability_stats():
         assert len(errors_list[i]) == expected_errors
 
 
+def test_confidence_interval_binomial_range():
+    values = [0.01, 0.5, 0.99]
+    n_samples = [100, 100, 100]
+
+    lower, upper = metrics.confidence_interval_binomial_range(values[0], n_samples[0], 0.95)
+    assert lower == 0.0
+    assert round(upper, 4) == 0.0295
+
+    lower, upper = metrics.confidence_interval_binomial_range(values[1], n_samples[1], 0.95)
+    assert round(lower, 4) == 0.402
+    assert round(upper, 4) == 0.598
+
+    lower, upper = metrics.confidence_interval_binomial_range(values[2], n_samples[2], 0.95)
+    assert round(lower, 4) == 0.9705
+    assert round(upper, 4) == 1.0
+
+    # Assert error when number of samples do not coincide
+    with pytest.raises(ValueError) as exception:
+        lower, upper = metrics.confidence_interval_binomial_range(values[2], n_samples[2], 0.123)
+    expected = 'Confidence value not valid. Confidence values accepted are 0.9, 0.95, 0.98, 0.99 or 90, 95, 98, 99'
+    actual = str(exception).split('ValueError: ')[1]
+    assert actual == expected
+
+
+def test_compute_confidence_interval_binomial():
+    values_a = np.array([0.01, 0.5, 0.99, 0.02, 0.55])
+    values_b = np.array([0.05, 0.05, 0.55])
+    probability_interval = np.array([0.01, 0.5, 0.99])
+    mean, lower, upper = metrics.compute_confidence_interval_binomial(values_a, values_b,
+                                                                      probability_interval=probability_interval)
+    lower = [round(l, 4) for l in lower]
+    upper = [round(u, 4) for u in upper]
+
+    assert upper == [0.9605, 1.0, 1.0]
+    assert lower == [0.2895, 0.3256, 1.0]
+    assert mean == [0.625, 0.75, 1.0]
+
+
 '''
 def test_metrics_top_k_binary():
     concepts = ['class0', 'class1']

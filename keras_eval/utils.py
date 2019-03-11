@@ -433,6 +433,10 @@ def mkdir(path):
         os.makedirs(path)
 
 
+def save_numpy(id, path, file):
+    np.save(os.path.join(path, id + '.npy'), file)
+
+
 def save_results(results, id, csv_path, mode='average', round_decimals=3, show_id=True):
     '''
 
@@ -449,7 +453,8 @@ def save_results(results, id, csv_path, mode='average', round_decimals=3, show_i
     '''
     df = results_to_dataframe(results, id=id, mode=mode, round_decimals=round_decimals, show_id=show_id)
     mkdir(csv_path)
-    df.to_csv(os.path.join(csv_path, id + '.csv'), float_format='%.' + str(round_decimals) + 'f', index=False)
+    df.to_csv(os.path.join(csv_path, id + '_' + mode + '.csv'), float_format='%.' + str(round_decimals) + 'f',
+              index=False)
 
 
 def load_csv_to_dataframe(csv_paths):

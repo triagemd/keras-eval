@@ -108,7 +108,7 @@ class Evaluator(object):
         return image_paths
 
     def evaluate(self, data_dir=None, top_k=1, filter_indices=None, confusion_matrix=False, data_augmentation=None,
-                 save_confusion_matrix_path=None):
+                 save_confusion_matrix_path=None, show_confusion_matrix_text=True):
         '''
         Evaluate a set of images. Each sub-folder under 'data_dir/' will be considered as a different class.
         E.g. 'data_dir/class_1/dog.jpg' , 'data_dir/class_2/cat.jpg
@@ -133,7 +133,7 @@ class Evaluator(object):
         Returns: Probabilities computed and ground truth labels associated.
 
         '''
-
+        self.top_k = top_k
         self.data_dir = data_dir or self.data_dir
         self.data_augmentation = data_augmentation or self.data_augmentation
         if self.data_dir is None:
@@ -164,9 +164,15 @@ class Evaluator(object):
                                             concept_labels=self.concept_labels, top_k=top_k,
                                             filter_indices=filter_indices,
                                             confusion_matrix=confusion_matrix,
-                                            save_confusion_matrix_path=save_confusion_matrix_path)
+                                            save_confusion_matrix_path=save_confusion_matrix_path,
+                                            show_confusion_matrix_text=show_confusion_matrix_text)
 
         return self.probabilities, self.labels
+
+    def save_probabilities_labels(self, id, save_path):
+        if self.combined_probabilities is not None and self.labels is not None:
+            utils.save_numpy(id + '_probabilities', save_path, self.combined_probabilities)
+            utils.save_numpy(id + '_labels', save_path, self.labels)
 
     def compute_inference_probabilities(self, concept_dictionary, probabilities):
         '''
@@ -193,7 +199,8 @@ class Evaluator(object):
                 self.combined_probs[0][:, idx] += probabilities[0][:, column_number]
         self.probabilities = self.combined_probs
 
-    def plot_confusion_matrix(self, confusion_matrix, concept_labels=None, save_path=None):
+    def plot_confusion_matrix(self, confusion_matrix, concept_labels=None, save_path=None, show_text=True,
+                              show_labels=True):
         '''
 
         Args:
@@ -206,10 +213,11 @@ class Evaluator(object):
 
         '''
         concept_labels = concept_labels or utils.get_concept_items(self.concepts, key='label')
-        visualizer.plot_confusion_matrix(confusion_matrix, concepts=concept_labels, save_path=save_path)
+        visualizer.plot_confusion_matrix(confusion_matrix, concepts=concept_labels, save_path=save_path,
+                                         show_text=show_text, show_labels=show_labels)
 
     def get_metrics(self, probabilities, labels, top_k=1, concept_labels=None, filter_indices=None,
-                    confusion_matrix=False, save_confusion_matrix_path=None):
+                    confusion_matrix=False, save_confusion_matrix_path=None, show_confusion_matrix_text=True):
         '''
          Print to screen metrics from experiment given probabilities and labels
 
@@ -241,7 +249,9 @@ class Evaluator(object):
         # Show metrics visualization as a confusion matrix
         if confusion_matrix:
             self.plot_confusion_matrix(confusion_matrix=results['average']['confusion_matrix'],
-                                       concept_labels=concept_labels, save_path=save_confusion_matrix_path)
+                                       concept_labels=concept_labels, save_path=save_confusion_matrix_path,
+                                       show_text=show_confusion_matrix_text,
+                                       show_labels=show_confusion_matrix_text)
 
         return results
 
@@ -260,6 +270,7 @@ class Evaluator(object):
         else:
             for i, model in enumerate(self.models):
                 print('Making predictions from model ', str(i))
+
                 if data_augmentation is None:
                     generator, labels = utils.create_image_generator(data_dir, self.batch_size, self.model_specs[i])
                     # N_batches + 1 to gather all the images + collect without repetition [0:n_samples]
@@ -418,7 +429,9 @@ class Evaluator(object):
                 'arithmetic': predictions are obtained by a arithmetic mean of all the probabilities
                 'harmonic': predictions are obtained by a harmonic mean of all the probabilities
 
-        Returns: A dictionary containing a list of images per confusion matrix square (relation ClassA_ClassB)
+        Returns: A dictionary containing a list of images per confusion matrix square (relation ClassA_ClassB), and the
+        predicted probabilities
+
         '''
         self.combined_probabilities = utils.combine_probabilities(probabilities, self.combination_mode)
 
@@ -437,14 +450,28 @@ class Evaluator(object):
 
         for name_1 in concept_labels:
             for name_2 in concept_labels:
-                dict_image_paths_concept.update({name_1 + '_' + name_2: []})
+                if name_1 == name_2:
+                    dict_image_paths_concept.update({name_1 + '_' + name_2: {'image_paths': [], 'probs': [],
+                                                                             'diagonal': True}})
+                else:
+                    dict_image_paths_concept.update({name_1 + '_' + name_2: {'image_paths': [], 'probs': [],
+                                                                             'diagonal': False}})
 
         for i, pred in enumerate(predictions):
             predicted_label = concept_labels[pred]
             correct_label = concept_labels[y_true[i]]
-            list_image_paths = dict_image_paths_concept[str(correct_label + '_' + predicted_label)]
+            list_image_paths = dict_image_paths_concept[str(correct_label + '_' + predicted_label)]['image_paths']
             list_image_paths.append(image_paths[i])
-            dict_image_paths_concept.update({correct_label + '_' + predicted_label: list_image_paths})
+            list_probs = dict_image_paths_concept[str(correct_label + '_' + predicted_label)]['probs']
+            list_probs.append(self.combined_probabilities[i])
+            diagonal = dict_image_paths_concept[str(correct_label + '_' + predicted_label)]['diagonal']
+            dict_image_paths_concept.update({correct_label + '_' + predicted_label:
+                                             {
+                                                 'image_paths': list_image_paths,
+                                                 'probs': list_probs,
+                                                 'diagonal': diagonal
+                                             }
+                                             })
 
         return dict_image_paths_concept
 
@@ -469,7 +496,111 @@ class Evaluator(object):
         if n_images is None:
             n_images = image_paths.shape[0]
 
-        visualizer.plot_images(image_paths, n_images, title, n_cols, image_res, save_name)
+        visualizer.plot_images(image_paths, n_images, title, None, n_cols, image_res, save_name)
+
+    def plot_probability_histogram(self, mode='errors', bins=100):
+        '''
+
+        Args:
+            mode: Two modes, "correct" and "error" are supported
+            bins: Number of histogram bins
+
+        Returns:
+
+        '''
+        if self.probabilities is None:
+            raise ValueError('There are not computed probabilities. Please run an evaluation first.')
+
+        self.combined_probabilities = utils.combine_probabilities(self.probabilities, self.combination_mode)
+        correct, errors = metrics.get_correct_errors_indices(self.combined_probabilities, self.labels, k=1)
+        probs_top = np.max(self.combined_probabilities, axis=1)
+
+        if mode == 'errors':
+            probs = probs_top[errors[0]]
+        elif mode == 'correct':
+            probs = probs_top[correct[0]]
+        else:
+            raise ValueError('Incorrect mode. Supported modes are "errors" and "correct"')
+
+        visualizer.plot_histogram(probs, bins, 'Histogram of ' + mode + ' probabilities', 'Probability', '')
+
+    def plot_most_confident(self, mode='errors', title='', n_cols=5, n_images=None, image_res=(20, 20), save_name=None):
+        '''
+    Plots most confident errors or correct detections
+        Args:
+            mode: Two modes, "correct" and "error" are supported
+            title: Title of the Plot
+            n_cols: Number of columns
+            n_images: Number of images to show
+            image_res: Plot image resolution
+            save_name: If specified, will save the plot in save_name path
+
+        Returns: Sorted image paths with corresponding probabilities
+
+        '''
+        if self.probabilities is None:
+            raise ValueError('There are not computed probabilities. Please run an evaluation first.')
+
+        self.combined_probabilities = utils.combine_probabilities(self.probabilities, self.combination_mode)
+        correct, errors = metrics.get_correct_errors_indices(self.combined_probabilities, self.labels, k=1)
+        probs_top = np.max(self.combined_probabilities, axis=1)
+
+        if mode == 'errors':
+            probs = probs_top[errors[0]]
+        elif mode == 'correct':
+            probs = probs_top[correct[0]]
+        else:
+            raise ValueError('Incorrect mode. Supported modes are "errors" and "correct"')
+
+        image_paths = np.array(self.image_paths)
+        index_max = np.argsort(probs)[::-1]
+        image_paths = image_paths[index_max]
+
+        if n_images is None:
+            n_images = min(len(image_paths), 20)
+
+        subtitles = ['Prob=' + str(prob)[0:5] for prob in probs[index_max]][0:n_images]
+
+        visualizer.plot_images(image_paths, n_images, title, subtitles[0:n_images], n_cols, image_res, save_name)
+
+        return image_paths, probs[index_max]
+
+    def plot_confidence_interval(self, mode='accuracy', confidence_value=0.95,
+                                 probability_interval=np.arange(0, 1.0, 0.01)):
+        '''
+        Computes and plot the confidence interval for a given mode. It uses a confidence value for a given success and
+        failure values following a binomial distribution using the gaussian approximation.
+        Args:
+            mode: Two modes, "accuracy" and "error" are supported
+            confidence_value:  Percentage of confidence. Values accepted are 0.9, 0.95, 0.98, 0.99 or 90, 95, 98, 99
+            probability_interval: Probabilities to compare with.
+
+        Returns: Mean, lower and upper bounds for each probability. Plot the graph.
+
+        '''
+        if self.probabilities is None:
+            raise ValueError('There are not computed probabilities. Please run an evaluation first.')
+
+        self.combined_probabilities = utils.combine_probabilities(self.probabilities, self.combination_mode)
+        correct, errors = metrics.get_correct_errors_indices(self.combined_probabilities, self.labels, k=1)
+        probs_correct = np.max(self.combined_probabilities, axis=1)[correct[0]]
+        probs_error = np.max(self.combined_probabilities, axis=1)[errors[0]]
+
+        if mode == 'accuracy':
+            title = 'Accuracy Confidence Interval'
+            mean, lower_bound, upper_bound = \
+                metrics.compute_confidence_interval_binomial(probs_correct, probs_error,
+                                                             confidence_value, probability_interval)
+        elif mode == 'error':
+            title = 'Error Confidence Interval'
+            mean, lower_bound, upper_bound = \
+                metrics.compute_confidence_interval_binomial(probs_error, probs_correct,
+                                                             confidence_value, probability_interval)
+        else:
+            raise ValueError('Incorrect mode. Modes available are "accuracy" or "error".')
+
+        visualizer.plot_confidence_interval(probability_interval, mean, lower_bound, upper_bound, title=title)
+        return mean, lower_bound, upper_bound
 
     def compute_confidence_prediction_distribution(self, verbose=1):
         '''
@@ -552,6 +683,47 @@ class Evaluator(object):
             raise ValueError('results parameter is None, please run an evaluation first')
 
         return utils.save_results(self.results, id, csv_path, mode, round_decimals, show_id)
+
+    def get_sensitivity_per_samples(self, csv_path=None, round_decimals=4):
+        '''
+
+        Args:
+            id: Name of the results evaluation
+            csv_path: If specified, results will be saved on that location
+            mode: Mode of results. "average" will show the average metrics while "individual" will show metrics by class
+            round_decimals: Decimal position to round the numbers.
+            show_id: Show id in the first column.
+
+        Returns: Nothing. Saves Pandas dataframe on csv_path specified.
+
+        '''
+        if self.results is None:
+            raise ValueError('results parameter is None, please run an evaluation first')
+
+        results_classes = self.show_results('individual', round_decimals=round_decimals)
+
+        if self.top_k > 1:
+            sensitivity = 'sensitivity_top_1'
+        else:
+            sensitivity = 'sensitivity'
+
+        results_classes = results_classes[results_classes.columns.intersection(['class', sensitivity, '% of samples'])]
+        results_classes = results_classes.sort_values(by=sensitivity).reset_index()
+        if csv_path is not None:
+            results_classes.to_csv(csv_path)
+        return results_classes
+
+    def plot_sensitivity_per_samples(self, csv_path=None, round_decimals=4):
+        if self.results is None:
+            raise ValueError('results parameter is None, please run an evaluation first')
+
+        results_classes = self.get_sensitivity_per_samples(csv_path, round_decimals)
+        visualizer.scatter_plot(results_classes['% of samples'],
+                                results_classes['sensitivity_top_1'],
+                                '% of Samples',
+                                'Sensitivity',
+                                'Sensitivity per Samples %')
+        return results_classes
 
     def ensemble_models(self, input_shape, combination_mode='average', ensemble_name='ensemble', model_filename=None):
         ensemble = utils.ensemble_models(self.models, input_shape=input_shape, combination_mode=combination_mode,

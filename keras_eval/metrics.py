@@ -3,7 +3,7 @@ from __future__ import print_function, division, absolute_import
 import numpy as np
 import scipy.stats
 
-from math import log
+from math import log, sqrt
 from keras_eval import utils
 from sklearn.metrics import confusion_matrix, roc_curve
 from keras.utils.np_utils import to_categorical
@@ -357,3 +357,59 @@ def get_top1_entropy_stats(y_probs, labels, entropy, verbose=0):
     n_errors = np.array(n_errors)
 
     return correct_list, errors_list, n_correct, n_errors
+
+
+def confidence_interval_binomial_range(value, samples, confidence=0.95):
+    '''
+    Computes lower and upper bounds for a determined confidence interval given the mean value following a
+    binomial distribution using the gaussian approximation.
+    Args:
+        value: Mean value
+        samples: Number of observations
+        confidence: Percentage of confidence. Values accepted are 0.9, 0.95, 0.98, 0.99 or 90, 95, 98, 99
+
+    Returns: Lower and upper bounds.
+
+    '''
+    confidence_cts = {0.90: 1.64, 0.95: 1.96, 0.98: 2.33, 0.99: 2.58, 90: 1.64, 95: 1.96, 98: 2.33, 99: 2.58}
+    accepted_confidence_keys = confidence_cts.keys()
+    if confidence in accepted_confidence_keys:
+        val = confidence_cts[confidence] * sqrt((value * (1 - value)) / samples)
+        return max(0.0, value - val), min(value + val, 1.0)
+    else:
+        raise ValueError('Confidence value not valid.'
+                         ' Confidence values accepted are 0.9, 0.95, 0.98, 0.99 or 90, 95, 98, 99')
+
+
+def compute_confidence_interval_binomial(values_a, values_b, confidence=0.95,
+                                         probability_interval=np.arange(0, 1.01, 0.01)):
+    '''
+    Computes mean, lower and upper bounds for a determined confidence value for a given success and failure values
+    following a binomial distribution using the gaussian approximation.
+    Args:
+        values_a: Success values. Probabilities at which we had a success outcome.
+        values_b: Failure values. Probabilities at which we had a failure outcome.
+        confidence: Percentage of confidence. Values accepted are 0.9, 0.95, 0.98, 0.99 or 90, 95, 98, 99
+        probability_interval: Probabilities to compare with.
+
+    Returns:
+
+    '''
+    mean = []
+    lower_bound = []
+    upper_bound = []
+    counts_a = np.zeros((len(probability_interval)))
+    counts_b = np.zeros((len(probability_interval)))
+    for i, val in enumerate(probability_interval):
+        for val_a in values_a:
+            if val_a >= val:
+                counts_a[i] += 1
+        for val_b in values_b:
+            if val_b >= val:
+                counts_b[i] += 1
+        samples = counts_a[i] + counts_b[i]
+        mean.append(counts_a[i] / samples)
+        lower, upper = confidence_interval_binomial_range(mean[i], samples, confidence)
+        lower_bound.append(lower)
+        upper_bound.append(upper)
+    return mean, lower_bound, upper_bound

@@ -83,14 +83,17 @@ def test_check_compute_inference_probabilities(evaluator_mobilenet_class_combine
 
 def test_get_image_paths_by_prediction(evaluator_mobilenet, test_catdog_dataset_path, test_cat_folder, test_dog_folder):
     probabilities, labels = evaluator_mobilenet.evaluate(test_catdog_dataset_path)
-    image_paths_dictionary = evaluator_mobilenet.get_image_paths_by_prediction(probabilities, labels)
-    print(image_paths_dictionary)
+    image_dictionary = evaluator_mobilenet.get_image_paths_by_prediction(probabilities, labels)
 
-    assert image_paths_dictionary['cat_cat'] == [os.path.join(test_cat_folder, 'cat-1.jpg'),
-                                                 os.path.join(test_cat_folder, 'cat-4.jpg')]
-    assert image_paths_dictionary['cat_dog'] == []
-    assert image_paths_dictionary['dog_cat'] == [os.path.join(test_dog_folder, 'dog-2.jpg')]
-    assert image_paths_dictionary['dog_dog'] == [os.path.join(test_dog_folder, 'dog-4.jpg')]
+    assert image_dictionary['cat_cat']['image_paths'] == [os.path.join(test_cat_folder, 'cat-1.jpg'),
+                                                          os.path.join(test_cat_folder, 'cat-4.jpg')]
+    assert len(image_dictionary['cat_cat']['probs']) == 2
+    assert image_dictionary['cat_dog']['image_paths'] == []
+    assert len(image_dictionary['cat_dog']['probs']) == 0
+    assert image_dictionary['dog_cat']['image_paths'] == [os.path.join(test_dog_folder, 'dog-2.jpg')]
+    assert len(image_dictionary['dog_cat']['probs']) == 1
+    assert image_dictionary['dog_dog']['image_paths'] == [os.path.join(test_dog_folder, 'dog-4.jpg')]
+    assert len(image_dictionary['dog_dog']['probs']) == 1
 
 
 def test_evaluator_single_mobilenet_v1_on_catdog_dataset(evaluator_mobilenet, test_catdog_dataset_path,
@@ -186,6 +189,89 @@ def test_show_results(evaluator_mobilenet, test_catdog_dataset_path):
     assert individual_df['TP'][1] == individual_df['FP'][0] == individual_df['FN'][1] == 1
     assert individual_df['FP'][1] == individual_df['FN'][0] == 0
     assert individual_df['AUROC'][0] == individual_df['AUROC'][1] == 1.0
+
+
+def test_save_results(evaluator_mobilenet):
+    # Assert error without results
+    with pytest.raises(ValueError) as exception:
+        evaluator_mobilenet.save_results('average', csv_path='')
+    expected = 'results parameter is None, please run an evaluation first'
+    actual = str(exception).split('ValueError: ')[1]
+    assert actual == expected
+
+
+def test_plot_probability_histogram(evaluator_mobilenet, test_catdog_dataset_path):
+    with pytest.raises(ValueError) as exception:
+        evaluator_mobilenet.plot_probability_histogram()
+    expected = 'There are not computed probabilities. Please run an evaluation first.'
+    actual = str(exception).split('ValueError: ')[1]
+    assert actual == expected
+
+    evaluator_mobilenet.evaluate(test_catdog_dataset_path)
+
+    with pytest.raises(ValueError) as exception:
+        evaluator_mobilenet.plot_probability_histogram(mode='x')
+    expected = 'Incorrect mode. Supported modes are "errors" and "correct"'
+    actual = str(exception).split('ValueError: ')[1]
+    assert actual == expected
+
+
+def test_plot_most_confident(evaluator_mobilenet, test_catdog_dataset_path):
+    with pytest.raises(ValueError) as exception:
+        evaluator_mobilenet.plot_most_confident()
+    expected = 'There are not computed probabilities. Please run an evaluation first.'
+    actual = str(exception).split('ValueError: ')[1]
+    assert actual == expected
+
+    evaluator_mobilenet.evaluate(test_catdog_dataset_path)
+
+    with pytest.raises(ValueError) as exception:
+        evaluator_mobilenet.plot_most_confident(mode='x')
+    expected = 'Incorrect mode. Supported modes are "errors" and "correct"'
+    actual = str(exception).split('ValueError: ')[1]
+    assert actual == expected
+
+
+def test_plot_confidence_interval(evaluator_mobilenet, test_catdog_dataset_path):
+    with pytest.raises(ValueError) as exception:
+        evaluator_mobilenet.plot_confidence_interval()
+    expected = 'There are not computed probabilities. Please run an evaluation first.'
+    actual = str(exception).split('ValueError: ')[1]
+    assert actual == expected
+
+    evaluator_mobilenet.evaluate(test_catdog_dataset_path)
+
+    with pytest.raises(ValueError) as exception:
+        evaluator_mobilenet.plot_confidence_interval(mode='x')
+    expected = 'Incorrect mode. Modes available are "accuracy" or "error".'
+    actual = str(exception).split('ValueError: ')[1]
+    assert actual == expected
+
+
+def test_plot_sensitivity_per_samples(evaluator_mobilenet):
+    with pytest.raises(ValueError) as exception:
+        evaluator_mobilenet.plot_sensitivity_per_samples()
+    expected = 'results parameter is None, please run an evaluation first'
+    actual = str(exception).split('ValueError: ')[1]
+    assert actual == expected
+
+
+def test_get_sensitivity_per_samples(evaluator_mobilenet, test_catdog_dataset_path):
+    with pytest.raises(ValueError) as exception:
+        evaluator_mobilenet.get_sensitivity_per_samples()
+    expected = 'results parameter is None, please run an evaluation first'
+    actual = str(exception).split('ValueError: ')[1]
+    assert actual == expected
+
+    evaluator_mobilenet.evaluate(test_catdog_dataset_path)
+    results_classes = evaluator_mobilenet.get_sensitivity_per_samples()
+
+    assert results_classes['sensitivity'][0] == 0.5
+    assert results_classes['sensitivity'][1] == 1.0
+    assert results_classes['class'][0] == 'dog'
+    assert results_classes['class'][1] == 'cat'
+    assert results_classes['% of samples'][0] == 50.0
+    assert results_classes['% of samples'][1] == 50.0
 
 
 def test_ensemble_models(evaluator_ensemble_mobilenet, test_cat_folder):
