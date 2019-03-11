@@ -376,11 +376,11 @@ def results_to_dataframe(results, id='default_model', mode='average', round_deci
     if mode not in ['average', 'individual']:
         raise ValueError('Results mode must be either "average" or "individual"')
 
-    if mode is 'average':
+    if mode == 'average':
         df = pd.DataFrame({'id': id}, index=range(1))
 
         for metric in results['average'].keys():
-            if metric is not 'confusion_matrix':
+            if metric != 'confusion_matrix':
                 if not isinstance(results['average'][metric], list):
                     df[metric] = round(results['average'][metric], round_decimals)
                 else:
@@ -390,7 +390,7 @@ def results_to_dataframe(results, id='default_model', mode='average', round_deci
                         for k in range(len(results['average'][metric])):
                             df[metric + '_top_' + str(k + 1)] = round(results['average'][metric][k], round_decimals)
 
-    if mode is 'individual':
+    if mode == 'individual':
         df = pd.DataFrame()
         metrics = results['individual'][0]['metrics'].keys()
         df['id'] = [id for i in range(len(results['individual']))]
