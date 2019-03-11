@@ -2,8 +2,8 @@ import os
 import numpy as np
 import PIL
 
-from keras_preprocessing.image import ImageDataGenerator, DirectoryIterator, get_keras_submodule, array_to_img, \
-    load_img, img_to_array
+from keras_preprocessing.image import ImageDataGenerator, DirectoryIterator, array_to_img, load_img, img_to_array
+from keras_preprocessing import get_keras_submodule
 
 backend = get_keras_submodule('backend')
 
