@@ -1,6 +1,6 @@
 -e .
 
-pytest
+pytest>=3.6
 pytest-cov
 flake8
 autoflake

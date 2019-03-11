@@ -18,16 +18,24 @@ class AugmentedDirectoryIterator(DirectoryIterator):
     Convolutions (https://arxiv.org/pdf/1409.4842.pdf) and allowing the use of transforms on such crops.
 
     It includes the addition of data_augmentation as an argument. It is a dictionary consisting of 3 elements:
+
     - 'scale_sizes': 'default' (4 similar scales to Original paper) or a list of sizes. Each scaled image then
-    will be cropped into three square parts.
+    will be cropped into three square parts. For each square, we then take the 4 corners and the center "target_size"
+    crop as well as the square resized to "target_size".
     - 'transforms': list of transforms to apply to these crops in addition to not
     applying any transform ('horizontal_flip', 'vertical_flip', 'rotate_90', 'rotate_180', 'rotate_270' are
     supported now).
     - 'crop_original': 'center_crop' mode allows to center crop the original image prior do the rest of transforms,
     scalings + croppings.
 
+    If 'scale_sizes' is None the image will be resized to "target_size" and transforms will be applied over that image.
+
     For instance: data_augmentation={'scale_sizes':'default', 'transforms':['horizontal_flip', 'rotate_180'],
     'crop_original':'center_crop'}
+
+    For 144 crops as GoogleNet paper, select data_augmentation={'scale_sizes':'default',
+    'transforms':['horizontal_flip']}
+    This results in 4x3x6x2 = 144 crops per image.
 
     '''
 
@@ -92,7 +100,7 @@ class AugmentedDirectoryIterator(DirectoryIterator):
             else:
                 raise ValueError('Incorrect format for `scale_sizes`, list of ints or `= default` is expected')
 
-            self.n_crops = len(self.scale_sizes) * 5 * 3 * self.n_transforms + self.n_transforms
+            self.n_crops = len(self.scale_sizes) * 6 * 3 * self.n_transforms
         else:
             self.scale_sizes = None
             self.n_crops = self.n_transforms
@@ -201,6 +209,8 @@ class AugmentedDirectoryIterator(DirectoryIterator):
                 crops.append(self._apply_transform(img.crop((w - target_w, 0, w, target_h)), transform))
                 # Right-Bottom
                 crops.append(self._apply_transform(img.crop((w - target_w, h - target_h, w, h)), transform))
+                # Resized Square
+                crops.append(self._apply_transform(img.resize((target_w, target_h)), transform))
 
         return crops
 
@@ -234,8 +244,9 @@ class AugmentedDirectoryIterator(DirectoryIterator):
                     else:
                         img = image.resize((round(image_w / image_h * size), size))
                     crops += self._apply_augmentation(img, self.target_size, self.transforms)
-
-            crops += [self._apply_transform(image.resize(self.target_size), transform) for transform in self.transforms]
+            else:
+                crops += [self._apply_transform(image.resize(self.target_size), transform)
+                          for transform in self.transforms]
 
             for c_i, crop in enumerate(crops):
                 x = img_to_array(crop, data_format=self.data_format)
