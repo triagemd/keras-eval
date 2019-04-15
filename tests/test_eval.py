@@ -73,12 +73,20 @@ def test_check_compute_inference_probabilities_data_augmentation(evaluator_mobil
     np.testing.assert_almost_equal(sum(sum(p[1] for p in probabilities)), 1.0)
 
 
-def test_check_compute_inference_probabilities(evaluator_mobilenet_class_combine, test_animals_dataset_path):
+def test_check_compute_inference_probabilities(evaluator_mobilenet_class_combine, evaluator_ensemble_mobilenet_class_inference,
+                                               test_animals_dataset_path):
     probabilities, labels = evaluator_mobilenet_class_combine.evaluate(test_animals_dataset_path)
 
-    assert probabilities[0].shape == (15, 3)
+    assert probabilities.shape == (1, 15, 3)
 
     np.testing.assert_almost_equal(sum(sum(p[1] for p in probabilities)), 1.0)
+
+    probabilities, labels = evaluator_ensemble_mobilenet_class_inference(test_animals_dataset_path)
+
+    assert probabilities.shape == (2, 15, 3)
+
+    for model_probs in probabilities:
+        np.testing.assert_almost_equal(sum(model_probs), np.ones(len(model_probs)))
 
 
 def test_get_image_paths_by_prediction(evaluator_mobilenet, test_catdog_dataset_path, test_cat_folder, test_dog_folder):
