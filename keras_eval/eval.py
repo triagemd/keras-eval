@@ -57,7 +57,6 @@ class Evaluator(object):
         self.probabilities = None
         self.labels = None
         self.group_id_dict = {}
-        self.combined_probs = []
 
         if self.model_path is not None:
             self.add_model(model_path=self.model_path)
@@ -176,28 +175,31 @@ class Evaluator(object):
 
     def compute_inference_probabilities(self, concept_dictionary, probabilities):
         '''
-        Combines probabilities based on key "group" in concept_dictionary and saves the values in self.probabilities
+        Computes the probability inference based on key "group" in concept_dictionary and saves the values in self.probabilities
 
         Args:
             concept_dictionary: It is the dictionary which contains all the granular concepts and the mapping with the groups.
             probabilities: These are computed granular probabilities
 
         '''
-
         for concept in concept_dictionary:
-
             if concept['group'] in self.group_id_dict.keys():
                 self.group_id_dict[concept['group']].append(concept['class_index'])
             else:
                 self.group_id_dict[concept['group']] = [concept['class_index']]
 
-        self.combined_probs = [[[0.0, ] * len(self.concept_labels)] * len(probabilities[0])]
-        self.combined_probs = np.array(self.combined_probs)
-        for idx, concept_label in enumerate(self.concept_labels):
-            column_numbers = self.group_id_dict[concept_label]
-            for column_number in column_numbers:
-                self.combined_probs[0][:, idx] += probabilities[0][:, column_number]
-        self.probabilities = self.combined_probs
+        inference_probs_list = []
+        inference_probs = np.zeros((1, len(combined_probabilities),len(concept_labels)))
+
+        for i in range(len(probabilities)):
+            for idx, concept_label in enumerate(self.concept_labels):
+                column_numbers = self.group_id_dict[concept_label]
+                for column_number in column_numbers:
+                    inference_probs[i][:, idx] += combined_probabilities[i][:, column_number]
+
+            inference_probs_list.append(inference_probs)
+
+        self.probabilities = inference_probs_list
 
     def plot_confusion_matrix(self, confusion_matrix, concept_labels=None, save_path=None, show_text=True,
                               show_labels=True):
@@ -219,7 +221,7 @@ class Evaluator(object):
     def get_metrics(self, probabilities, labels, top_k=1, concept_labels=None, filter_indices=None,
                     confusion_matrix=False, save_confusion_matrix_path=None, show_confusion_matrix_text=True):
         '''
-         Print to screen metrics from experiment given probabilities and labels
+        Print to screen metrics from experiment given probabilities and labels
 
         Args:
             probabilities: Probabilities from softmax layer
