@@ -121,6 +121,7 @@ def evaluator_mobilenet_class_inference(test_animals_model_path, test_animals_di
         batch_size=1
     )
 
+
 @pytest.fixture('function')
 def evaluator_ensemble_mobilenet_class_inference(test_ensemble_models_path, test_animals_dictionary_path):
     return Evaluator(
