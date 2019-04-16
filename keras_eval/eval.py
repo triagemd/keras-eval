@@ -182,6 +182,8 @@ class Evaluator(object):
             probabilities: These are computed granular probabilities
 
         '''
+        self.combined_probabilities = utils.combine_probabilities(probabilities, self.combination_mode)
+
         for concept in concept_dictionary:
             if concept['group'] in self.group_id_dict.keys():
                 self.group_id_dict[concept['group']].append(concept['class_index'])
@@ -189,15 +191,12 @@ class Evaluator(object):
                 self.group_id_dict[concept['group']] = [concept['class_index']]
 
         inference_probs_list = []
-        inference_probs = np.zeros((1, len(combined_probabilities), len(concept_labels)))
+        inference_probs = np.zeros((1, len(self.combined_probabilities), len(self.concept_labels)))
 
-        for i in range(len(probabilities)):
-            for idx, concept_label in enumerate(self.concept_labels):
-                column_numbers = self.group_id_dict[concept_label]
-                for column_number in column_numbers:
-                    inference_probs[i][:, idx] += combined_probabilities[i][:, column_number]
-
-            inference_probs_list.append(inference_probs)
+        for idx, concept_label in enumerate(self.concept_labels):
+            column_numbers = self.group_id_dict[concept_label]
+            for column_number in column_numbers:
+                inference_probs[0][:, idx] += self.combined_probabilities[:, column_number]
 
         self.probabilities = inference_probs_list
 
@@ -259,12 +258,9 @@ class Evaluator(object):
 
     def _compute_probabilities_generator(self, data_dir=None, data_augmentation=None):
         '''
-
         Args:
             data_dir: Data directory to load the images from
-
         Returns: Probabilities, ground truth labels of predictions
-
         '''
         probabilities = []
         if len(self.models) < 1:

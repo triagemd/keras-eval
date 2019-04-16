@@ -16,8 +16,8 @@ def test_round_list():
     assert utils.round_list(input_list, decimals=6) == [0.666667, 0.333333]
 
 
-def test_read_dictionary(training_dict_file):
-    dictionary = utils.read_dictionary(training_dict_file)
+def test_read_dictionary(test_animals_mobilenet_dictionary_path):
+    dictionary = utils.read_dictionary(test_animals_mobilenet_dictionary_path)
     expected = 5
     actual = len(dictionary)
     assert actual == expected
