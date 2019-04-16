@@ -189,7 +189,7 @@ class Evaluator(object):
                 self.group_id_dict[concept['group']] = [concept['class_index']]
 
         inference_probs_list = []
-        inference_probs = np.zeros((1, len(combined_probabilities),len(concept_labels)))
+        inference_probs = np.zeros((1, len(combined_probabilities), len(concept_labels)))
 
         for i in range(len(probabilities)):
             for idx, concept_label in enumerate(self.concept_labels):
