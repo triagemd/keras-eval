@@ -1,0 +1,12 @@
+[
+    {
+        "class_index": 0,
+        "class_name": "cat",
+        "group": "cat"
+    },
+    {
+        "class_index": 1,
+        "class_name": "dog",
+        "group": "dog"
+    }
+]
