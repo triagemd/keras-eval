@@ -190,15 +190,14 @@ class Evaluator(object):
             else:
                 self.group_id_dict[concept['group']] = [concept['class_index']]
 
-        inference_probs_list = []
-        inference_probs = np.zeros((1, len(self.combined_probabilities), len(self.concept_labels)))
+        inference_probabilities = np.zeros((1, len(self.combined_probabilities), len(self.concept_labels)))
 
         for idx, concept_label in enumerate(self.concept_labels):
             column_numbers = self.group_id_dict[concept_label]
             for column_number in column_numbers:
-                inference_probs[0][:, idx] += self.combined_probabilities[:, column_number]
+                inference_probabilities[0][:, idx] += self.combined_probabilities[0][:, column_number]
 
-        self.probabilities = inference_probs_list
+        self.probabilities = inference_probabilities
 
     def plot_confusion_matrix(self, confusion_matrix, concept_labels=None, save_path=None, show_text=True,
                               show_labels=True):
