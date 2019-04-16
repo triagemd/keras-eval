@@ -73,9 +73,9 @@ def test_check_compute_inference_probabilities_data_augmentation(evaluator_mobil
     np.testing.assert_almost_equal(sum(sum(p[1] for p in probabilities)), 1.0)
 
 
-def test_check_compute_inference_probabilities(evaluator_mobilenet_class_combine, evaluator_ensemble_mobilenet_class_inference,
+def test_check_compute_inference_probabilities(evaluator_mobilenet_class_inference, evaluator_ensemble_mobilenet_class_inference,
                                                test_animals_dataset_path):
-    probabilities, labels = evaluator_mobilenet_class_combine.evaluate(test_animals_dataset_path)
+    probabilities, labels = evaluator_mobilenet_class_inference.evaluate(test_animals_dataset_path)
 
     assert probabilities.shape == (1, 15, 3)
 
