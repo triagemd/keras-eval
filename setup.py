@@ -21,6 +21,7 @@ setup(
         'plotly',
         'matplotlib',
         'sklearn',
-        'keras-model-specs>=0.0.30'
+        'keras-model-specs>=0.0.30',
+        'jupyter'
         ]
 )
