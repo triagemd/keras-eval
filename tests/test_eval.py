@@ -64,29 +64,30 @@ def check_predict_single_image(evaluator, test_image_path):
     assert len(evaluator.image_paths) == 1
 
 
-def test_check_compute_inference_probabilities_data_augmentation(evaluator_mobilenet_data_augmentation,
+def test_check_compute_inference_probabilities_data_augmentation(evaluator_catdog_mobilenet_data_augmentation,
                                                                  test_catdog_dataset_path):
-    probabilities, labels = evaluator_mobilenet_data_augmentation.evaluate(test_catdog_dataset_path)
+    probabilities, labels = evaluator_catdog_mobilenet_data_augmentation.evaluate(test_catdog_dataset_path)
 
     assert probabilities[0].shape == (4, 2)
 
     np.testing.assert_almost_equal(sum(sum(p[1] for p in probabilities)), 1.0)
 
 
-def test_check_compute_inference_probabilities(evaluator_mobilenet_class_inference, evaluator_ensemble_mobilenet_class_inference,
+def test_check_compute_inference_probabilities(evaluator_animals_mobilenet_class_inference,
+                                               evaluator_animals_ensemble_class_inference,
                                                test_animals_dataset_path):
-    probabilities, labels = evaluator_mobilenet_class_inference.evaluate(test_animals_dataset_path)
+    probabilities, labels = evaluator_animals_mobilenet_class_inference.evaluate(test_animals_dataset_path)
 
     assert probabilities.shape == (1, 15, 3)
 
     np.testing.assert_almost_equal(sum(sum(p[1] for p in probabilities)), 1.0)
 
-    probabilities, labels = evaluator_ensemble_mobilenet_class_inference(test_animals_dataset_path)
+    probabilities, labels = evaluator_animals_ensemble_class_inference(test_animals_dataset_path)
 
     assert probabilities.shape == (2, 15, 3)
 
-    for model_probs in probabilities:
-        np.testing.assert_almost_equal(sum(model_probs), np.ones(len(model_probs)))
+    for model in range(len(probabilities)):
+        np.testing.assert_almost_equal(sum(sum(p[1] for p in probabilities[model])), 1.0)
 
 
 def test_get_image_paths_by_prediction(evaluator_mobilenet, test_catdog_dataset_path, test_cat_folder, test_dog_folder):
@@ -113,13 +114,13 @@ def test_evaluator_single_mobilenet_v1_on_catdog_dataset(evaluator_mobilenet, te
     check_predict_single_image(evaluator_mobilenet, test_image_path)
 
 
-def test_evaluator_ensemble_mobilenet_v1_on_catdog_dataset(evaluator_ensemble_mobilenet, test_catdog_dataset_path,
+def test_evaluator_catdog_ensemble_on_catdog_dataset(evaluator_catdog_ensemble, test_catdog_dataset_path,
                                                            test_cat_folder, test_image_path):
-    check_evaluate_on_catdog_dataset(evaluator_ensemble_mobilenet, test_catdog_dataset_path)
+    check_evaluate_on_catdog_dataset(evaluator_catdog_ensemble, test_catdog_dataset_path)
 
-    check_predict_on_cat_folder(evaluator_ensemble_mobilenet, test_cat_folder)
+    check_predict_on_cat_folder(evaluator_catdog_ensemble, test_cat_folder)
 
-    check_predict_single_image(evaluator_ensemble_mobilenet, test_image_path)
+    check_predict_single_image(evaluator_catdog_ensemble, test_image_path)
 
 
 def test_compute_confidence_prediction_distribution(evaluator_mobilenet, test_catdog_dataset_path):
@@ -282,9 +283,9 @@ def test_get_sensitivity_per_samples(evaluator_mobilenet, test_catdog_dataset_pa
     assert results_classes['% of samples'][1] == 50.0
 
 
-def test_ensemble_models(evaluator_ensemble_mobilenet, test_cat_folder):
-    ensemble = evaluator_ensemble_mobilenet.ensemble_models(input_shape=(224, 224, 3), combination_mode='average')
-    model_spec = evaluator_ensemble_mobilenet.model_specs[0]
+def test_ensemble_models(evaluator_catdog_ensemble, test_cat_folder):
+    ensemble = evaluator_catdog_ensemble.ensemble_models(input_shape=(224, 224, 3), combination_mode='average')
+    model_spec = evaluator_catdog_ensemble.model_specs[0]
     image = utils.load_preprocess_image(os.path.join(test_cat_folder, 'cat-1.jpg'), model_spec)
 
     # forward pass

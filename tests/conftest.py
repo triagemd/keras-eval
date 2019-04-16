@@ -59,7 +59,7 @@ def test_animals_mobilenet_path():
 
 @pytest.fixture('session')
 def test_animals_mobilenet_dictionary_path():
-    return os.path.abspath(os.path.join('tmp', 'fixtures', 'models', 'animals', 'mobilenet_1', 'dictionary.json'))
+    return os.path.abspath(os.path.join('tests', 'files', 'animals', 'dictionary.json'))
 
 
 @pytest.fixture('session')
@@ -110,27 +110,27 @@ def evaluator_catdog_mobilenet_data_augmentation(test_catdog_mobilenet_model):
 
 
 @pytest.fixture('function')
-def evaluator_catdog_ensemble(test_catdog_ensemble_models):
+def evaluator_catdog_ensemble(test_catdog_ensemble_path):
     return Evaluator(
-        ensemble_models_dir=test_catdog_ensemble_models,
+        ensemble_models_dir=test_catdog_ensemble_path,
         combination_mode='arithmetic',
         batch_size=1
     )
 
 
 @pytest.fixture('function')
-def evaluator_animals_mobilenet_class_inference(test_animals_model_path, test_animals_dictionary_path):
+def evaluator_animals_mobilenet_class_inference(test_animals_mobilenet_path, test_animals_dictionary_path):
     return Evaluator(
-        model_path=test_animals_model_path,
+        model_path=test_animals_mobilenet_path,
         concept_dictionary_path=test_animals_dictionary_path,
         batch_size=1
     )
 
 
 @pytest.fixture('function')
-def evaluator_animals_ensemble_class_inference(test_catdog_ensemble_models, test_animals_dictionary_path):
+def evaluator_animals_ensemble_class_inference(test_animals_ensemble_path, test_animals_dictionary_path):
     return Evaluator(
-        ensemble_models_dir=test_catdog_ensemble_models,
+        ensemble_models_dir=test_animals_ensemble_path,
         concept_dictionary_path=test_animals_dictionary_path,
         batch_size=1
     )
