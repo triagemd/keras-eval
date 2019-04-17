@@ -302,7 +302,7 @@ class Evaluator(object):
 
             return probabilities, labels
 
-    def predict(self, data_dir=None):
+    def predict(self, data_dir=None, verbose=True):
         '''
 
         Args:
@@ -315,13 +315,13 @@ class Evaluator(object):
             self.data_dir = data_dir
 
         if os.path.isdir(self.data_dir):
-            return self._predict_folder(self.data_dir)
+            return self._predict_folder(self.data_dir, verbose=verbose)
         elif self.data_dir.endswith(".png") or self.data_dir.endswith(".jpeg") or self.data_dir.endswith(".jpg"):
-            return self._predict_image(self.data_dir)
+            return self._predict_image(self.data_dir, verbose=verbose)
         else:
             raise ValueError('Wrong data format inputted, please input a valid directory or image path')
 
-    def _predict_folder(self, folder_path):
+    def _predict_folder(self, folder_path, verbose):
         '''
 
         Predict the class probabilities of a set of images from a folder.
@@ -338,7 +338,8 @@ class Evaluator(object):
             images, image_paths = utils.load_preprocess_images(folder_path, self.model_specs[i])
             images = np.array(images)
             # Predict
-            print('Making predictions from model ', str(i))
+            if verbose:
+                print('Making predictions from model ', str(i))
             probabilities.append(model.predict(images, batch_size=self.batch_size, verbose=1))
 
         self.probabilities = np.array(probabilities)
@@ -347,7 +348,7 @@ class Evaluator(object):
 
         return self.probabilities
 
-    def _predict_image(self, image_path):
+    def _predict_image(self, image_path, verbose):
         '''
 
         Predict class probabilities for a single image.
@@ -363,7 +364,8 @@ class Evaluator(object):
             # Read image
             image = utils.load_preprocess_image(image_path, self.model_specs[i])
             # Predict
-            print('Making predictions from model ', str(i))
+            if verbose:
+                print('Making predictions from model ', str(i))
             probabilities.append(model.predict(image, batch_size=1, verbose=1))
 
         self.probabilities = np.array(probabilities)
