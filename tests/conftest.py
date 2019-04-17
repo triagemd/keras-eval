@@ -93,7 +93,7 @@ def model_spec_mobilenet():
 
 
 @pytest.fixture('function')
-def evaluator_mobilenet(test_catdog_mobilenet_model):
+def evaluator_catdog_mobilenet(test_catdog_mobilenet_model):
     return Evaluator(
         batch_size=1,
         model_path=test_catdog_mobilenet_model
@@ -132,6 +132,7 @@ def evaluator_animals_ensemble_class_inference(test_animals_ensemble_path, test_
     return Evaluator(
         ensemble_models_dir=test_animals_ensemble_path,
         concept_dictionary_path=test_animals_dictionary_path,
+        combination_mode='arithmetic',
         batch_size=1
     )
 
