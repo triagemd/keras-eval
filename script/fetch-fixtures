@@ -26,6 +26,7 @@ mkdir -p tmp/fixtures/models/animals/mobilenet_1/ tmp/fixtures/models/animals/mo
 cd tmp/fixtures/models/animals/mobilenet_1/
   MODEL_URL="https://storage.googleapis.com/triage-lab/models/animals/animals/animals-mobilenet.hdf5"
   MODEL_SPEC_URL="https://storage.googleapis.com/triage-lab/models/animals/animals/model_spec.json"
+
 if [ ! -f animals-mobilenet.hdf5 ]; then
     wget $MODEL_URL
 fi

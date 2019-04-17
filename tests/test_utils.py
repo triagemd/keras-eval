@@ -34,8 +34,8 @@ def test_load_model(test_catdog_mobilenet_model, test_mobilenet_1_model_spec):
     assert model
 
 
-def test_load_model_ensemble(test_ensemble_models_path):
-    models, specs = utils.load_multi_model(test_ensemble_models_path)
+def test_load_model_ensemble(test_catdog_ensemble_path):
+    models, specs = utils.load_multi_model(test_catdog_ensemble_path)
     assert models
     assert specs
 
@@ -184,8 +184,8 @@ def test_results_to_dataframe():
     assert individual_df['AUROC'][0] == individual_df['AUROC'][1] == 0.833
 
 
-def test_ensemble_models(test_image_path, model_spec_mobilenet, test_ensemble_models_path):
-    models, model_specs = utils.load_multi_model(test_ensemble_models_path)
+def test_ensemble_models(test_image_path, model_spec_mobilenet, test_catdog_ensemble_path):
+    models, model_specs = utils.load_multi_model(test_catdog_ensemble_path)
 
     with pytest.raises(ValueError) as exception:
         utils.ensemble_models(models, input_shape=(224, 224, 3), combination_mode='asdf')
