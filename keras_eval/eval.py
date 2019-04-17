@@ -195,7 +195,7 @@ class Evaluator(object):
         for idx, concept_label in enumerate(self.concept_labels):
             column_numbers = self.group_id_dict[concept_label]
             for column_number in column_numbers:
-                inference_probabilities[0][:, idx] += self.combined_probabilities[0][:, column_number]
+                inference_probabilities[0][:, idx] += self.combined_probabilities[:, column_number]
 
         self.probabilities = inference_probabilities
 
