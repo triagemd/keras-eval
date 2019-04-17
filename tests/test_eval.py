@@ -81,6 +81,7 @@ def test_check_compute_inference_probabilities(evaluator_animals_mobilenet_class
 
     np.testing.assert_almost_equal(sum(sum(p[1] for p in probabilities)), 1.0)
 
+
 def test_check_compute_inference_probabilities_ensemble(evaluator_animals_ensemble_class_inference,
                                                         test_animals_dataset_path):
 
@@ -116,7 +117,7 @@ def test_evaluator_single_mobilenet_v1_on_catdog_dataset(evaluator_catdog_mobile
 
 
 def test_evaluator_catdog_ensemble_on_catdog_dataset(evaluator_catdog_ensemble, test_catdog_dataset_path,
-                                                           test_cat_folder, test_image_path):
+                                                     test_cat_folder, test_image_path):
     check_evaluate_on_catdog_dataset(evaluator_catdog_ensemble, test_catdog_dataset_path)
 
     check_predict_on_cat_folder(evaluator_catdog_ensemble, test_cat_folder)
