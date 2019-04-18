@@ -73,23 +73,27 @@ def test_check_compute_probabilities_generator_data_augmentation(evaluator_catdo
     np.testing.assert_almost_equal(sum(sum(p[1] for p in probabilities)), 1.0)
 
 
-def test_check_compute_inference_probabilities(evaluator_animals_mobilenet_class_inference,
-                                               test_animals_dataset_path):
-    probabilities, labels = evaluator_animals_mobilenet_class_inference.evaluate(test_animals_dataset_path)
+def test_check_compute_inference_probabilities(evaluator_animals_mobilenet_class_inference):
+    evaluator = evaluator_animals_mobilenet_class_inference
+    probabilities, labels = evaluator._compute_probabilities_generator(evaluator.data_dir)
+    evaluator.compute_inference_probabilities(probabilities)
+    inference_probabilities = evaluator.probabilities
 
-    assert probabilities.shape == (1, 15, 3)
+    assert inference_probabilities.shape == (1, 15, 3)
 
-    np.testing.assert_almost_equal(sum(sum(p[1] for p in probabilities)), 1.0)
+    np.testing.assert_almost_equal(sum(sum(p[1] for p in inference_probabilities)), 1.0)
 
 
-def test_check_compute_inference_probabilities_ensemble(evaluator_animals_ensemble_class_inference,
-                                                        test_animals_dataset_path):
+def test_check_compute_inference_probabilities_ensemble(evaluator_animals_ensemble_class_inference):
+    evaluator = evaluator_animals_ensemble_class_inference
+    probabilities, labels = evaluator._compute_probabilities_generator(evaluator.data_dir)
+    evaluator.compute_inference_probabilities(probabilities)
+    inference_probabilities = evaluator.probabilities
 
-    probabilities, labels = evaluator_animals_ensemble_class_inference.evaluate(test_animals_dataset_path)
+    assert inference_probabilities.shape == (2, 15, 3)
 
-    assert probabilities.shape == (1, 15, 3)
-
-    np.testing.assert_almost_equal(sum(sum(p[1] for p in probabilities)), 1.0)
+    for model in range(len(inference_probabilities)):
+        np.testing.assert_almost_equal([sum(p) for p in inference_probabilities[model]], 1.0)
 
 
 def test_get_image_paths_by_prediction(evaluator_catdog_mobilenet, test_catdog_dataset_path, test_cat_folder, test_dog_folder):
