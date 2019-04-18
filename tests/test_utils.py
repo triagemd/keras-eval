@@ -16,8 +16,8 @@ def test_round_list():
     assert utils.round_list(input_list, decimals=6) == [0.666667, 0.333333]
 
 
-def test_read_dictionary(test_animals_mobilenet_dictionary_path):
-    dictionary = utils.read_dictionary(test_animals_mobilenet_dictionary_path)
+def test_read_dictionary(test_animals_dictionary_path):
+    dictionary = utils.read_dictionary(test_animals_dictionary_path)
     expected = 5
     actual = len(dictionary)
     assert actual == expected
@@ -100,6 +100,15 @@ def test_default_concepts(test_catdog_dataset_path):
     concepts_by_default = utils.get_default_concepts(test_catdog_dataset_path)
     assert concepts_by_default == [{'label': 'cat', 'id': 'cat'},
                                    {'label': 'dog', 'id': 'dog'}]
+
+
+def test_get_dictionary_concepts(test_animals_dictionary_path):
+    dictionary_concepts = utils.get_dictionary_concepts(test_animals_dictionary_path)
+    assert dictionary_concepts == [{'label': '00000_cat', 'id': 0},
+                                   {'label': '00001_dog', 'id': 1},
+                                   {'label': '00002_goose', 'id': 2},
+                                   {'label': '00003_turtle', 'id': 3},
+                                   {'label': '00004_elephant', 'id': 4}]
 
 
 def test_create_training_json(test_catdog_dataset_path):
