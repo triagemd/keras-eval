@@ -2,6 +2,7 @@ import os
 import pytest
 import numpy as np
 
+from keras_eval import utils
 from keras_eval.eval import Evaluator
 from keras_model_specs import ModelSpec
 
@@ -55,11 +56,6 @@ def test_animals_ensemble_path():
 @pytest.fixture('session')
 def test_animals_mobilenet_path():
     return os.path.abspath(os.path.join('tmp', 'fixtures', 'models', 'animals', 'mobilenet_1', 'animals-mobilenet.hdf5'))
-
-
-@pytest.fixture('session')
-def test_animals_mobilenet_dictionary_path():
-    return os.path.abspath(os.path.join('tests', 'files', 'animals', 'dictionary.json'))
 
 
 @pytest.fixture('session')
@@ -119,22 +115,35 @@ def evaluator_catdog_ensemble(test_catdog_ensemble_path):
 
 
 @pytest.fixture('function')
-def evaluator_animals_mobilenet_class_inference(test_animals_mobilenet_path, test_animals_dictionary_path):
-    return Evaluator(
+def evaluator_animals_mobilenet_class_inference(test_animals_dataset_path, test_animals_mobilenet_path,
+                                                test_animals_dictionary_path):
+    evaluator = Evaluator(
         model_path=test_animals_mobilenet_path,
         concept_dictionary_path=test_animals_dictionary_path,
         batch_size=1
     )
+    evaluator.data_dir = test_animals_dataset_path
+    evaluator.concepts = utils.get_dictionary_concepts(test_animals_dictionary_path)
+    group_concepts = utils.get_default_concepts(evaluator.data_dir)
+    evaluator.concept_labels = utils.get_concept_items(concepts=group_concepts, key='label')
+
+    return evaluator
 
 
 @pytest.fixture('function')
-def evaluator_animals_ensemble_class_inference(test_animals_ensemble_path, test_animals_dictionary_path):
-    return Evaluator(
+def evaluator_animals_ensemble_class_inference(test_animals_dataset_path, test_animals_ensemble_path,
+                                               test_animals_dictionary_path):
+    evaluator = Evaluator(
         ensemble_models_dir=test_animals_ensemble_path,
         concept_dictionary_path=test_animals_dictionary_path,
         combination_mode='arithmetic',
         batch_size=1
     )
+    evaluator.data_dir = test_animals_dataset_path
+    evaluator.concepts = utils.get_dictionary_concepts(test_animals_dictionary_path)
+    group_concepts = utils.get_default_concepts(evaluator.data_dir)
+    evaluator.concept_labels = utils.get_concept_items(concepts=group_concepts, key='label')
+    return evaluator
 
 
 @pytest.fixture('session')
