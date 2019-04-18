@@ -5,24 +5,24 @@ import numpy as np
 from keras_eval import utils
 
 
-def test_set_concepts(evaluator_mobilenet):
+def test_set_concepts(evaluator_catdog_mobilenet):
     with pytest.raises(ValueError) as exception:
-        evaluator_mobilenet.set_concepts([{'id': 'abcd', 'label': 'asd'}, {'a': 'b', 'b': 'c'}])
+        evaluator_catdog_mobilenet.set_concepts([{'id': 'abcd', 'label': 'asd'}, {'a': 'b', 'b': 'c'}])
     expected = 'Incorrect format for concepts list. It must contain the fields `id` and `label`'
     actual = str(exception).split('ValueError: ')[1]
     assert actual == expected
 
-    evaluator_mobilenet.set_concepts([{'id': '1', 'label': '1'}, {'id': '2', 'label': '2'}])
+    evaluator_catdog_mobilenet.set_concepts([{'id': '1', 'label': '1'}, {'id': '2', 'label': '2'}])
 
 
-def test_set_combination_mode(evaluator_mobilenet):
+def test_set_combination_mode(evaluator_catdog_mobilenet):
     with pytest.raises(ValueError) as exception:
-        evaluator_mobilenet.set_combination_mode('asdf')
+        evaluator_catdog_mobilenet.set_combination_mode('asdf')
     expected = 'Error: invalid option for `combination_mode` asdf'
     actual = str(exception).split('ValueError: ')[1]
     assert actual == expected
 
-    evaluator_mobilenet.set_combination_mode('maximum')
+    evaluator_catdog_mobilenet.set_combination_mode('maximum')
 
 
 def check_evaluate_on_catdog_dataset(evaluator, test_catdog_dataset_path):
@@ -64,26 +64,41 @@ def check_predict_single_image(evaluator, test_image_path):
     assert len(evaluator.image_paths) == 1
 
 
-def test_check_compute_inference_probabilities_data_augmentation(evaluator_mobilenet_data_augmentation,
+def test_check_compute_probabilities_generator_data_augmentation(evaluator_catdog_mobilenet_data_augmentation,
                                                                  test_catdog_dataset_path):
-    probabilities, labels = evaluator_mobilenet_data_augmentation.evaluate(test_catdog_dataset_path)
+    probabilities, labels = evaluator_catdog_mobilenet_data_augmentation.evaluate(test_catdog_dataset_path)
 
-    assert probabilities[0].shape == (4, 2)
-
-    np.testing.assert_almost_equal(sum(sum(p[1] for p in probabilities)), 1.0)
-
-
-def test_check_compute_inference_probabilities(evaluator_mobilenet_class_combine, test_animals_dataset_path):
-    probabilities, labels = evaluator_mobilenet_class_combine.evaluate(test_animals_dataset_path)
-
-    assert probabilities[0].shape == (15, 3)
+    assert probabilities.shape == (1, 4, 2)
 
     np.testing.assert_almost_equal(sum(sum(p[1] for p in probabilities)), 1.0)
 
 
-def test_get_image_paths_by_prediction(evaluator_mobilenet, test_catdog_dataset_path, test_cat_folder, test_dog_folder):
-    probabilities, labels = evaluator_mobilenet.evaluate(test_catdog_dataset_path)
-    image_dictionary = evaluator_mobilenet.get_image_paths_by_prediction(probabilities, labels)
+def test_check_compute_inference_probabilities(evaluator_animals_mobilenet_class_inference):
+    evaluator = evaluator_animals_mobilenet_class_inference
+    probabilities, labels = evaluator._compute_probabilities_generator(evaluator.data_dir)
+    evaluator.compute_inference_probabilities(probabilities)
+    inference_probabilities = evaluator.probabilities
+
+    assert inference_probabilities.shape == (1, 15, 3)
+
+    np.testing.assert_almost_equal(sum(sum(p[1] for p in inference_probabilities)), 1.0)
+
+
+def test_check_compute_inference_probabilities_ensemble(evaluator_animals_ensemble_class_inference):
+    evaluator = evaluator_animals_ensemble_class_inference
+    probabilities, labels = evaluator._compute_probabilities_generator(evaluator.data_dir)
+    evaluator.compute_inference_probabilities(probabilities)
+    inference_probabilities = evaluator.probabilities
+
+    assert inference_probabilities.shape == (2, 15, 3)
+
+    for model in range(len(inference_probabilities)):
+        np.testing.assert_almost_equal([sum(p) for p in inference_probabilities[model]], 1.0)
+
+
+def test_get_image_paths_by_prediction(evaluator_catdog_mobilenet, test_catdog_dataset_path, test_cat_folder, test_dog_folder):
+    probabilities, labels = evaluator_catdog_mobilenet.evaluate(test_catdog_dataset_path)
+    image_dictionary = evaluator_catdog_mobilenet.get_image_paths_by_prediction(probabilities, labels)
 
     assert image_dictionary['cat_cat']['image_paths'] == [os.path.join(test_cat_folder, 'cat-1.jpg'),
                                                           os.path.join(test_cat_folder, 'cat-4.jpg')]
@@ -96,79 +111,79 @@ def test_get_image_paths_by_prediction(evaluator_mobilenet, test_catdog_dataset_
     assert len(image_dictionary['dog_dog']['probs']) == 1
 
 
-def test_evaluator_single_mobilenet_v1_on_catdog_dataset(evaluator_mobilenet, test_catdog_dataset_path,
+def test_evaluator_single_mobilenet_v1_on_catdog_dataset(evaluator_catdog_mobilenet, test_catdog_dataset_path,
                                                          test_cat_folder, test_image_path):
-    check_evaluate_on_catdog_dataset(evaluator_mobilenet, test_catdog_dataset_path)
+    check_evaluate_on_catdog_dataset(evaluator_catdog_mobilenet, test_catdog_dataset_path)
 
-    check_predict_on_cat_folder(evaluator_mobilenet, test_cat_folder)
+    check_predict_on_cat_folder(evaluator_catdog_mobilenet, test_cat_folder)
 
-    check_predict_single_image(evaluator_mobilenet, test_image_path)
-
-
-def test_evaluator_ensemble_mobilenet_v1_on_catdog_dataset(evaluator_ensemble_mobilenet, test_catdog_dataset_path,
-                                                           test_cat_folder, test_image_path):
-    check_evaluate_on_catdog_dataset(evaluator_ensemble_mobilenet, test_catdog_dataset_path)
-
-    check_predict_on_cat_folder(evaluator_ensemble_mobilenet, test_cat_folder)
-
-    check_predict_single_image(evaluator_ensemble_mobilenet, test_image_path)
+    check_predict_single_image(evaluator_catdog_mobilenet, test_image_path)
 
 
-def test_compute_confidence_prediction_distribution(evaluator_mobilenet, test_catdog_dataset_path):
+def test_evaluator_catdog_ensemble_on_catdog_dataset(evaluator_catdog_ensemble, test_catdog_dataset_path,
+                                                     test_cat_folder, test_image_path):
+    check_evaluate_on_catdog_dataset(evaluator_catdog_ensemble, test_catdog_dataset_path)
+
+    check_predict_on_cat_folder(evaluator_catdog_ensemble, test_cat_folder)
+
+    check_predict_single_image(evaluator_catdog_ensemble, test_image_path)
+
+
+def test_compute_confidence_prediction_distribution(evaluator_catdog_mobilenet, test_catdog_dataset_path):
     with pytest.raises(ValueError) as exception:
-        evaluator_mobilenet.compute_confidence_prediction_distribution()
+        evaluator_catdog_mobilenet.compute_confidence_prediction_distribution()
     expected = 'probabilities value is None, please run an evaluation first'
     actual = str(exception).split('ValueError: ')[1]
     assert actual == expected
 
-    evaluator_mobilenet.evaluate(test_catdog_dataset_path)
+    evaluator_catdog_mobilenet.evaluate(test_catdog_dataset_path)
 
-    output = evaluator_mobilenet.compute_confidence_prediction_distribution()
+    output = evaluator_catdog_mobilenet.compute_confidence_prediction_distribution()
 
     np.testing.assert_array_almost_equal(output, np.array([0.82156974, 0.1784302], dtype=np.float32))
 
 
-def test_compute_uncertainty_distribution(evaluator_mobilenet, test_catdog_dataset_path):
+def test_compute_uncertainty_distribution(evaluator_catdog_mobilenet, test_catdog_dataset_path):
     with pytest.raises(ValueError) as exception:
-        evaluator_mobilenet.compute_uncertainty_distribution()
+        evaluator_catdog_mobilenet.compute_uncertainty_distribution()
     expected = 'probabilities value is None, please run an evaluation first'
     actual = str(exception).split('ValueError: ')[1]
     assert actual == expected
 
-    evaluator_mobilenet.evaluate(test_catdog_dataset_path)
+    evaluator_catdog_mobilenet.evaluate(test_catdog_dataset_path)
 
-    output = evaluator_mobilenet.compute_uncertainty_distribution()
+    output = evaluator_catdog_mobilenet.compute_uncertainty_distribution()
 
     np.testing.assert_array_almost_equal(output, np.array([0.8283282, 0.13131963, 0.36905038, 0.9456398], dtype=np.float32))
 
 
-def test_plot_top_k_accuracy(evaluator_mobilenet):
+def test_plot_top_k_accuracy(evaluator_catdog_mobilenet):
     with pytest.raises(ValueError) as exception:
-        evaluator_mobilenet.plot_top_k_accuracy()
+        evaluator_catdog_mobilenet.plot_top_k_accuracy()
     expected = 'results parameter is None, please run an evaluation first'
     actual = str(exception).split('ValueError: ')[1]
     assert actual == expected
 
 
-def test_plot_top_k_sensitivity_by_concept(evaluator_mobilenet):
+def test_plot_top_k_sensitivity_by_concept(evaluator_catdog_mobilenet):
     with pytest.raises(ValueError) as exception:
-        evaluator_mobilenet.plot_top_k_sensitivity_by_concept()
+        evaluator_catdog_mobilenet.plot_top_k_sensitivity_by_concept()
     expected = 'results parameter is None, please run an evaluation first'
     actual = str(exception).split('ValueError: ')[1]
     assert actual == expected
 
 
-def test_show_results(evaluator_mobilenet, test_catdog_dataset_path):
+def test_show_results(evaluator_catdog_mobilenet, test_catdog_dataset_path):
     # Assert error without results
     with pytest.raises(ValueError) as exception:
-        evaluator_mobilenet.show_results('average')
+        evaluator_catdog_mobilenet.show_results('average')
     expected = 'results parameter is None, please run an evaluation first'
     actual = str(exception).split('ValueError: ')[1]
     assert actual == expected
 
-    evaluator_mobilenet.evaluate(test_catdog_dataset_path)
+    evaluator_catdog_mobilenet.evaluate(test_catdog_dataset_path)
 
-    average_df = evaluator_mobilenet.show_results(mode='average')
+    average_df = evaluator_catdog_mobilenet.show_results(mode='average')
     assert average_df['id'][0] == 'catdog-mobilenet.hdf5'
     assert average_df['accuracy'][0] == 0.75
     assert average_df['sensitivity'][0] == 0.75
@@ -176,7 +191,7 @@ def test_show_results(evaluator_mobilenet, test_catdog_dataset_path):
     assert average_df['precision'][0] == 0.833
     assert average_df['f1_score'][0] == 0.733
 
-    individual_df = evaluator_mobilenet.show_results(mode='individual')
+    individual_df = evaluator_catdog_mobilenet.show_results(mode='individual')
     assert individual_df['class'][0] == 'cat'
     assert individual_df['class'][1] == 'dog'
     assert individual_df['sensitivity'][0] == 1.0
@@ -191,80 +206,80 @@ def test_show_results(evaluator_mobilenet, test_catdog_dataset_path):
     assert individual_df['AUROC'][0] == individual_df['AUROC'][1] == 1.0
 
 
-def test_save_results(evaluator_mobilenet):
+def test_save_results(evaluator_catdog_mobilenet):
     # Assert error without results
     with pytest.raises(ValueError) as exception:
-        evaluator_mobilenet.save_results('average', csv_path='')
+        evaluator_catdog_mobilenet.save_results('average', csv_path='')
     expected = 'results parameter is None, please run an evaluation first'
     actual = str(exception).split('ValueError: ')[1]
     assert actual == expected
 
 
-def test_plot_probability_histogram(evaluator_mobilenet, test_catdog_dataset_path):
+def test_plot_probability_histogram(evaluator_catdog_mobilenet, test_catdog_dataset_path):
     with pytest.raises(ValueError) as exception:
-        evaluator_mobilenet.plot_probability_histogram()
+        evaluator_catdog_mobilenet.plot_probability_histogram()
     expected = 'There are not computed probabilities. Please run an evaluation first.'
     actual = str(exception).split('ValueError: ')[1]
     assert actual == expected
 
-    evaluator_mobilenet.evaluate(test_catdog_dataset_path)
+    evaluator_catdog_mobilenet.evaluate(test_catdog_dataset_path)
 
     with pytest.raises(ValueError) as exception:
-        evaluator_mobilenet.plot_probability_histogram(mode='x')
+        evaluator_catdog_mobilenet.plot_probability_histogram(mode='x')
     expected = 'Incorrect mode. Supported modes are "errors" and "correct"'
     actual = str(exception).split('ValueError: ')[1]
     assert actual == expected
 
 
-def test_plot_most_confident(evaluator_mobilenet, test_catdog_dataset_path):
+def test_plot_most_confident(evaluator_catdog_mobilenet, test_catdog_dataset_path):
     with pytest.raises(ValueError) as exception:
-        evaluator_mobilenet.plot_most_confident()
+        evaluator_catdog_mobilenet.plot_most_confident()
     expected = 'There are not computed probabilities. Please run an evaluation first.'
     actual = str(exception).split('ValueError: ')[1]
     assert actual == expected
 
-    evaluator_mobilenet.evaluate(test_catdog_dataset_path)
+    evaluator_catdog_mobilenet.evaluate(test_catdog_dataset_path)
 
     with pytest.raises(ValueError) as exception:
-        evaluator_mobilenet.plot_most_confident(mode='x')
+        evaluator_catdog_mobilenet.plot_most_confident(mode='x')
     expected = 'Incorrect mode. Supported modes are "errors" and "correct"'
     actual = str(exception).split('ValueError: ')[1]
     assert actual == expected
 
 
-def test_plot_confidence_interval(evaluator_mobilenet, test_catdog_dataset_path):
+def test_plot_confidence_interval(evaluator_catdog_mobilenet, test_catdog_dataset_path):
     with pytest.raises(ValueError) as exception:
-        evaluator_mobilenet.plot_confidence_interval()
+        evaluator_catdog_mobilenet.plot_confidence_interval()
     expected = 'There are not computed probabilities. Please run an evaluation first.'
     actual = str(exception).split('ValueError: ')[1]
     assert actual == expected
 
-    evaluator_mobilenet.evaluate(test_catdog_dataset_path)
+    evaluator_catdog_mobilenet.evaluate(test_catdog_dataset_path)
 
     with pytest.raises(ValueError) as exception:
-        evaluator_mobilenet.plot_confidence_interval(mode='x')
+        evaluator_catdog_mobilenet.plot_confidence_interval(mode='x')
     expected = 'Incorrect mode. Modes available are "accuracy" or "error".'
     actual = str(exception).split('ValueError: ')[1]
     assert actual == expected
 
 
-def test_plot_sensitivity_per_samples(evaluator_mobilenet):
+def test_plot_sensitivity_per_samples(evaluator_catdog_mobilenet):
     with pytest.raises(ValueError) as exception:
-        evaluator_mobilenet.plot_sensitivity_per_samples()
+        evaluator_catdog_mobilenet.plot_sensitivity_per_samples()
     expected = 'results parameter is None, please run an evaluation first'
     actual = str(exception).split('ValueError: ')[1]
     assert actual == expected
 
 
-def test_get_sensitivity_per_samples(evaluator_mobilenet, test_catdog_dataset_path):
+def test_get_sensitivity_per_samples(evaluator_catdog_mobilenet, test_catdog_dataset_path):
     with pytest.raises(ValueError) as exception:
-        evaluator_mobilenet.get_sensitivity_per_samples()
+        evaluator_catdog_mobilenet.get_sensitivity_per_samples()
     expected = 'results parameter is None, please run an evaluation first'
     actual = str(exception).split('ValueError: ')[1]
     assert actual == expected
 
-    evaluator_mobilenet.evaluate(test_catdog_dataset_path)
-    results_classes = evaluator_mobilenet.get_sensitivity_per_samples()
+    evaluator_catdog_mobilenet.evaluate(test_catdog_dataset_path)
+    results_classes = evaluator_catdog_mobilenet.get_sensitivity_per_samples()
 
     assert results_classes['sensitivity'][0] == 0.5
     assert results_classes['sensitivity'][1] == 1.0
@@ -274,9 +289,9 @@ def test_get_sensitivity_per_samples(evaluator_mobilenet, test_catdog_dataset_pa
     assert results_classes['% of samples'][1] == 50.0
 
 
-def test_ensemble_models(evaluator_ensemble_mobilenet, test_cat_folder):
-    ensemble = evaluator_ensemble_mobilenet.ensemble_models(input_shape=(224, 224, 3), combination_mode='average')
-    model_spec = evaluator_ensemble_mobilenet.model_specs[0]
+def test_ensemble_models(evaluator_catdog_ensemble, test_cat_folder):
+    ensemble = evaluator_catdog_ensemble.ensemble_models(input_shape=(224, 224, 3), combination_mode='average')
+    model_spec = evaluator_catdog_ensemble.model_specs[0]
     image = utils.load_preprocess_image(os.path.join(test_cat_folder, 'cat-1.jpg'), model_spec)
 
     # forward pass

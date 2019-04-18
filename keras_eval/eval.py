@@ -57,7 +57,6 @@ class Evaluator(object):
         self.probabilities = None
         self.labels = None
         self.group_id_dict = {}
-        self.combined_probs = []
 
         if self.model_path is not None:
             self.add_model(model_path=self.model_path)
@@ -147,8 +146,8 @@ class Evaluator(object):
             self.concept_labels = utils.get_concept_items(self.concepts, key='label')
 
             if hasattr(self, 'concept_dictionary'):
-                if utils.compare_group_test_concepts(self.concept_labels,
-                                                     self.concept_dictionary) and utils.check_concept_unique(self.concept_dictionary):
+                if utils.compare_group_test_concepts(self.concept_labels, self.concept_dictionary) \
+                        and utils.check_concept_unique(self.concept_dictionary):
                     # Create Keras image generator and obtain probabilities
                     self.probabilities, self.labels = self._compute_probabilities_generator(
                         data_dir=self.data_dir, data_augmentation=self.data_augmentation)
@@ -174,30 +173,31 @@ class Evaluator(object):
             utils.save_numpy(id + '_probabilities', save_path, self.combined_probabilities)
             utils.save_numpy(id + '_labels', save_path, self.labels)
 
-    def compute_inference_probabilities(self, concept_dictionary, probabilities):
+    def compute_inference_probabilities(self, probabilities):
         '''
-        Combines probabilities based on key "group" in concept_dictionary and saves the values in self.probabilities
+        Computes the class probability inference based on key "group" in concept_dictionary and saves the values in
+        self.probabilities
 
         Args:
-            concept_dictionary: It is the dictionary which contains all the granular concepts and the mapping with the groups.
-            probabilities: These are computed granular probabilities
+            probabilities: Class inference probabilities with shape [model,samples,inferred_classes].
 
         '''
-
-        for concept in concept_dictionary:
-
+        for concept in self.concept_dictionary:
             if concept['group'] in self.group_id_dict.keys():
                 self.group_id_dict[concept['group']].append(concept['class_index'])
             else:
                 self.group_id_dict[concept['group']] = [concept['class_index']]
 
-        self.combined_probs = [[[0.0, ] * len(self.concept_labels)] * len(probabilities[0])]
-        self.combined_probs = np.array(self.combined_probs)
-        for idx, concept_label in enumerate(self.concept_labels):
-            column_numbers = self.group_id_dict[concept_label]
-            for column_number in column_numbers:
-                self.combined_probs[0][:, idx] += probabilities[0][:, column_number]
-        self.probabilities = self.combined_probs
+        inference_probabilities = []
+        for model in range(len(probabilities)):
+            single_inference_probabilities = np.zeros((len(probabilities[0]), len(self.concept_labels)))
+            for idx, concept_label in enumerate(self.concept_labels):
+                column_numbers = self.group_id_dict[concept_label]
+                for column_number in column_numbers:
+                    single_inference_probabilities[:, idx] += probabilities[model][:, column_number]
+            inference_probabilities.append(single_inference_probabilities)
+
+        self.probabilities = np.array(inference_probabilities)
 
     def plot_confusion_matrix(self, confusion_matrix, concept_labels=None, save_path=None, show_text=True,
                               show_labels=True):
@@ -219,7 +219,7 @@ class Evaluator(object):
     def get_metrics(self, probabilities, labels, top_k=1, concept_labels=None, filter_indices=None,
                     confusion_matrix=False, save_confusion_matrix_path=None, show_confusion_matrix_text=True):
         '''
-         Print to screen metrics from experiment given probabilities and labels
+        Print to screen metrics from experiment given probabilities and labels
 
         Args:
             probabilities: Probabilities from softmax layer
@@ -257,12 +257,9 @@ class Evaluator(object):
 
     def _compute_probabilities_generator(self, data_dir=None, data_augmentation=None):
         '''
-
         Args:
             data_dir: Data directory to load the images from
-
         Returns: Probabilities, ground truth labels of predictions
-
         '''
         probabilities = []
         if len(self.models) < 1:
