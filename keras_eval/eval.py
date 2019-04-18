@@ -146,8 +146,8 @@ class Evaluator(object):
             self.concept_labels = utils.get_concept_items(self.concepts, key='label')
 
             if hasattr(self, 'concept_dictionary'):
-                if utils.compare_group_test_concepts(self.concept_labels,
-                                                     self.concept_dictionary) and utils.check_concept_unique(self.concept_dictionary):
+                if utils.compare_group_test_concepts(self.concept_labels, self.concept_dictionary) \
+                        and utils.check_concept_unique(self.concept_dictionary):
                     # Create Keras image generator and obtain probabilities
                     self.probabilities, self.labels = self._compute_probabilities_generator(
                         data_dir=self.data_dir, data_augmentation=self.data_augmentation)
@@ -173,31 +173,31 @@ class Evaluator(object):
             utils.save_numpy(id + '_probabilities', save_path, self.combined_probabilities)
             utils.save_numpy(id + '_labels', save_path, self.labels)
 
-    def compute_inference_probabilities(self, concept_dictionary, probabilities):
+    def compute_inference_probabilities(self, probabilities):
         '''
-        Computes the probability inference based on key "group" in concept_dictionary and saves the values in self.probabilities
+        Computes the class probability inference based on key "group" in concept_dictionary and saves the values in
+        self.probabilities
 
         Args:
-            concept_dictionary: It is the dictionary which contains all the granular concepts and the mapping with the groups.
-            probabilities: These are computed granular probabilities
+            probabilities: Class inference probabilities with shape [model,samples,inferred_classes].
 
         '''
-        self.combined_probabilities = utils.combine_probabilities(probabilities, self.combination_mode)
-
-        for concept in concept_dictionary:
+        for concept in self.concept_dictionary:
             if concept['group'] in self.group_id_dict.keys():
                 self.group_id_dict[concept['group']].append(concept['class_index'])
             else:
                 self.group_id_dict[concept['group']] = [concept['class_index']]
 
-        inference_probabilities = np.zeros((1, len(self.combined_probabilities), len(self.concept_labels)))
+        inference_probabilities = []
+        for model in range(len(probabilities)):
+            single_inference_probabilities = np.zeros((len(probabilities[0]), len(self.concept_labels)))
+            for idx, concept_label in enumerate(self.concept_labels):
+                column_numbers = self.group_id_dict[concept_label]
+                for column_number in column_numbers:
+                    single_inference_probabilities[:, idx] += probabilities[model][:, column_number]
+            inference_probabilities.append(single_inference_probabilities)
 
-        for idx, concept_label in enumerate(self.concept_labels):
-            column_numbers = self.group_id_dict[concept_label]
-            for column_number in column_numbers:
-                inference_probabilities[0][:, idx] += self.combined_probabilities[:, column_number]
-
-        self.probabilities = inference_probabilities
+        self.probabilities = np.array(inference_probabilities)
 
     def plot_confusion_matrix(self, confusion_matrix, concept_labels=None, save_path=None, show_text=True,
                               show_labels=True):
