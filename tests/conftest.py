@@ -126,7 +126,6 @@ def evaluator_animals_mobilenet_class_inference(test_animals_dataset_path, test_
     evaluator.concepts = utils.get_dictionary_concepts(test_animals_dictionary_path)
     group_concepts = utils.get_default_concepts(evaluator.data_dir)
     evaluator.concept_labels = utils.get_concept_items(concepts=group_concepts, key='label')
-
     return evaluator
 
 
