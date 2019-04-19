@@ -2,7 +2,6 @@ import os
 import pytest
 import numpy as np
 
-from copy import deepcopy
 from keras_eval import utils
 
 
@@ -111,7 +110,7 @@ def test_check_compute_inference_probabilities_ensemble(evaluator_animals_ensemb
     inference_probabilities = evaluator.probabilities
 
     assert inference_probabilities.shape == (2, 15, 3)
-    
+
     for model in range(len(inference_probabilities)):
         np.testing.assert_almost_equal([sum(p) for p in inference_probabilities[model]], 1.0)
 
