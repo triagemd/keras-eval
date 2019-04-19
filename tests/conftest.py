@@ -118,6 +118,18 @@ def evaluator_catdog_ensemble(test_catdog_ensemble_path):
 def evaluator_animals_mobilenet_class_inference(test_animals_dataset_path, test_animals_mobilenet_path,
                                                 test_animals_dictionary_path):
     evaluator = Evaluator(
+        data_dir=test_animals_dataset_path,
+        model_path=test_animals_mobilenet_path,
+        concept_dictionary_path=test_animals_dictionary_path,
+        batch_size=1
+    )
+    return evaluator
+
+
+@pytest.fixture('function')
+def evaluator_animals_mobilenet_class_inference_initialized(test_animals_dataset_path, test_animals_mobilenet_path,
+                                                            test_animals_dictionary_path):
+    evaluator = Evaluator(
         model_path=test_animals_mobilenet_path,
         concept_dictionary_path=test_animals_dictionary_path,
         batch_size=1
@@ -132,6 +144,19 @@ def evaluator_animals_mobilenet_class_inference(test_animals_dataset_path, test_
 @pytest.fixture('function')
 def evaluator_animals_ensemble_class_inference(test_animals_dataset_path, test_animals_ensemble_path,
                                                test_animals_dictionary_path):
+    evaluator = Evaluator(
+        data_dir=test_animals_dataset_path,
+        ensemble_models_dir=test_animals_ensemble_path,
+        concept_dictionary_path=test_animals_dictionary_path,
+        combination_mode='arithmetic',
+        batch_size=1
+    )
+    return evaluator
+
+
+@pytest.fixture('function')
+def evaluator_animals_ensemble_class_inference_initialized(test_animals_dataset_path, test_animals_ensemble_path,
+                                                           test_animals_dictionary_path):
     evaluator = Evaluator(
         ensemble_models_dir=test_animals_ensemble_path,
         concept_dictionary_path=test_animals_dictionary_path,

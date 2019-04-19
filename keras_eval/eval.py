@@ -151,7 +151,7 @@ class Evaluator(object):
                     # Create Keras image generator and obtain probabilities
                     self.probabilities, self.labels = self._compute_probabilities_generator(
                         data_dir=self.data_dir, data_augmentation=self.data_augmentation)
-                    self.compute_inference_probabilities(self.concept_dictionary, self.probabilities)
+                    self.compute_inference_probabilities(self.probabilities)
 
             else:
                 # Create Keras image generator and obtain probabilities
