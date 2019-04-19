@@ -128,7 +128,7 @@ def evaluator_animals_mobilenet_class_inference(test_animals_dataset_path, test_
 
 @pytest.fixture('function')
 def evaluator_animals_mobilenet_class_inference_initialized(test_animals_dataset_path, test_animals_mobilenet_path,
-                                                test_animals_dictionary_path):
+                                                            test_animals_dictionary_path):
     evaluator = Evaluator(
         model_path=test_animals_mobilenet_path,
         concept_dictionary_path=test_animals_dictionary_path,
@@ -153,9 +153,10 @@ def evaluator_animals_ensemble_class_inference(test_animals_dataset_path, test_a
     )
     return evaluator
 
+
 @pytest.fixture('function')
 def evaluator_animals_ensemble_class_inference_initialized(test_animals_dataset_path, test_animals_ensemble_path,
-                                               test_animals_dictionary_path):
+                                                           test_animals_dictionary_path):
     evaluator = Evaluator(
         ensemble_models_dir=test_animals_ensemble_path,
         concept_dictionary_path=test_animals_dictionary_path,
