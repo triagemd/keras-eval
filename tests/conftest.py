@@ -37,6 +37,12 @@ def test_image_path():
 
 
 @pytest.fixture('session')
+def test_image_paths_list():
+    return [os.path.abspath(os.path.join('tests', 'files', 'catdog', 'test', 'cat', 'cat-1.jpg')),
+            os.path.abspath(os.path.join('tests', 'files', 'catdog', 'test', 'dog', 'dog-2.jpg'))]
+
+
+@pytest.fixture('session')
 def test_ensemble_models_path():
     return os.path.abspath(os.path.join('tmp', 'fixtures', 'models', 'ensemble'))
 

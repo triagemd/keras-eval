@@ -302,7 +302,7 @@ class Evaluator(object):
 
             return probabilities, labels
 
-    def predict(self, data_dir=None):
+    def predict(self, data_dir=None, image_list=None):
         '''
 
         Args:
@@ -314,7 +314,9 @@ class Evaluator(object):
         if data_dir is not None:
             self.data_dir = data_dir
 
-        if os.path.isdir(self.data_dir):
+        if image_list is not None and isinstance(image_list, list):
+            return self._predict_folder_list(self.data_dir, image_list)
+        elif os.path.isdir(self.data_dir):
             return self._predict_folder(self.data_dir)
         elif self.data_dir.endswith(".png") or self.data_dir.endswith(".jpeg") or self.data_dir.endswith(".jpg"):
             return self._predict_image(self.data_dir)
@@ -343,6 +345,31 @@ class Evaluator(object):
 
         self.probabilities = np.array(probabilities)
         self.combined_probabilities = utils.combine_probabilities(self.probabilities, self.combination_mode)
+        self.image_paths = image_paths
+
+        return self.probabilities
+
+    def _predict_list(self, image_list):
+        '''
+
+        Predict the class probabilities of a set of images from a list.
+
+        Args:
+            image_list: List of images
+
+        Returns: Probabilities predicted, image path for every image (aligned with probability)
+
+        '''
+        probabilities = []
+        image_paths = []
+
+        for image_path in image_list:
+            # Read images from folder
+            if image_path.endswith(".png") or image_path.endswith(".jpeg") or image_path.endswith(".jpg"):
+                probabilities.append(self._predict_image(image_path)[0][0])
+                image_paths.append(image_path)
+
+        self.probabilities = np.array(probabilities)
         self.image_paths = image_paths
 
         return self.probabilities

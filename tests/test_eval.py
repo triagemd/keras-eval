@@ -54,6 +54,16 @@ def check_predict_on_cat_folder(evaluator, test_cat_folder):
     assert len(evaluator.image_paths) == 2
 
 
+def check_predict_on_cat_folder(evaluator, test_image_paths_list):
+    probabilities = evaluator.predict(test_image_paths_list)
+
+    # n_models x n_samples x n_classes
+    assert len(probabilities.shape) == 3
+
+    # 2 images in the folder
+    assert len(evaluator.image_paths) == 2
+
+
 def check_predict_single_image(evaluator, test_image_path):
     probabilities = evaluator.predict(test_image_path)
 
