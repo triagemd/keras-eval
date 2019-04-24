@@ -145,6 +145,26 @@ def get_default_concepts(data_dir):
     return concepts
 
 
+def get_dictionary_concepts(model_dictionary):
+    '''
+    Returns concept list from a model dictionary.
+
+    Args:
+        model_dictionary: String indicating the path where the model_dictionary json file is.
+                        This dictionary must contain 'class_index' and 'class_name' for each class.
+
+    Returns:
+        concepts: Dictionary with 'label' and 'id' equal to 'class_name' and 'class_index' for each class.
+    '''
+    if not os.path.isfile(model_dictionary):
+        raise ValueError('model_dictionary file does not exist')
+
+    concepts = []
+    for model_class in read_dictionary(model_dictionary):
+        concepts.append({'label': model_class['class_name'], 'id': model_class['class_index']})
+    return concepts
+
+
 def get_concept_items(concepts, key):
     return [concept[key] for concept in concepts]
 
