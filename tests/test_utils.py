@@ -16,26 +16,26 @@ def test_round_list():
     assert utils.round_list(input_list, decimals=6) == [0.666667, 0.333333]
 
 
-def test_read_dictionary(training_dict_file):
-    dictionary = utils.read_dictionary(training_dict_file)
+def test_read_dictionary(test_animals_dictionary_path):
+    dictionary = utils.read_dictionary(test_animals_dictionary_path)
     expected = 5
     actual = len(dictionary)
     assert actual == expected
 
 
-def test_load_model(test_catdog_mobilenet_model, test_mobilenet_1_model_spec):
+def test_load_model(test_catdog_mobilenet_model, test_catdog_mobilenet_model_spec):
 
     # Default model_spec
     model = utils.load_model(test_catdog_mobilenet_model)
     assert model
 
     # Custom model_spec
-    model = utils.load_model(test_catdog_mobilenet_model, specs_path=test_mobilenet_1_model_spec)
+    model = utils.load_model(test_catdog_mobilenet_model, specs_path=test_catdog_mobilenet_model_spec)
     assert model
 
 
-def test_load_model_ensemble(test_ensemble_models_path):
-    models, specs = utils.load_multi_model(test_ensemble_models_path)
+def test_load_model_ensemble(test_catdog_ensemble_path):
+    models, specs = utils.load_multi_model(test_catdog_ensemble_path)
     assert models
     assert specs
 
@@ -100,6 +100,15 @@ def test_default_concepts(test_catdog_dataset_path):
     concepts_by_default = utils.get_default_concepts(test_catdog_dataset_path)
     assert concepts_by_default == [{'label': 'cat', 'id': 'cat'},
                                    {'label': 'dog', 'id': 'dog'}]
+
+
+def test_get_dictionary_concepts(test_animals_dictionary_path):
+    dictionary_concepts = utils.get_dictionary_concepts(test_animals_dictionary_path)
+    assert dictionary_concepts == [{'label': '00000_cat', 'id': 0},
+                                   {'label': '00001_dog', 'id': 1},
+                                   {'label': '00002_goose', 'id': 2},
+                                   {'label': '00003_turtle', 'id': 3},
+                                   {'label': '00004_elephant', 'id': 4}]
 
 
 def test_create_training_json(test_catdog_dataset_path):
@@ -184,8 +193,8 @@ def test_results_to_dataframe():
     assert individual_df['AUROC'][0] == individual_df['AUROC'][1] == 0.833
 
 
-def test_ensemble_models(test_image_path, model_spec_mobilenet, test_ensemble_models_path):
-    models, model_specs = utils.load_multi_model(test_ensemble_models_path)
+def test_ensemble_models(test_image_path, model_spec_mobilenet, test_catdog_ensemble_path):
+    models, model_specs = utils.load_multi_model(test_catdog_ensemble_path)
 
     with pytest.raises(ValueError) as exception:
         utils.ensemble_models(models, input_shape=(224, 224, 3), combination_mode='asdf')

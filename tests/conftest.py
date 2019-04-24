@@ -2,6 +2,7 @@ import os
 import pytest
 import numpy as np
 
+from keras_eval import utils
 from keras_eval.eval import Evaluator
 from keras_model_specs import ModelSpec
 
@@ -27,11 +28,6 @@ def test_dog_folder():
 
 
 @pytest.fixture('session')
-def training_dict_file():
-    return os.path.abspath(os.path.join('tests', 'files', 'animals', 'dictionary.json'))
-
-
-@pytest.fixture('session')
 def test_image_path():
     return os.path.abspath(os.path.join('tests', 'files', 'catdog', 'test', 'cat', 'cat-1.jpg'))
 
@@ -46,21 +42,31 @@ def test_image_paths_list():
 def test_ensemble_models_path():
     return os.path.abspath(os.path.join('tmp', 'fixtures', 'models', 'ensemble'))
 
+  
+@pytest.fixture('session')
+def test_catdog_ensemble_path():
+    return os.path.abspath(os.path.join('tmp', 'fixtures', 'models', 'catdog'))
+  
 
 @pytest.fixture('session')
 def test_catdog_mobilenet_model():
     return os.path.abspath(
-        os.path.join('tmp', 'fixtures', 'models', 'ensemble', 'mobilenet_1', 'catdog-mobilenet.hdf5'))
+        os.path.join('tmp', 'fixtures', 'models', 'catdog', 'mobilenet_1', 'catdog-mobilenet.hdf5'))
 
 
 @pytest.fixture('session')
-def test_mobilenet_1_model_spec():
-    return os.path.abspath(os.path.join('tmp', 'fixtures', 'models', 'ensemble', 'mobilenet_1', 'model_spec.json'))
+def test_catdog_mobilenet_model_spec():
+    return os.path.abspath(os.path.join('tmp', 'fixtures', 'models', 'catdog', 'mobilenet_1', 'model_spec.json'))
 
 
 @pytest.fixture('session')
-def test_animals_model_path():
-    return os.path.abspath(os.path.join('tmp', 'fixtures', 'models', 'single', 'animals-mobilenet.hdf5'))
+def test_animals_ensemble_path():
+    return os.path.abspath(os.path.join('tmp', 'fixtures', 'models', 'animals'))
+
+
+@pytest.fixture('session')
+def test_animals_mobilenet_path():
+    return os.path.abspath(os.path.join('tmp', 'fixtures', 'models', 'animals', 'mobilenet_1', 'animals-mobilenet.hdf5'))
 
 
 @pytest.fixture('session')
@@ -94,7 +100,7 @@ def model_spec_mobilenet():
 
 
 @pytest.fixture('function')
-def evaluator_mobilenet(test_catdog_mobilenet_model):
+def evaluator_catdog_mobilenet(test_catdog_mobilenet_model):
     return Evaluator(
         batch_size=1,
         model_path=test_catdog_mobilenet_model
@@ -102,7 +108,7 @@ def evaluator_mobilenet(test_catdog_mobilenet_model):
 
 
 @pytest.fixture('function')
-def evaluator_mobilenet_data_augmentation(test_catdog_mobilenet_model):
+def evaluator_catdog_mobilenet_data_augmentation(test_catdog_mobilenet_model):
     return Evaluator(
         batch_size=1,
         model_path=test_catdog_mobilenet_model,
@@ -111,21 +117,68 @@ def evaluator_mobilenet_data_augmentation(test_catdog_mobilenet_model):
 
 
 @pytest.fixture('function')
-def evaluator_ensemble_mobilenet(test_ensemble_models_path):
+def evaluator_catdog_ensemble(test_catdog_ensemble_path):
     return Evaluator(
-        ensemble_models_dir=test_ensemble_models_path,
+        ensemble_models_dir=test_catdog_ensemble_path,
         combination_mode='arithmetic',
         batch_size=1
     )
 
 
 @pytest.fixture('function')
-def evaluator_mobilenet_class_combine(test_animals_model_path, test_animals_dictionary_path):
-    return Evaluator(
-        batch_size=1,
-        model_path=test_animals_model_path,
-        concept_dictionary_path=test_animals_dictionary_path
+def evaluator_animals_mobilenet_class_inference(test_animals_dataset_path, test_animals_mobilenet_path,
+                                                test_animals_dictionary_path):
+    evaluator = Evaluator(
+        data_dir=test_animals_dataset_path,
+        model_path=test_animals_mobilenet_path,
+        concept_dictionary_path=test_animals_dictionary_path,
+        batch_size=1
     )
+    return evaluator
+
+
+@pytest.fixture('function')
+def evaluator_animals_mobilenet_class_inference_initialized(test_animals_dataset_path, test_animals_mobilenet_path,
+                                                            test_animals_dictionary_path):
+    evaluator = Evaluator(
+        model_path=test_animals_mobilenet_path,
+        concept_dictionary_path=test_animals_dictionary_path,
+        batch_size=1
+    )
+    evaluator.data_dir = test_animals_dataset_path
+    evaluator.concepts = utils.get_dictionary_concepts(test_animals_dictionary_path)
+    group_concepts = utils.get_default_concepts(evaluator.data_dir)
+    evaluator.concept_labels = utils.get_concept_items(concepts=group_concepts, key='label')
+    return evaluator
+
+
+@pytest.fixture('function')
+def evaluator_animals_ensemble_class_inference(test_animals_dataset_path, test_animals_ensemble_path,
+                                               test_animals_dictionary_path):
+    evaluator = Evaluator(
+        data_dir=test_animals_dataset_path,
+        ensemble_models_dir=test_animals_ensemble_path,
+        concept_dictionary_path=test_animals_dictionary_path,
+        combination_mode='arithmetic',
+        batch_size=1
+    )
+    return evaluator
+
+
+@pytest.fixture('function')
+def evaluator_animals_ensemble_class_inference_initialized(test_animals_dataset_path, test_animals_ensemble_path,
+                                                           test_animals_dictionary_path):
+    evaluator = Evaluator(
+        ensemble_models_dir=test_animals_ensemble_path,
+        concept_dictionary_path=test_animals_dictionary_path,
+        combination_mode='arithmetic',
+        batch_size=1
+    )
+    evaluator.data_dir = test_animals_dataset_path
+    evaluator.concepts = utils.get_dictionary_concepts(test_animals_dictionary_path)
+    group_concepts = utils.get_default_concepts(evaluator.data_dir)
+    evaluator.concept_labels = utils.get_concept_items(concepts=group_concepts, key='label')
+    return evaluator
 
 
 @pytest.fixture('session')
