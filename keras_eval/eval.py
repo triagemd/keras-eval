@@ -328,7 +328,7 @@ class Evaluator(object):
         Args:
             folder_path: Path of the folder containing the images
 
-        Returns: Probabilities predicted, image path for every image (aligned with probability)
+        Returns: Probabilities predicted
 
         '''
         probabilities = []
@@ -350,12 +350,12 @@ class Evaluator(object):
     def _predict_list(self, image_list, verbose=True):
         '''
 
-        Predict the class probabilities of a set of images from a list.
+        Predict the class probabilities of a set of images from a given list.
 
         Args:
-            image_list: List of images
+            image_list: List of image paths
 
-        Returns: Probabilities predicted, image path for every image (aligned with probability)
+        Returns: Probabilities predicted
 
         '''
         probabilities = []
@@ -363,9 +363,8 @@ class Evaluator(object):
 
         for image_path in image_list:
             # Read images from folder
-            if image_path.endswith(".png") or image_path.endswith(".jpeg") or image_path.endswith(".jpg"):
-                probabilities.append(self._predict_image(image_path, verbose)[0])
-                image_paths.append(image_path)
+            probabilities.append(self._predict_image(image_path, verbose)[0])
+            image_paths.append(image_path)
 
         self.probabilities = np.array(probabilities)
         self.image_paths = image_paths

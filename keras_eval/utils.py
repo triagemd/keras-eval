@@ -308,7 +308,8 @@ def load_preprocess_image(img_path, model_spec):
     Returns: The preprocessed image.
 
     """
-    return model_spec.load_image(img_path)
+    if img_path.endswith(".png") or img_path.endswith(".jpeg") or img_path.endswith(".jpg"):
+        return model_spec.load_image(img_path)
 
 
 def load_preprocess_images(folder_path, model_spec):
