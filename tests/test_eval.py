@@ -54,6 +54,16 @@ def check_predict_on_cat_folder(evaluator, test_cat_folder):
     assert len(evaluator.image_paths) == 2
 
 
+def check_predict_on_image_paths(evaluator, image_paths_list):
+    probabilities = evaluator.predict(image_list=image_paths_list)
+
+    # n_models x n_samples x n_classes
+    assert len(probabilities.shape) == 3
+
+    # 2 images in the folder
+    assert len(evaluator.image_paths) == 2
+
+
 def check_predict_single_image(evaluator, test_image_path):
     probabilities = evaluator.predict(test_image_path)
 
@@ -135,21 +145,25 @@ def test_get_image_paths_by_prediction(evaluator_catdog_mobilenet, test_catdog_d
 
 
 def test_evaluator_single_mobilenet_v1_on_catdog_dataset(evaluator_catdog_mobilenet, test_catdog_dataset_path,
-                                                         test_cat_folder, test_image_path):
+                                                         test_cat_folder, test_image_path, test_image_paths_list):
     check_evaluate_on_catdog_dataset(evaluator_catdog_mobilenet, test_catdog_dataset_path)
 
     check_predict_on_cat_folder(evaluator_catdog_mobilenet, test_cat_folder)
 
     check_predict_single_image(evaluator_catdog_mobilenet, test_image_path)
 
+    check_predict_on_image_paths(evaluator_catdog_mobilenet, test_image_paths_list)
+
 
 def test_evaluator_catdog_ensemble_on_catdog_dataset(evaluator_catdog_ensemble, test_catdog_dataset_path,
-                                                     test_cat_folder, test_image_path):
+                                                     test_cat_folder, test_image_path, test_image_paths_list):
     check_evaluate_on_catdog_dataset(evaluator_catdog_ensemble, test_catdog_dataset_path)
 
     check_predict_on_cat_folder(evaluator_catdog_ensemble, test_cat_folder)
 
     check_predict_single_image(evaluator_catdog_ensemble, test_image_path)
+
+    check_predict_on_image_paths(evaluator_catdog_ensemble, test_image_paths_list)
 
 
 def test_compute_confidence_prediction_distribution(evaluator_catdog_mobilenet, test_catdog_dataset_path):

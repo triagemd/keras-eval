@@ -299,7 +299,7 @@ class Evaluator(object):
 
             return probabilities, labels
 
-    def predict(self, data_dir=None, verbose=True):
+    def predict(self, data_dir=None, image_list=None, verbose=True):
         '''
 
         Args:
@@ -311,14 +311,16 @@ class Evaluator(object):
         if data_dir is not None:
             self.data_dir = data_dir
 
-        if os.path.isdir(self.data_dir):
+        if image_list is not None and isinstance(image_list, list):
+            return self._predict_list(image_list, verbose=verbose)
+        elif os.path.isdir(self.data_dir):
             return self._predict_folder(self.data_dir, verbose=verbose)
         elif self.data_dir.endswith(".png") or self.data_dir.endswith(".jpeg") or self.data_dir.endswith(".jpg"):
             return self._predict_image(self.data_dir, verbose=verbose)
         else:
             raise ValueError('Wrong data format inputted, please input a valid directory or image path')
 
-    def _predict_folder(self, folder_path, verbose):
+    def _predict_folder(self, folder_path, verbose=True):
         '''
 
         Predict the class probabilities of a set of images from a folder.
@@ -326,7 +328,7 @@ class Evaluator(object):
         Args:
             folder_path: Path of the folder containing the images
 
-        Returns: Probabilities predicted, image path for every image (aligned with probability)
+        Returns: Probabilities predicted
 
         '''
         probabilities = []
@@ -337,10 +339,34 @@ class Evaluator(object):
             # Predict
             if verbose:
                 print('Making predictions from model ', str(i))
-            probabilities.append(model.predict(images, batch_size=self.batch_size, verbose=1))
+            probabilities.append(model.predict(images, batch_size=self.batch_size, verbose=verbose))
 
         self.probabilities = np.array(probabilities)
         self.combined_probabilities = utils.combine_probabilities(self.probabilities, self.combination_mode)
+        self.image_paths = image_paths
+
+        return self.probabilities
+
+    def _predict_list(self, image_list, verbose=True):
+        '''
+
+        Predict the class probabilities of a set of images from a given list.
+
+        Args:
+            image_list: List of image paths
+
+        Returns: Probabilities predicted
+
+        '''
+        probabilities = []
+        image_paths = []
+
+        for image_path in image_list:
+            # Read images from folder
+            probabilities.append(self._predict_image(image_path, verbose)[0])
+            image_paths.append(image_path)
+
+        self.probabilities = np.array(probabilities)
         self.image_paths = image_paths
 
         return self.probabilities
@@ -363,7 +389,7 @@ class Evaluator(object):
             # Predict
             if verbose:
                 print('Making predictions from model ', str(i))
-            probabilities.append(model.predict(image, batch_size=1, verbose=1))
+            probabilities.append(model.predict(image, batch_size=1, verbose=verbose))
 
         self.probabilities = np.array(probabilities)
         self.combined_probabilities = utils.combine_probabilities(self.probabilities, self.combination_mode)
