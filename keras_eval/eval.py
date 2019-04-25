@@ -312,7 +312,7 @@ class Evaluator(object):
             self.data_dir = data_dir
 
         if image_list is not None and isinstance(image_list, list):
-            return self._predict_folder_list(self.data_dir, image_list=image_list, verbose=verbose)
+            return self._predict_list(image_list, verbose=verbose)
         elif os.path.isdir(self.data_dir):
             return self._predict_folder(self.data_dir, verbose=verbose)
         elif self.data_dir.endswith(".png") or self.data_dir.endswith(".jpeg") or self.data_dir.endswith(".jpg"):
@@ -364,7 +364,7 @@ class Evaluator(object):
         for image_path in image_list:
             # Read images from folder
             if image_path.endswith(".png") or image_path.endswith(".jpeg") or image_path.endswith(".jpg"):
-                probabilities.append(self._predict_image(image_path, verbose)[0][0])
+                probabilities.append(self._predict_image(image_path, verbose)[0])
                 image_paths.append(image_path)
 
         self.probabilities = np.array(probabilities)
