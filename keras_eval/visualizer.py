@@ -7,7 +7,7 @@ import matplotlib.pyplot as plt
 from sklearn import metrics
 from keras_eval import utils
 from plotly.offline import iplot
-from sklearn.utils.fixes import signature
+from inspect import signature
 
 
 def plot_confusion_matrix(cm, concepts, normalize=False, show_text=True, fontsize=18, figsize=(16, 12),
